@@ -29,6 +29,7 @@ export class ForecastDetailPage extends PageBase {
   branchList = [];
   itemsState = [];
   columnView = [];
+  existedItems = [];
   //removedItem
   removedItems = [];
   periodSubscription: Subscription;
@@ -290,6 +291,7 @@ export class ForecastDetailPage extends PageBase {
                       Take: 20,
                       Skip: 0,
                       Term: term,
+                    //  Id_ne: [...this.existedItems?.join(',')]
                     })
                     .pipe(
                       catchError(() => of([])), // empty list on error
@@ -369,6 +371,12 @@ export class ForecastDetailPage extends PageBase {
     }
   }
   changeItem(ev, row) {
+    let groupRows = <FormArray>this.formGroup.controls.Rows;
+    let existedRow = groupRows.controls.find(d=> d.get('IDItem').value == ev.Id);
+    if(existedRow){
+      this.removeRow(row,0);
+      return;
+    }
     row.get('IDUoM').setValue('');
     row.get('_UoMDataSource').setValue(ev.UoMs);
     if (ev.SalesUoM && ev.UoMs?.length > 0) {
@@ -455,11 +463,25 @@ export class ForecastDetailPage extends PageBase {
         Id: fg.get('Id').value,
       };
     });
-    if (!fg.get('IDItem').value) {
-      var index = groupRows.controls.findIndex((d) => d.get('Key').value == 'undefined-undefined');
-      if (index) groupRows.removeAt(index);
-      return;
+    if(deletedIds.length==0){
+      if (!fg.get('IDItem').value) {
+        let rowsEmpty = groupRows.controls.filter((d) => d.get('Key').value === 'undefined-undefined');
+        for (let i = rowsEmpty.length - 1; i >= 0; i--) {
+          let row = rowsEmpty[i];
+          let index = groupRows.controls.indexOf(row);
+          if (index !== -1) {
+            groupRows.removeAt(index); 
+          }
+        }
+        return;
+      }
+      else{
+        let index = groupRows.controls.findIndex((d) => d.get('Key').value == 'undefined-undefined' && d.get('IDItem').value == fg.get('IDItem').value);
+        if (index) groupRows.removeAt(index);
+        return;
+      }
     }
+    
     //  let deleteIds = filteredIds?.map((filteredControl) => filteredControl.get('Id').value);
     this.env.showPrompt('Bạn chắc muốn xóa ?', null, 'Xóa ' + deletedIds.length + ' dòng').then((_) => {
       this.forecastDetailService.delete(deletedIds).then((_) => {
