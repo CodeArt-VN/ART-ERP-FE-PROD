@@ -29,7 +29,6 @@ export class ForecastDetailPage extends PageBase {
   branchList = [];
   itemsState = [];
   columnView = [];
-  existedItems = [];
   //removedItem
   removedItems = [];
   periodSubscription: Subscription;
@@ -63,7 +62,7 @@ export class ForecastDetailPage extends PageBase {
       }),
       StartDate: ['', Validators.required],
       EndDate: ['', Validators.required],
-      Name: [''],
+      Name: ['',Validators.required],
       Period: ['Daily', Validators.required],
       Rows: this.formBuilder.array([]),
       Cells: this.formBuilder.array([]),
@@ -291,7 +290,6 @@ export class ForecastDetailPage extends PageBase {
                       Take: 20,
                       Skip: 0,
                       Term: term,
-                    //  Id_ne: [...this.existedItems?.join(',')]
                     })
                     .pipe(
                       catchError(() => of([])), // empty list on error
@@ -371,12 +369,6 @@ export class ForecastDetailPage extends PageBase {
     }
   }
   changeItem(ev, row) {
-    let groupRows = <FormArray>this.formGroup.controls.Rows;
-    let existedRow = groupRows.controls.find(d=> d.get('IDItem').value == ev.Id);
-    if(existedRow){
-      this.removeRow(row,0);
-      return;
-    }
     row.get('IDUoM').setValue('');
     row.get('_UoMDataSource').setValue(ev.UoMs);
     if (ev.SalesUoM && ev.UoMs?.length > 0) {
@@ -470,7 +462,7 @@ export class ForecastDetailPage extends PageBase {
           let row = rowsEmpty[i];
           let index = groupRows.controls.indexOf(row);
           if (index !== -1) {
-            groupRows.removeAt(index); 
+            groupRows.removeAt(index);
           }
         }
         return;
