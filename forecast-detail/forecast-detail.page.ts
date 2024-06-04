@@ -187,10 +187,10 @@ export class ForecastDetailPage extends PageBase {
         this.reRender();
       }
     } else {
-      if (this.item.Items?.length > 0) {
+      if (this.item.ForecastItems?.length > 0) {
         let rows = this.formGroup.get('Rows') as FormArray;
         rows.clear();
-        this.item.Items.forEach((is) => {
+        this.item.ForecastItems.forEach((is) => {
           this.addRows(is);
         });
       }
@@ -201,7 +201,7 @@ export class ForecastDetailPage extends PageBase {
     this.formGroup.controls.Cells = new FormArray([]);
     this.pageConfig.showSpinner = true;
     this.columnView.forEach((d) => {
-      this.item.Items.forEach((state, index) => {
+      this.item.ForecastItems?.forEach((state, index) => {
         let cell = this.item.ForeCastDetails.find(
           (x) => x.Date == d.Date && x.IDItem == state.IDItem && x.IDItem && state.IDUoM == x.IDUoM,
         );
@@ -590,6 +590,28 @@ export class ForecastDetailPage extends PageBase {
       this.renderView();
       this.saveChange2();
     }
+  }
+
+  createBOMRecommendation(){
+    let subQuery = {
+      Id: this.item.Id,
+    }
+      this.env
+          .showLoading('Xin vui lòng chờ trong giây lát...',  this.commonService
+          .connect('POST', 'SALE/Forecast/CreateBOMRecommendation/'+ this.item.Id, subQuery).toPromise())
+          .then((result) => {
+            console.log(result);
+            if(result){
+              this.env.showTranslateMessage('Saved','success');
+
+            }
+            else
+            {
+              this.env.showTranslateMessage('Cannot save, please try again','danger');
+            }
+
+          })
+  
   }
 
   @ViewChild('importfile') importfile: any;

@@ -47,8 +47,11 @@
 						<ion-label>{{'Other information' | translate}}</ion-label>
 					</ion-segment-button>
 				</ion-segment>
+			
 				<ion-buttons slot="end" *ngIf="segmentView=='s1'">
-
+					<ion-button (click)="createBOMRecommendation()" class="ion-hide-sm-down" *ngIf="formGroup.get('Cells')['controls'].length>0 && item.Id"  title="{{'BoM' | translate}}">
+						<ion-icon slot="icon-only" name="logo-chrome"></ion-icon>
+					</ion-button>
 					<ion-button class="ion-hide-sm-down" *ngIf="pageConfig.canExport && item.Id" (click)="export()" title="{{'Export' | translate}}">
 						<ion-icon slot="icon-only" name="cloud-download-outline"></ion-icon>
 					</ion-button> 
