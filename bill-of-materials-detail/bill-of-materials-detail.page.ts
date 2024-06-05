@@ -107,7 +107,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
   }
 
   loadedData(event) {
-    if (this.item) {
+    if (this.item?._Item) {
       this.itemListSelected.push(this.item._Item);
     }
     super.loadedData(event);
