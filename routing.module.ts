@@ -11,5 +11,7 @@ export const PRODRoutes: Routes = [
     
     { path: 'staff-catering-booking-note', loadChildren: () => import('./staff-catering-booking-note/staff-catering-booking-note.module').then(m => m.StaffCateringBookingNotePageModule), canActivate: [AuthGuard] },
     { path: 'staff-catering-booking-note/:segment', loadChildren: () => import('./staff-catering-booking-note/staff-catering-booking-note.module').then(m => m.StaffCateringBookingNotePageModule), canActivate: [AuthGuard] },
-  
+    { path: 'forecast', loadChildren: () => import('./forecast/forecast.module').then(m => m.ForecastPageModule), canActivate: [AuthGuard] },
+    { path: 'forecast/:id', loadChildren: () => import('./forecast-detail/forecast-detail.module').then(m => m.ForecastDetailPageModule), canActivate: [AuthGuard] },
+   
 ];

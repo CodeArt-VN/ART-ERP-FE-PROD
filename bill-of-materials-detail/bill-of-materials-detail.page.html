@@ -1,6 +1,9 @@
 <ion-header>
   <app-detail-toolbar [page]="this">
     <div *ngIf="pageConfig.canEdit && this.id">
+      <ion-button (click)="exportClick()" title="{{'Export component' | translate}}">
+        <ion-icon slot="icon-only" name="cloud-download-outline"></ion-icon>
+      </ion-button>
       <ion-button (click)="importClick()" title="{{'Import component' | translate}}">
         <ion-icon slot="icon-only" name="cloud-upload-outline"></ion-icon>
       </ion-button>
@@ -818,4 +821,5 @@
     </div>
   </div>
   <app-page-message [itemsLength]="item? 1: 0" [showSpinner]="pageConfig.showSpinner"></app-page-message>
+  <input class="hide-all" #importfile type="file" accept=".xlsx" (change)="uploadBOMDetail($event)" />
 </ion-content>

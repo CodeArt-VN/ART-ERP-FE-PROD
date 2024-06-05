@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { NavController, ModalController, AlertController, LoadingController, PopoverController } from '@ionic/angular';
 import { EnvService } from 'src/app/services/core/env.service';
 import { PageBase } from 'src/app/page-base';
-import { PROD_MRPProvider } from 'src/app/services/static/services.service';
+import { PROD_MRPRecommendationProvider } from 'src/app/services/static/services.service';
 import { Location } from '@angular/common';
 import { lib } from 'src/app/services/static/global-functions';
 import { CommonService } from 'src/app/services/core/common.service';
@@ -18,7 +18,7 @@ export class OrderRecommendationPage extends PageBase {
   itemMRPList = [];
 
   constructor(
-    public pageProvider: PROD_MRPProvider,
+    public pageProvider: PROD_MRPRecommendationProvider,
     public modalController: ModalController,
     public popoverCtrl: PopoverController,
     public alertCtrl: AlertController,
@@ -71,11 +71,11 @@ export class OrderRecommendationPage extends PageBase {
   }
 
   refresh(event?) {
-    if (typeof this.query.IDMRP === 'number') {
-      this.query.IDMRP = parseInt(this.query.IDMRP);
+    if (typeof this.query.SAPMRP === 'number') {
+      this.query.SAPMRP = parseInt(this.query.SAPMRP);
     }
-    if (this.query.IDMRP == '') {
-      delete this.query.IDMRP;
+    if (this.query.SAPMRP == '') {
+      delete this.query.SAPMRP;
     }
     super.refresh(event);
   }

@@ -43,4 +43,19 @@ export class BillOfMaterialsPage extends PageBase {
       super.loadedData(event);
     });
   }
+
+  exportClick() {
+    if (this.submitAttempt) return;
+    this.submitAttempt = true;
+    this.env
+      .showLoading('Vui lòng chờ export dữ liệu...', this.pageProvider.export(this.query))
+      .then((response: any) => {
+        this.downloadURLContent(response);
+        this.submitAttempt = false;
+      })
+      .catch((err) => {
+        this.submitAttempt = false;
+      });
+  }
+
 }
