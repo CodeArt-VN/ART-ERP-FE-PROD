@@ -374,6 +374,7 @@ export class ForecastDetailPage extends PageBase {
   }
   changeItem(ev, row) {
     row.get('IDUoM').setValue('');
+    row.get('IDItem').markAsPristine();
     row.get('_UoMDataSource').setValue(ev.UoMs);
     if (ev.SalesUoM && ev.UoMs?.length > 0) {
       row.get('IDUoM').setValue(ev.SalesUoM);
