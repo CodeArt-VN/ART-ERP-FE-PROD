@@ -8,9 +8,14 @@
 				<ion-icon class="min-btn" *ngIf="sort.Id" [name]="sort.Id == 'Id'?'arrow-down': 'arrow-up'"></ion-icon>
 				<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.Id" name="search" color="primary"></ion-icon>
 			</div>
+			<div class="col-name cell" (click)="sortToggle('Name')">
+				{{'Name' | translate}}
+				<ion-icon class="min-btn" *ngIf="sort.Name" [name]="sort.Name == 'Name'?'arrow-down': 'arrow-up'"></ion-icon>
+				<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.Name" name="search" color="primary"></ion-icon>
+			</div>
 		
 			<div class="col-name cell" (click)="sortToggle('WarehouseName')">
-				{{'Warehouse' | translate}}
+				{{'Branch' | translate}}
 				<ion-icon class="min-btn" *ngIf="sort.WarehouseName" [name]="sort.WarehouseName == 'WarehouseName'?'arrow-down': 'arrow-up'"></ion-icon>
 				<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.WarehouseName" name="search" color="primary"></ion-icon>
 			</div>
@@ -49,6 +54,14 @@
 				  name="close-circle-outline"
 				></ion-icon>
 			  </div>
+			  <div class="col-name cell"><input
+				(change)="refresh()"
+				[ngModelOptions]="{standalone: true}"
+				[(ngModel)]="query.Name"
+				class="c-input"
+				[ngClass]="{active: query.Name}"
+				type="text"
+			  /></div>
 			
 			  <div class="col-name cell"></div>
 			
@@ -103,7 +116,11 @@
 							{{i.Id}}
 						</div>
 						<div  class="col-name cell">
-							{{i.BranchName}}   						</div>
+							{{i.Name}}   						
+						</div>
+						<div  class="col-name cell">
+							{{i.BranchName}}   						
+						</div>
 					
 						<div class="col-date cell">
 							{{i.StartDate | date: 'dd/MM/yyyy'}}

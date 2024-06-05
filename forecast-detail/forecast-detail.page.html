@@ -1,5 +1,9 @@
 <ion-header>
-	<app-detail-toolbar [page]="this"></app-detail-toolbar>
+	<app-detail-toolbar [page]="this">
+		<ion-button  (click)="createBOMRecommendation()" class="ion-hide-sm-down" *ngIf="pageConfig.canAdd && formGroup.get('Cells')['controls'].length>0 && item.Id"  title="{{'Create recommendation' | translate}}">
+			<ion-icon slot="icon-only" name="logo-chrome"></ion-icon>
+		</ion-button>
+	</app-detail-toolbar>
 </ion-header>
 <ion-content appScrollbarTheme class="ion-padding">
 	<div class="main-view" *ngIf="item && pageConfig.showSpinner==false">
@@ -28,8 +32,8 @@
 					</ion-col>
 
 					<ion-col size="12" size-sm size-xl="4">
-						<app-form-control [field]="{id:'StartDate', label: 'Start date', type: 'datetime-local' , form : formGroup }" (change)="changePeriodAndDate()"></app-form-control>
-						<app-form-control [field]="{id:'EndDate', label: 'End date', type: 'datetime-local' , form : formGroup }" (change)="changePeriodAndDate()"></app-form-control>
+						<app-form-control [field]="{id:'StartDate', label: 'Start date', type: 'date' , form : formGroup }" (change)="changePeriodAndDate()"></app-form-control>
+						<app-form-control [field]="{id:'EndDate', label: 'End date', type: 'date' , form : formGroup }" (change)="changePeriodAndDate()"></app-form-control>
 
 
 					</ion-col>
@@ -49,9 +53,7 @@
 				</ion-segment>
 			
 				<ion-buttons slot="end" *ngIf="segmentView=='s1'">
-					<ion-button (click)="createBOMRecommendation()" class="ion-hide-sm-down" *ngIf="formGroup.get('Cells')['controls'].length>0 && item.Id"  title="{{'BoM' | translate}}">
-						<ion-icon slot="icon-only" name="logo-chrome"></ion-icon>
-					</ion-button>
+				
 					<ion-button class="ion-hide-sm-down" *ngIf="pageConfig.canExport && item.Id" (click)="export()" title="{{'Export' | translate}}">
 						<ion-icon slot="icon-only" name="cloud-download-outline"></ion-icon>
 					</ion-button> 

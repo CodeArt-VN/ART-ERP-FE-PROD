@@ -104,6 +104,8 @@ export class ForecastDetailPage extends PageBase {
   }
 
   loadedData(event?: any, ignoredFromGroup?: boolean): void {
+    this.item.StartDate = lib.dateFormat(this.item.StartDate);
+    this.item.EndDate = lib.dateFormat(this.item.EndDate);
     super.loadedData(event, ignoredFromGroup);
     this.formGroup.controls.Period.markAsDirty();
     this.formGroup.controls.IDBranch.markAsDirty();
@@ -269,6 +271,7 @@ export class ForecastDetailPage extends PageBase {
           searchProvider: this.itemProvider,
           loading: false,
           input$: new Subject<string>(),
+          existedItems : groups.controls.map(d=>d.get('IDItem').value),
           selected: [
             {
               Id: row?.IDItem,
@@ -290,6 +293,7 @@ export class ForecastDetailPage extends PageBase {
                       Take: 20,
                       Skip: 0,
                       Term: term,
+                      Id_ne:this.existedItems.length>0? this.existedItems:''
                     })
                     .pipe(
                       catchError(() => of([])), // empty list on error
@@ -387,8 +391,6 @@ export class ForecastDetailPage extends PageBase {
         cell.get('Key').setValue(key);
         cell.get('IDItem').setValue(row.get('IDItem').value);
         cell.get('IDUoM').setValue(row.get('IDUoM').value);
-        cell.get('IDItem').markAsDirty();
-        cell.get('IDUoM').markAsDirty();
       });
       itemsToPassingAPI = existedCells.map((c) => {
         return {
@@ -511,7 +513,7 @@ export class ForecastDetailPage extends PageBase {
     if (i.get('IsChecked').value) {
       this.checkedRows.push(i);
     } else {
-      let index = this.checkedRows.getRawValue().findIndex((d) => d.Id == i.get('Id').value);
+      let index = this.checkedRows.getRawValue().indexOf(i);//getRawValue().findIndex((d) => d.Id == i.get('Id').value);
       this.checkedRows.removeAt(index);
     }
   }
@@ -550,7 +552,7 @@ export class ForecastDetailPage extends PageBase {
 
             deleteCells?.forEach((d) => {
               const indexCellToRemove = groupCells.controls.findIndex(
-                (cellControl) => cellControl.get('Id').value === d,
+                (cellControl) => cellControl.get('Id').value === d.Id,
               );
               groupCells.removeAt(indexCellToRemove);
             });
