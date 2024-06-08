@@ -25,7 +25,7 @@
               (change)="saveChange()">
             </app-form-control> -->
 
-            <app-form-control [field]="{id:'BOM', label: 'BOM', type : 'text', form : formGroup }"
+            <app-form-control [field]="{id:'IDBOM', label: 'BOM', type : 'text', form : formGroup }"
               (change)="saveChange()">
             </app-form-control>
 
@@ -68,14 +68,14 @@
               [field]="{id:'DueDate', label: 'Due date', type : 'datetime-local', placeholder: 'yyyy-MM-dd', form : formGroup }"
               (change)="saveChange()">
             </app-form-control>
-            <app-form-control [field]="{id:'SalesOrder', label: 'SalesOrder', type : 'text', form : formGroup }"
+            <app-form-control [field]="{id:'IDSaleOrder', label: 'SalesOrder', type : 'text', form : formGroup }"
               (change)="saveChange()">
             </app-form-control>
             <app-form-control
-              [field]="{id:'Customer', label: 'Customer', type : 'ng-select-bp', form : formGroup,  dataSource: IDBusinessPartnerDataSource,  bindValue: 'Id' }"
+              [field]="{id:'IDCustomer', label: 'Customer', type : 'ng-select-bp', form : formGroup,  dataSource: IDBusinessPartnerDataSource,  bindValue: 'Id' }"
               (change)="IDBusinessPartnerChange($event);" (nav)="nav($event)">
             </app-form-control>
-            <app-form-control [field]="{id:'PickPack', label: 'Pick & Pack remark', type : 'text', form : formGroup }"
+            <app-form-control [field]="{id:'PickRemark', label: 'Pick & Pack remark', type : 'text', form : formGroup }"
               (change)="saveChange()">
             </app-form-control>
           </ion-col>
@@ -109,22 +109,9 @@
                 {{'Name' | translate}}
               </div>
 
-              <div class="col-status cell">
+              <div class="col-uom cell">
                 {{'Type' | translate}}
               </div>
-
-              <div class="col-qty  cell">
-                {{'Base qty' | translate}}
-              </div>
-
-              <div class="col-qty cell">
-                {{'Planned qty' | translate}}
-              </div>
-
-              <div class="col-qty cell">
-                {{'Issue method' | translate}}
-              </div>
-
               <div class="col-date cell">
                 {{'Start date' | translate}}
               </div>
@@ -133,17 +120,33 @@
                 {{'End date' | translate}}
               </div>
 
-              <div class="col-date cell">
+              <div class="col-qty cell">
                 {{'Production time' | translate}}
               </div>
+
+              <div class="col-qty cell">
+                {{'Base qty' | translate}}
+              </div>
+
+              <div class="col-qty cell">
+                {{'Planned qty' | translate}}
+              </div>
+
+              <div class="col-status cell">
+                {{'Issue method' | translate}}
+              </div>
+
               <div class="col-status cell">
                 {{'Status' | translate}}
+              </div>
+              <div class="col-icon cell">
+                  
               </div>
             </header>
             <app-page-message [itemsLength]="formGroup.get('ProductionOrderDetails')['controls']"
               [showSpinner]="pageConfig.showSpinner"></app-page-message>
             <ng-container *ngIf="!pageConfig.showSpinner">
-              <!-- <div *ngFor="let c of formGroup.get('ProductionOrderDetails')['controls'] ;let j = index" class="row"
+              <div *ngFor="let c of formGroup.get('ProductionOrderDetails')['controls'] ;let j = index" class="row"
                 [ngClass]="{odd: j % 2 != 0}">
                 <div class="col-checkbox cell" style="text-align: center;">
                   <app-input-control [field]="{id:'IsChecked', type : 'checkbox', form : c, }"
@@ -157,44 +160,45 @@
                       (mousedown)="$event.stopPropagation()">#{{c.get('IDItem').value}} <ion-icon
                         name="open-outline"></ion-icon></a>
                     <span [title]="c.get('ItemName')?.value"> {{c.get('ItemName').value}}</span>
-
                   </div>
+                 
                 </div>
                 <div class="col-uom cell">
-                  {{c.get('UoMName')?.value}}
+                  {{c.get('Type')?.value}}
                 </div>
 
-                <div class="col-name cell" *ngIf="formGroup.get('IsCountByLocation').value">
-                  {{c.get('ZoneName')?.value}}
+                <div class="col-date cell">
+                  {{c.get('StartDate')?.value}}
                 </div>
 
-                <div class="col-code cell" *ngIf="formGroup.get('IsCountByLocation').value">
-                  {{c.get('LocationName')?.value}}
-                </div>
-
-                <div class="col-code cell" *ngIf="formGroup.get('IsCountByLot').value">
-                  {{c.get('LotName')?.value}}
+                <div class="col-date cell">
+                  {{c.get('EndDate')?.value}}
                 </div>
 
                 <div class="col-qty cell">
-                  {{c.get('CurrentQuantity')?.value}}
+                  {{c.get('RequiredDays')?.value}}
                 </div>
+
                 <div class="col-qty cell">
-                  <app-input-control [field]="{id:'CountedQuantity', type : 'text', form : c, }"
-                    (change)="saveChangeDetail(c)"></app-input-control>
+                  {{c.get('BaseQuantity')?.value}}
                 </div>
 
-                <div class="col-promotion cell">
-                  <app-input-control [field]="{id:'IsCounted', type : 'checkbox', form : c, }"
-                    (change)="saveChangeDetail(c)"></app-input-control>
+                <div class="col-qty cell">
+                  {{c.get('PlannedQuantity')?.value}}
                 </div>
 
-              
+                <div class="col-status cell">
+                  {{c.get('IssueMethod')?.value}}
+                </div>
+
+                <div class="col-status cell">
+                  {{c.get('Status')?.value}}
+                </div>
 
                 <div class="col-icon cell" (click)="removeField(c,j)" clickable>
-                  <ion-icon color="danger" *ngIf="pageConfig.canEdit && pageConfig.canDelete" name="trash"></ion-icon>
+                  
                 </div>
-              </div> -->
+              </div>
             </ng-container>
 
           </section>
@@ -215,7 +219,7 @@
                     [field]="{id:'ItemComponentCost', label: 'Item component cost', type : 'text', bindValue: 'TaxCode', form : formGroup }"
                     (change)="saveChange()"></app-form-control>
                   <app-form-control
-                    [field]="{id:'ResourceComponentCost', label: 'resource component cost', type : 'text', form : formGroup }"
+                    [field]="{id:'ResourceComponentCost', label: 'Resource component cost', type : 'text', form : formGroup }"
                     (change)="saveChange()"></app-form-control>
                   <app-form-control [field]="{id:'AdditionCost', label: 'Addition cost', type : 'text', form : formGroup }"
                     (change)="saveChange()"></app-form-control>

@@ -63,17 +63,18 @@ export class ProductionOrderDetailPage extends PageBase {
     this.pageConfig.canAdd = true;
     this.formGroup = formBuilder.group({
       Id: new FormControl({ value: '', disabled: true }),
+      IDBranch: ['', Validators.required],
       Type: [''],
       Status: [''],
-      BOM: [''],
+      IDBOM: [''],
       PlannedQuantity: [1, Validators.required],
       IDWarehouse: [''],
       OrderDate: [''],
       StartDate: [''],
       DueDate: [''],
-      SalesOrder: [''],
-      Customer: [''],
-      PickPack: [''],
+      IDSaleOrder: [''],
+      IDCustomer: [''],
+      PickRemark: [''],
       ProductionOrderDetails: this.formBuilder.array([]),
       ItemComponentCost: [''],
       ResourceComponentCost: [''],
@@ -160,6 +161,41 @@ export class ProductionOrderDetailPage extends PageBase {
     if (this.item?.Customer) {
       this.IDBusinessPartnerDataSource.selected.push(this.item?.Customer);
     }
+
+    const productionOrderDetailsArray = this.formGroup.get('ProductionOrderDetails') as FormArray;
+    productionOrderDetailsArray.clear();
+    this.item.ProductionOrderDetails = [
+      {
+        IsChecked: true,
+        IDItem: 1,
+        ItemName: 'Item 1',
+        Name: 'Component 1',
+        Type: 'Type A',
+        BaseQuantity: 10,
+        PlannedQuantity: 20,
+        IssueMethod: 'Manual',
+        StartDate: '2023-01-01',
+        EndDate: '2023-01-10',
+        RequiredDays: 10,
+        Status: 'Pending'
+      },
+      {
+        IsChecked: false,
+        IDItem: 2,
+        ItemName: 'Item 2',
+        Name: 'Component 2',
+        Type: 'Type B',
+        BaseQuantity: 15,
+        PlannedQuantity: 25,
+        IssueMethod: 'Automatic',
+        StartDate: '2023-02-01',
+        EndDate: '2023-02-10',
+        RequiredDays: 9,
+        Status: 'InProgress'
+      }
+    ];
+    this.patchFieldsValue();
+
     this.IDBusinessPartnerDataSource.initSearch();
     super.loadedData(event);
 
@@ -204,6 +240,36 @@ export class ProductionOrderDetailPage extends PageBase {
       );
     },
   };
+
+  patchFieldsValue(){
+
+    this.formGroup.controls.ProductionOrderDetails = new FormArray([]);
+    if (this.item.ProductionOrderDetails?.length) {
+      this.item.ProductionOrderDetails.forEach(i => this.addField(i));
+    }
+  }
+
+  addField(field: any, markAsDirty = false) {
+    let groups = this.formGroup.controls.ProductionOrderDetails as FormArray;
+    let group = this.formBuilder.group({
+      IsChecked: [field.IsChecked],
+      IDItem: [field.IDItem],
+      ItemName: [field.ItemName],
+      Name: [field.Name],
+      Type: [field.Type],
+      BaseQuantity: [field.BaseQuantity],
+      PlannedQuantity: [field.PlannedQuantity],
+      IssueMethod: [field.IssueMethod],
+      StartDate: [field.StartDate],
+      EndDate: [field.EndDate],
+      RequiredDays: [field.RequiredDays],
+      Status: [field.Status],
+      
+    });
+
+    groups.push(group);
+  }
+
   markNestedNode(ls, Id) {
     ls.filter((d) => d.IDParent == Id).forEach((i) => {
       if (i.Type == 'Warehouse') i.disabled = false;
