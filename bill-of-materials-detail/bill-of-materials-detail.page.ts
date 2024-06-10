@@ -525,15 +525,15 @@ export class BillOfMaterialsDetailPage extends PageBase {
       });
   }
 
-  changedItemFinishedGood(e) {
+  IDItemChange(e) {
     let itemBOM = e.BOMs.find((f) => f.Type == this.formGroup.controls.Type.value && f.IDBOM != this.item.Id);
-    if (e.BOMs.length > 0 && itemBOM) {
+    if (itemBOM) {
       this.env
         .showPrompt('Bạn có muốn xem định mức này không?', null, 'Đã thiết lập BOM cho sản phẩm ' + e.Name)
         .then((_) => {
-          let newURL = '#/bill-of-materials/' + itemBOM.IDBOM;
-          window.location.href = newURL;
-          window.location.reload();
+          this.nav('bill-of-materials/' + itemBOM.IDBOM);
+          this.id = itemBOM.IDBOM;
+          this.loadData();
         })
         .catch((_) => {
           this.formGroup.controls.IDItem.setValue(this.item.IDItem);
