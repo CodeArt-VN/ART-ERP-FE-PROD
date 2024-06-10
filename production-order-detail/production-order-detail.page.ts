@@ -67,7 +67,7 @@ export class ProductionOrderDetailPage extends PageBase {
       Type: [''],
       Status: [''],
       IDBOM: [''],
-      PlannedQuantity: [1, Validators.required],
+      PlannedQuantity: [''],
       IDWarehouse: [''],
       OrderDate: [''],
       StartDate: [''],
@@ -105,12 +105,8 @@ export class ProductionOrderDetailPage extends PageBase {
         AllParent: true,
         Id: this.env.selectedBranchAndChildren,
       }),
-      this.priceListProvider.read(),
-      this.env.getType('BOMType'),
-      this.env.getType('ComponentType'),
-      this.env.getType('IssueMethod'),
     ]).then((values) => {
-      this.typeList = values[2];
+      
       lib.buildFlatTree(values[0]['data'], this.branchList).then((result: any) => {
         this.branchList = result;
         this.branchList.forEach((i) => {
@@ -120,19 +116,40 @@ export class ProductionOrderDetailPage extends PageBase {
         super.preLoadData(event);
       });
     });
+
+    this.typeList = [{
+      Name: "Type 1",
+      Code: "type1"
+    },
+    {
+      Name: "Type 2",
+      Code: "type2"
+    }]
+    this.statusList = [{
+      Name: "Status 1",
+      Code: "status1"
+    },
+    {
+      Name: "Status 2",
+      Code: "status2"
+    }]
   }
 
   loadedData(event) {
     
     this.item.Type = 'ProductionOrder';
     this.item.Status = 'ProductionOrder';
-    this.item.BOM = 'BOM';
+    this.item.IDBOM = 2;
     this.item.PlannedQuantity = 1;
-    this.item.IDWarehouse = 12;
-    this.item.OrderDate = null;
-    this.item.StartDate = null;
-    this.item.DueDate = null;
-    this.item.SalesOrder = 'SalesOrder';
+    this.item.IDWarehouse = 610;
+    this.item.IDBranch = 21;
+    this.item.OrderDate = "2024-06-05T16:33:15.233";
+    this.item.Type = "type1";
+    this.item.Status = "status2";
+    this.item.StartDate = "2024-06-05T16:33:15.233";
+    this.item.DueDate = "2024-06-05T16:33:15.233";
+    this.item.IDSaleOrder = 2;
+    this.item.IDCustomer = 922;
     this.item.Customer = {
       Code: '-1',
       IDAddress: 903,
@@ -141,25 +158,30 @@ export class ProductionOrderDetailPage extends PageBase {
       Name: 'Khách lẻ',
       TaxAddresses: [],
       WorkPhone: '',
+      AnnualRevenue: 0,
+      BillingAddress: '',
+      BillingPhone: null,
+      CompanyName: 'Người Mua Không Lấy Hóa Đơn',
+      CreatedBy: 'a.nguyen@codeart.vn',
+      CreatedDate: '2022-01-31T17:59:19.987',
+     
     };
-    this.item.PickPack = 'PickPack';
-    this.item.ItemComponentCost = 'PickPack';
-    this.item.ResourceComponentCost = 'PickPack';
-    this.item.AdditionCost = 'PickPack';
-    this.item.ProductCost = 'PickPack';
+    this.item.PickRemark = 'PickPack';
+    this.item.ItemComponentCost = 'ItemComponentCost';
+    this.item.ResourceComponentCost = 'ResourceComponentCost';
+    this.item.AdditionCost = 'AdditionCost';
+    this.item.ProductCost = 'ProductCost';
     this.item.TotalCost = 4;
-    this.item.JournalRemark = 'PickPack';
+    this.item.JournalRemark = 'JournalRemark';
     this.item.CompletedQuantity = 1;
 
     this.item.RejectedQuantity = 2;
-    this.item.ActualClosingDate = 1;
-    this.item.Overdue = new Date();
+    this.item.ActualClosingDate = "2024-06-05T16:33:15.233";
+    this.item.Overdue = "2024-06-05T16:33:15.233";
 
-    if (this.item?._Item) {
-      this.itemListSelected.push(this.item._Item);
-    }
+
     if (this.item?.Customer) {
-      this.IDBusinessPartnerDataSource.selected.push(this.item?.Customer);
+      this._contactDataSource.selected.push(this.item?.Customer);
     }
 
     const productionOrderDetailsArray = this.formGroup.get('ProductionOrderDetails') as FormArray;
@@ -196,7 +218,7 @@ export class ProductionOrderDetailPage extends PageBase {
     ];
     this.patchFieldsValue();
 
-    this.IDBusinessPartnerDataSource.initSearch();
+    this._contactDataSource.initSearch();
     super.loadedData(event);
 
     if (this.id == 0) {
@@ -208,7 +230,7 @@ export class ProductionOrderDetailPage extends PageBase {
     this.itemSearch();
   }
 
-  IDBusinessPartnerDataSource = {
+  _contactDataSource = {
     searchProvider: this.contactProvider,
     loading: false,
     input$: new Subject<string>(),
@@ -289,12 +311,8 @@ export class ProductionOrderDetailPage extends PageBase {
         this.isShowPrice.push(false);
       });
 
-    this.calcTotalLine();
   }
 
-  togglePrice(index) {
-    this.isShowPrice[index] = !this.isShowPrice[index];
-  }
 
   addOrderLine(line) {
     let stdCost = 0;
@@ -360,7 +378,7 @@ export class ProductionOrderDetailPage extends PageBase {
       group.controls.AdditionalQuantity.markAsDirty();
       group.controls.IssueMethod.markAsDirty();
     }
-    this.changedType(group, true);
+
   }
 
   removeOrderLine(index, permanentlyRemove = true) {
@@ -390,7 +408,6 @@ export class ProductionOrderDetailPage extends PageBase {
               if (permanentlyRemove) {
                 this.bomDetailProvider.delete(Ids).then((resp) => {
                   groups.removeAt(index);
-                  this.calcTotalLine();
                   this.env.showTranslateMessage('Deleted!', 'success');
                 });
               }
@@ -425,144 +442,21 @@ export class ProductionOrderDetailPage extends PageBase {
     );
   }
 
-  changedIDItem(group, e) {
-    if (e) {
-      group.controls._UoMs.setValue(e.UoMs);
-      group.controls.IDItem.setValue(e.Id);
-      group.controls.IDItem.markAsDirty();
-      group.controls.IDUoM.setValue(e.PurchasingUoM);
-      group.controls.IDUoM.markAsDirty();
-      this.changedIDUoM(group);
-    }
-  }
 
-  changedIDUoM(group, submit = true) {
-    let selectedUoM = group.controls._UoMs.value.find((d) => d.Id == group.controls.IDUoM.value);
 
-    if (selectedUoM) {
-      let cost = selectedUoM.PriceList.find((d) => d.Type == 'StdCostPriceList');
-      if (cost) {
-        group.controls.StdCost.setValue(cost.Price);
-      } else {
-        group.controls.StdCost.setValue(0);
-      }
-
-      let price = selectedUoM.PriceList.find((d) => d.Type == 'PriceList');
-      if (price) {
-        group.controls.UoMPrice.setValue(price.Price);
-      } else {
-        group.controls.UoMPrice.setValue(0);
-      }
-
-      group.controls.UoMPrice.markAsDirty();
-
-      //if (submit) this.saveChange();
-    }
-  }
-
-  changedType(group, stop = false) {
-    if (group.controls.Type.value != 'CTItem') {
-      group.controls._Item.disable();
-      group.controls.IDItem.disable();
-      group.controls.IDUoM.disable();
-      group.controls.UoMPrice.disable();
-      group.controls.Quantity.disable();
-      group.controls.IssueMethod.disable();
-      this.formGroup.updateValueAndValidity();
-    }
-    if (group.controls.Type.value == 'CTItem') {
-      group.controls._Item.enable();
-      group.controls.IDItem.enable();
-      group.controls.IDUoM.enable();
-      group.controls.UoMPrice.enable();
-      group.controls.Quantity.enable();
-      group.controls.IssueMethod.enable();
-      this.formGroup.updateValueAndValidity();
-    }
-    //if(!stop) this.saveChange();
-  }
-
-  findInvalidControls(fg) {
-    const invalid = [];
-    const controls = fg.controls;
-    for (const name in controls) {
-      if (controls[name].invalid) {
-        invalid.push(name);
-
-        if (controls[name]['controls']) {
-          this.findInvalidControls(controls[name]);
-        }
-      }
-    }
-    return invalid;
-  }
   segmentView = 's1';
   segmentChanged(ev: any) {
     this.segmentView = ev.detail.value;
   }
 
   async saveChange() {
-    this.calcTotalLine();
+    // this.calcTotalLine();
 
-    if (this.formGroup.controls.Lines.valid) {
-      return super.saveChange2();
-    }
+    // if (this.formGroup.controls.Lines.valid) {
+    //   return super.saveChange2();
+    // }
   }
 
-  async calcTotalLine(resetPrice = false) {
-    if (this.formGroup.controls.Lines) {
-      this.item.TotalPrice = 0;
-      this.item.TotalStdCost = 0;
-
-      this.formGroup.controls.Lines['controls'].forEach((group: FormGroup) => {
-        if (resetPrice) {
-          this.changedIDUoM(group, false);
-        }
-
-        let totalPrice =
-          (group.controls.UoMPrice.value * group.controls.Quantity.value) / this.formGroup.controls.Quantity.value;
-        group.controls.TotalPrice.setValue(totalPrice);
-
-        let totalStdCost =
-          (group.controls.StdCost.value * group.controls.Quantity.value) / this.formGroup.controls.Quantity.value +
-          group.controls.StdCost.value *
-            (group.controls.AdditionalQuantity.value / this.formGroup.controls.BatchSize.value);
-        group.controls.TotalStdCost.setValue(totalStdCost);
-
-        this.item.TotalPrice += totalPrice;
-        this.item.TotalStdCost += totalStdCost;
-      });
-
-      if (resetPrice) this.saveChange();
-    }
-
-    // this.item.TotalDiscount = this.formGroup.controls.Lines.value.map(x => x.TotalDiscount).reduce((a, b) => (+a) + (+b), 0);
-    // this.item.TotalAfterTax = this.formGroup.controls.Lines.value.map(x => x.IsPromotionItem ? 0 : (x.UoMPrice * x.UoMQuantityExpected - x.TotalDiscount)).reduce((a, b) => (+a) + (+b), 0)
-  }
-
-  resetPrice() {
-    this.env.showPrompt('Bạn chắc muốn lấy lại giá theo bảng giá đang chọn?', null, 'Reset price').then((_) => {
-      this.calcTotalLine(true);
-    });
-  }
-
-  changePriceList() {
-    this.saveChange().then((_) => {
-      this.refresh();
-    });
-  }
-
-  count;
-  changeSoLuong(group, e = null) {
-    this.count++;
-    if (e) {
-      this.calcTotalLine();
-    }
-  }
-
-  saveSoLuong() {
-    this.saveChange();
-  }
 
   async saveAll() {
     if (this.removedItems?.length) {
@@ -571,106 +465,31 @@ export class ProductionOrderDetailPage extends PageBase {
     this.saveChange();
   }
 
-  printBOM() {
-    this.nav('bill-of-materials/note/' + this.id);
-  }
 
   doReorder(ev, groups) {
+    let obj = [];
     groups = ev.detail.complete(groups);
     for (let i = 0; i < groups.length; i++) {
       const g = groups[i];
       g.controls.Sort.setValue(i + 1);
       g.controls.Sort.markAsDirty();
-    }
-
-    this.saveChange();
-  }
-
-  importClick() {
-    this.importfile.nativeElement.value = '';
-    this.importfile.nativeElement.click();
-  }
-
-  async uploadBOMDetail(event) {
-    if (event.target.files.length == 0) return;
-
-    const loading = await this.loadingController.create({
-      cssClass: 'my-custom-class',
-      message: 'Vui lòng chờ import dữ liệu',
-    });
-    await loading.present().then(() => {
-      const formData: FormData = new FormData();
-      formData.append('fileKey', event.target.files[0], event.target.files[0].name);
-
-      this.commonService
-        .connect('UPLOAD', 'PROD/BillOfMaterials/ImportExcel/' + this.formGroup.get('Id').value, formData)
-        .toPromise()
-        .then((resp: any) => {
-          this.refresh();
-          if (loading) loading.dismiss();
-
-          if (resp.ErrorList && resp.ErrorList.length) {
-            let message = '';
-            for (let i = 0; i < resp.ErrorList.length && i <= 5; i++)
-              if (i == 5) message += '<br> Còn nữa...';
-              else {
-                const e = resp.ErrorList[i];
-                message += '<br> ' + e.Id + '. Tại dòng ' + e.Line + ': ' + e.Message;
-              }
-
-            this.alertCtrl
-              .create({
-                header: 'Có lỗi import dữ liệu',
-                subHeader: 'Bạn có muốn xem lại các mục bị lỗi?',
-                message: 'Có ' + resp.ErrorList.length + ' lỗi khi import:' + message,
-                cssClass: 'alert-text-left',
-                buttons: [
-                  {
-                    text: 'Không',
-                    role: 'cancel',
-                    handler: () => {},
-                  },
-                  {
-                    text: 'Có',
-                    cssClass: 'success-btn',
-                    handler: () => {
-                      this.downloadURLContent(resp.FileUrl);
-                    },
-                  },
-                ],
-              })
-              .then((alert) => {
-                alert.present();
-              });
-          } else {
-            this.env.showTranslateMessage('Import completed!', 'success');
-            this.env.publishEvent({
-              Code: this.pageConfig.pageName,
-            });
-          }
-        })
-        .catch((err) => {
-          if (err.statusText == 'Conflict') {
-            this.downloadURLContent(err._body);
-          }
-          if (loading) loading.dismiss();
-        });
-    });
-  }
-
-  exportClick() {
-    if (this.submitAttempt) return;
-    this.query.Id = this.formGroup.get('Id').value;
-    this.submitAttempt = true;
-    this.env
-      .showLoading('Vui lòng chờ export dữ liệu...', this.pageProvider.export(this.query))
-      .then((response: any) => {
-        this.downloadURLContent(response);
-        this.submitAttempt = false;
-      })
-      .catch((err) => {
-        this.submitAttempt = false;
+      obj.push({
+        Id: g.get('Id').value,
+        Sort: g.get('Sort').value,
       });
+    }
+    // if (obj.length > 0) {
+    //   this.pageProvider.commonService
+    //     .connect('PUT', 'putSort', obj)
+    //     .toPromise()
+    //     .then((rs) => {
+    //       if (rs) {
+    //         this.env.showTranslateMessage('Saving completed!', 'success');
+    //       } else {
+    //         this.env.showTranslateMessage('Cannot save, please try again', 'danger');
+    //       }
+    //     });
+    // }
   }
 
 }
