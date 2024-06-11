@@ -267,11 +267,14 @@ export class BillOfMaterialsDetailPage extends PageBase {
       this.itemListInput$.pipe(
         distinctUntilChanged(),
         tap(() => (this.itemListLoading = true)),
-        switchMap((term) =>
-          this.itemProvider.search({ Take: 20, Skip: 0, Term: term }).pipe(
-            catchError(() => of([])), // empty list on error
-            tap(() => (this.itemListLoading = false)),
-          ),
+        switchMap(
+          (term) =>
+            (this.query = this.commonService
+              .connect('GET', 'PROD/BillOfMaterials/ItemSearch/', { Take: 20, Skip: 0, Term: term })
+              .pipe(
+                catchError(() => of([])),
+                tap(() => (this.itemListLoading = false)),
+              )),
         ),
       ),
     );
