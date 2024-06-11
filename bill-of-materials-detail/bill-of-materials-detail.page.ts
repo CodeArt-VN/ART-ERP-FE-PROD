@@ -24,7 +24,7 @@ import { catchError, distinctUntilChanged, switchMap, tap } from 'rxjs/operators
 })
 export class BillOfMaterialsDetailPage extends PageBase {
   @ViewChild('importfile') importfile: any;
-  
+
   segmentView = {
     Page: 's1',
     ShowSpinner: true,
@@ -525,4 +525,22 @@ export class BillOfMaterialsDetailPage extends PageBase {
       });
   }
 
+  IDItemChange(e) {
+    let itemBOM = e.BOMs.find((f) => f.Type == this.formGroup.controls.Type.value && f.IDBOM != this.item.Id);
+    if (itemBOM) {
+      this.env
+        .showPrompt('Bạn có muốn xem định mức này không?', null, 'Đã thiết lập BOM cho sản phẩm ' + e.Name)
+        .then((_) => {
+          this.nav('bill-of-materials/' + itemBOM.IDBOM);
+          this.id = itemBOM.IDBOM;
+          this.loadData();
+        })
+        .catch((_) => {
+          this.formGroup.controls.IDItem.setValue(this.item.IDItem);
+          this.itemSearch();
+        });
+    } else {
+      this.saveChange();
+    }
+  }
 }

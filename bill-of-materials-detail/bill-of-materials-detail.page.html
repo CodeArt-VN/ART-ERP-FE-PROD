@@ -137,7 +137,7 @@
                   </label>
                   <ng-select
                     class="c-input"
-                    (change)="saveChange();"
+                    (change)="IDItemChange($event);"
                     labelForId="IDItem"
                     formControlName="IDItem"
                     [items]="itemList$ | async"
