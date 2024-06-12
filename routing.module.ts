@@ -6,6 +6,9 @@ export const PRODRoutes: Routes = [
     { path: 'bill-of-materials', loadChildren: () => import('./bill-of-materials/bill-of-materials.module').then(m => m.BillOfMaterialsPageModule), canActivate: [AuthGuard] },
     { path: 'bill-of-materials/:id', loadChildren: () => import('./bill-of-materials-detail/bill-of-materials-detail.module').then(m => m.BillOfMaterialsDetailPageModule), canActivate: [AuthGuard] },
     { path: 'bill-of-materials/note/:id', loadChildren: () => import('./bill-of-materials-note/bill-of-materials-note.module').then(m => m.BillOfMaterialsNotePageModule), canActivate: [AuthGuard] },
+
+    { path: 'production-order', loadChildren: () => import('./production-order/production-order.module').then(m => m.ProductionOrderPageModule), canActivate: [AuthGuard] },
+    { path: 'production-order/:id', loadChildren: () => import('./production-order-detail/production-order-detail.module').then(m => m.ProductionOrderDetailPageModule), canActivate: [AuthGuard] },
     
     { path: 'order-recommendation', loadChildren: () => import('./order-recommendation/order-recommendation.module').then(m => m.OrderRecommendationPageModule), canActivate: [AuthGuard] },
     
