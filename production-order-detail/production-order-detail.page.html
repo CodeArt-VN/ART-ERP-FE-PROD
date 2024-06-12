@@ -4,7 +4,7 @@
 </ion-header>
 
 <ion-content appScrollbarTheme class="ion-padding">
-  <div class="main-view" *ngIf="item && pageConfig.showSpinner==false">
+  <div id="production-order-page" class="main-view" *ngIf="item && pageConfig.showSpinner==false">
     <ion-grid fixed>
       <form [formGroup]="formGroup">
         <ion-row class="hr-group">
@@ -25,9 +25,35 @@
               (change)="saveChange()">
             </app-form-control>
 
-            <app-form-control [field]="{id:'IDBOM', label: 'BOM', type : 'span-text', form : formGroup }"
-              (change)="saveChange()">
-            </app-form-control>
+            <div class="c-control">
+              <label class="c-label" for="IDBOM">{{'BOM' | translate}}
+                <span
+                  *ngIf="!formGroup.controls.IDBOM.valid && !formGroup.controls.IDBOM.pending && (formGroup.controls.IDBOM.dirty || submitAttempt)"
+                  ion-text color="danger">(*)</span>
+              </label>
+              <ng-select class="c-input" (change)="saveChange();" labelForId="IDBOM" formControlName="IDBOM"
+                [items]="itemList$ | async" [typeahead]="itemListInput$" [virtualScroll]="true" bindLabel="Name"
+                bindValue="Id" placeholder="{{'Search for name or product code' | translate}}">
+                <ng-template ng-label-tmp let-i="item">
+                  <div *ngIf="i.Id">
+                    <a [routerLink]="['/bill-of-materials/'+i.Id]" (mousedown)="$event.stopPropagation()">#{{i.Id}}
+                      <ion-icon name="open-outline"></ion-icon></a>
+                    <span [title]="i._Item?.Name">
+                      <b *ngIf="i._Item?.Code" (mousedown)="$event.stopPropagation()">{{i._Item?.Code}}</b>
+                      {{i._Item?.Name}}</span>
+                  </div>
+                </ng-template>
+                <ng-template ng-option-tmp let-i="item" let-search="searchTerm">
+                  <div *ngIf="i">
+                    <div>
+                      <span [ngOptionHighlight]="search">{{i._Item?.Name}}</span>
+                    </div>
+                    <small>#<b><span class="important" [ngOptionHighlight]="search">{{i.Id}} -
+                          {{i._Item?.Code}}</span></b></small>
+                  </div>
+                </ng-template>
+              </ng-select>
+            </div>
 
             <app-form-control
               [field]="{id:'PlannedQuantity', label: 'Planned quantity', type : 'number', form : formGroup }"
@@ -40,9 +66,9 @@
                   *ngIf="!formGroup.controls.IDWarehouse.valid && !formGroup.controls.IDWarehouse.pending && (formGroup.controls.IDWarehouse.dirty || submitAttempt)"
                   ion-text color="danger">(*)</span>
               </label>
-              <ng-select class="c-input" (change)="changeWarehouse($event);" labelForId="IDWarehouse"
-                formControlName="IDWarehouse" [items]="branchList" [virtualScroll]="true" bindLabel="Name"
-                bindValue="Id" placeholder="{{'erp.app.pages.purchase.purchase-order.search-placeholder' | translate}}">
+              <ng-select class="c-input" (change)="saveChange();" labelForId="IDWarehouse" formControlName="IDWarehouse"
+                [items]="branchList" [virtualScroll]="true" bindLabel="Name" bindValue="Id"
+                placeholder="{{'erp.app.pages.purchase.purchase-order.search-placeholder' | translate}}">
                 <ng-template ng-option-tmp let-i="item" let-search="searchTerm">
                   <div *ngIf="i">
                     <div> <span *ngFor="let l of i.levels">&nbsp;&nbsp;&nbsp;</span> <span
@@ -51,14 +77,12 @@
                 </ng-template>
               </ng-select>
             </div>
-
             <app-form-control
               [field]="{id:'OrderDate', label: 'Order date', type : 'datetime-local', placeholder: 'yyyy-MM-dd', form : formGroup }"
               (change)="saveChange()">
             </app-form-control>
-
           </ion-col>
-
+          
           <ion-col size="12" size-sm size-xl="4">
             <app-form-control
               [field]="{id:'StartDate', label: 'Start date', type : 'datetime-local', placeholder: 'yyyy-MM-dd', form : formGroup }"
@@ -68,12 +92,12 @@
               [field]="{id:'DueDate', label: 'Due date', type : 'datetime-local', placeholder: 'yyyy-MM-dd', form : formGroup }"
               (change)="saveChange()">
             </app-form-control>
-            <app-form-control [field]="{id:'IDSaleOrder', label: 'SalesOrder', type : 'span-text', form : formGroup }"
+            <app-form-control [field]="{id:'IDSaleOrder', label: 'SalesOrder', type : 'number', form : formGroup }"
               (change)="saveChange()">
             </app-form-control>
             <app-form-control
               [field]="{id:'IDCustomer', label: 'Customer', type : 'ng-select-bp', form : formGroup,  dataSource: _contactDataSource,  bindValue: 'Id' }"
-              (change)="IDBusinessPartnerChange($event);" (nav)="nav($event)">
+              (change)="saveChange();">
             </app-form-control>
             <app-form-control [field]="{id:'PickRemark', label: 'Pick & Pack remark', type : 'text', form : formGroup }"
               (change)="saveChange()">
@@ -95,133 +119,154 @@
         </ion-segment>
       </ion-toolbar>
 
-      <div class="table-contain" *ngIf="segmentView == 's1'">
-
-        <section class="table responsive">
-
-          <header class="bold">
-            <div class="col-reorder cell" *ngIf="pageConfig.canEdit"></div>
-            <div class="col-checkbox cell">
-              <input (change)="toggleSelectAll()" [(ngModel)]="isAllChecked" class="c-checkbox" type="checkbox">
-            </div>
-            <div class="col-id cell">#</div>
-
-            <div class="col-name cell">
-              {{'Name' | translate}}
-            </div>
-
-            <div class="col-uom cell">
-              {{'Type' | translate}}
-            </div>
-            <div class="col-date cell">
-              {{'Start date' | translate}}
-            </div>
-
-            <div class="col-date cell">
-              {{'End date' | translate}}
-            </div>
-
-            <div class="col-qty cell">
-              {{'Production time' | translate}}
-            </div>
-
-            <div class="col-qty cell">
-              {{'Base qty' | translate}}
-            </div>
-
-            <div class="col-qty cell">
-              {{'Planned qty' | translate}}
-            </div>
-
-            <div class="col-status cell">
-              {{'Issue method' | translate}}
-            </div>
-
-            <div class="col-status cell">
-              {{'Status' | translate}}
-            </div>
-            <div class="col-icon cell">
-
-            </div>
-          </header>
-          <ion-reorder-group (ionItemReorder)="doReorder($event, formGroup.get('ProductionOrderDetails')['controls'])"
-            [disabled]="!pageConfig.canEdit">
-            <app-page-message [itemsLength]="formGroup.get('ProductionOrderDetails')['controls']"
-              [showSpinner]="pageConfig.showSpinner"></app-page-message>
-            <ng-container *ngIf="!pageConfig.showSpinner">
-              <div *ngFor="let c of formGroup.get('ProductionOrderDetails')['controls'] ;let j = index" class="row"
-                [ngClass]="{odd: j % 2 != 0}">
-                <ion-reorder slot="start"></ion-reorder>
-                <div class="col-checkbox cell" style="text-align: center;">
-                  <app-input-control [field]="{id:'IsChecked', type : 'checkbox', form : c, }"
-                    (change)="changeSelection(c,'main', $event)"></app-input-control>
-                </div>
-                <div class="col-id cell">{{j+1}}</div>
-
-                <div class="col-name cell">
-                  <div *ngIf="c.get('IDItem')?.value">
-                    <a [routerLink]="['/item/'+c.get('IDItem').value]"
-                      (mousedown)="$event.stopPropagation()">#{{c.get('IDItem').value}} <ion-icon
-                        name="open-outline"></ion-icon></a>
-                    <span [title]="c.get('ItemName')?.value"> {{c.get('ItemName').value}}</span>
+      <div *ngIf="!env.isMobile && segmentView == 's1'" class="row-full shadow full-screen"
+        [ngClass]="{'mobile-screen': env.isMobile}">
+        <form [formGroup]="formGroup">
+          <ng-container formArrayName="ProductionOrderDetails">
+            <div class="table-contain">
+              <section class="table" style="min-width: 1270px">
+                <header class="bold" style="padding-right: 0">
+                  <div class="col-id cell">#</div>
+                  <div class="col-uom cell">
+                    {{'Type' | translate}}
                   </div>
 
-                </div>
-                <div class="col-uom cell">
-                  {{c.get('Type')?.value}}
-                </div>
+                  <div class="col-name cell">
+                    {{'Name' | translate}}
+                  </div>
 
-                <div class="col-date cell">
-                  {{c.get('StartDate')?.value}}
-                </div>
+                  <div class="col-date cell">
+                    {{'Start date' | translate}}
+                  </div>
 
-                <div class="col-date cell">
-                  {{c.get('EndDate')?.value}}
-                </div>
+                  <div class="col-date cell">
+                    {{'End date' | translate}}
+                  </div>
 
-                <div class="col-qty cell">
-                  {{c.get('RequiredDays')?.value}}
-                </div>
+                  <div class="col-qty cell">
+                    {{'Production time' | translate}}
+                  </div>
 
-                <div class="col-qty cell">
-                  {{c.get('BaseQuantity')?.value}}
-                </div>
+                  <div class="col-qty cell">
+                    {{'Base qty' | translate}}
+                  </div>
 
-                <div class="col-qty cell">
-                  {{c.get('PlannedQuantity')?.value}}
-                </div>
+                  <div class="col-qty cell">
+                    {{'Planned qty' | translate}}
+                  </div>
 
-                <div class="col-status cell">
-                  {{c.get('IssueMethod')?.value}}
-                </div>
+                  <div class="col-status cell">
+                    {{'Issue method' | translate}}
+                  </div>
 
-                <div class="col-status cell">
-                  {{c.get('Status')?.value}}
-                </div>
-
-                <div class="col-icon cell" (click)="removeField(c,j)" clickable>
-
-                </div>
-              </div>
-            </ng-container>
-          </ion-reorder-group>
-        </section>
-
-      </div>
-      <div class="table-contain">
-        <div class="row" *ngIf="pageConfig.canEdit && this.id && item?.Lines?.length < 2">
-          <div class="cell">
-            <ion-button fill="clear" size="small" (click)="addOrderLine()">
-              <ion-icon slot="start" name="add-circle"></ion-icon>
-              {{'Add component' | translate}}
-            </ion-button>
-          </div>
-        </div>
+                  <div class="col-status cell">
+                    {{'Status' | translate}}
+                  </div>
+                </header>
+                <ng-container *ngFor="let g of formGroup.get('ProductionOrderDetails')['controls']; let idx = index;">
+                  <ng-container [formGroup]="g">
+                    <div class="row">
+                      <ion-reorder slot="start"></ion-reorder>
+                      <div class="col-id cell">{{idx+1}}</div>
+                      <div class="col-uom cell">
+                        <div class="col-uom cell">
+                          <select formControlName="Type"
+                            [attr.disabled]="(!pageConfig.canEdit || submitAttempt)?'':null" class="c-input c-dropdown"
+                            (change)="saveChange()">
+                            <option [disabled]="t.Flag" *ngFor="let t of componentTypeList" [value]="t.Code">
+                              {{t.Name}}
+                            </option>
+                          </select>
+                        </div>
+                      </div>
+                      <ng-container *ngIf="g.controls.Type.value!='CTItem'">
+                        <div class="col-name cell">
+                          <app-input-control [field]="{id:'Name', type : 'text', form : g, }"
+                            (change)="saveChangeDetail(g)"></app-input-control>
+                        </div>
+                      </ng-container>
+                      <ng-container *ngIf="g.controls.Type.value =='CTItem'">
+                        <div class="col-name cell">
+                          <ng-select formControlName="_Item" appendTo="#production-order-page"
+                            [readonly]="!pageConfig.canEdit || submitAttempt" class="c-input"
+                            (change)="changedIDItem(g, $event)" [labelForId]="'IDItem'+idx"
+                            [items]="g.controls._ItemDataSource.value | async" [clearable]="false"
+                            [typeahead]="g.controls._ItemSearchInput.value"
+                            [loading]="g.controls._ItemSearchLoading.value" [virtualScroll]="true" bindLabel="Name"
+                            placeholder="{{'Search for name or product code' | translate}}">
+                            <ng-template ng-label-tmp let-i="item">
+                              <div *ngIf="i.Id">
+                                <a [routerLink]="['/item/'+i.Id]" (mousedown)="$event.stopPropagation()">#{{i.Id}}
+                                  <ion-icon name="open-outline"></ion-icon></a>
+                                <span [title]="i.Name">
+                                  <b *ngIf="i.Code" (mousedown)="$event.stopPropagation()">{{i.Code}}</b>
+                                  {{i.Name}}</span>
+                              </div>
+                            </ng-template>
+                            <ng-template ng-option-tmp let-i="item" let-search="searchTerm">
+                              <div *ngIf="i">
+                                <div>
+                                  <span [ngOptionHighlight]="search">{{i.Name}}</span>
+                                </div>
+                                <small>#<b><span class="important" [ngOptionHighlight]="search">{{i.Id}} -
+                                      {{i.Code}}</span></b></small>
+                              </div>
+                            </ng-template>
+                          </ng-select>
+                        </div>
+                        <div class="col-date cell">
+                          <app-input-control [field]="{id:'StartDate', type: 'datetime-local' , form : g }"
+                            (change)="saveChangeDetail(g)"></app-input-control>
+                        </div>
+                        <div class="col-date cell">
+                          <app-input-control [field]="{id:'EndDate', type: 'datetime-local' , form : g }"
+                            (change)="saveChangeDetail(g)"></app-input-control>
+                        </div>
+                        <div class="col-qty cell">
+                          <app-input-control [field]="{id:'RequiredDays', type : 'number', form : g, }"
+                            (change)="saveChangeDetail(g)"></app-input-control>
+                        </div>
+                        <div class="col-qty cell">
+                          <app-input-control [field]="{id:'BaseQuantity', type : 'number', form : g, }"
+                            (change)="saveChangeDetail(g)"></app-input-control>
+                        </div>
+                        <div class="col-qty cell">
+                          <app-input-control [field]="{id:'PlannedQuantity', type : 'number', form : g, }"
+                            (change)="saveChangeDetail(g)"></app-input-control>
+                        </div>
+                        <div class="col-status cell">
+                          <select formControlName="IssueMethod"
+                            [attr.disabled]="(!pageConfig.canEdit || submitAttempt)?'':null" class="c-input c-dropdown"
+                            (change)="saveChange()">
+                            <option [disabled]="t.Flag" *ngFor="let t of issueMethodList" [value]="t.Code">
+                              {{t.Name}}
+                            </option>
+                          </select>
+                        </div>
+                        <div class="col-status cell">
+                          <select formControlName="Status"
+                            [attr.disabled]="(!pageConfig.canEdit || submitAttempt)?'':null" class="c-input c-dropdown"
+                            (change)="saveChange()">
+                            <option *ngFor="let t of statusList" [value]="t.Code">
+                              {{t.Name}}
+                            </option>
+                          </select>
+                        </div>
+                      </ng-container>
+                    </div>
+                  </ng-container>
+                </ng-container>
+              </section>
+            </div>
+          </ng-container>
+        </form>
       </div>
       <div *ngIf="segmentView == 's2'">
         <div class="ion-padding">
           <ion-grid fixed>
             <form [formGroup]="formGroup">
+
+              <!-- Group cost -->
               <ion-row class="hr-group">
                 <ion-col size="12" size-sm="12" size-md="12" size-xl="4">
                   <ion-list-header class="ion-no-padding">
@@ -249,6 +294,7 @@
                 </ion-col>
               </ion-row>
 
+              <!-- Group quantity -->
               <ion-row class="hr-group">
                 <ion-col size="12" size-sm="12" size-md="12" size-xl="4">
                   <ion-list-header class="ion-no-padding">
@@ -267,6 +313,8 @@
                     (change)="saveChange()"></app-form-control>
                 </ion-col>
               </ion-row>
+
+              <!-- Group dates -->
               <ion-row class="hr-group">
                 <ion-col size="12" size-sm="12" size-md="12" size-xl="4">
                   <ion-list-header class="ion-no-padding">
