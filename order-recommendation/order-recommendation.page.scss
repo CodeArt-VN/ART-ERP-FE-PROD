@@ -10,7 +10,7 @@
     background: transparent;
   }
   .row {
-    background: var(--ion-color-tertiary-tint);
+    background: var(--table-row-background);
 
     &.selected {
       font-weight: bold;

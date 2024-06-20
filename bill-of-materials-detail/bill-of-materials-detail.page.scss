@@ -478,7 +478,7 @@ ion-card.bom-details {
 
   ion-card-header {
     padding-top: 45px;
-    background: var(--ion-color-tertiary-tint);
+    background: var(--table-row-background);
     border-radius: 10px 10px 0 0;
     .ngay-hd {
       font-size: calc(10/16 * 1.1rem);
@@ -489,7 +489,7 @@ ion-card.bom-details {
   }
 
   ion-card-content {
-    background: var(--ion-color-tertiary-tint);
+    background: var(--table-row-background);
     color: var(--ion-color-dark);
     padding-bottom: 0;
     // padding-top: 20px;
@@ -505,7 +505,7 @@ ion-card.bom-details {
   }
 
   .card-footer {
-    background: var(--ion-color-tertiary-tint);
+    background: var(--table-row-background);
     border-radius: 0 0 10px 10px;
   }
 
