@@ -7,6 +7,7 @@ import {
   BRA_BranchProvider,
   SALE_ForecastDetailProvider,
   SALE_ForecastProvider,
+  SYS_SchemaProvider,
   // PROD_ForecastDetailProvider,
   // PROD_ForecastProvider,
   SYS_TypeProvider,
@@ -29,7 +30,7 @@ export class ForecastDetailPage extends PageBase {
   branchList = [];
   itemsState = [];
   columnView = [];
-  //removedItem
+  schema: any;
   removedItems = [];
   periodSubscription: Subscription;
 
@@ -41,6 +42,7 @@ export class ForecastDetailPage extends PageBase {
     public itemProvider: WMS_ItemProvider,
     public typeProvider: SYS_TypeProvider,
     public priceListProvider: WMS_PriceListProvider,
+    public schemaService: SYS_SchemaProvider,
 
     public env: EnvService,
     public navCtrl: NavController,
@@ -63,7 +65,7 @@ export class ForecastDetailPage extends PageBase {
       StartDate: ['', Validators.required],
       EndDate: ['', Validators.required],
       Name: ['',Validators.required],
-      Period: ['Daily', Validators.required],
+      Period: ['',Validators.required],
       Rows: this.formBuilder.array([]),
       Cells: this.formBuilder.array([]),
       Remark: [''],
@@ -107,13 +109,17 @@ export class ForecastDetailPage extends PageBase {
     this.item.StartDate = lib.dateFormat(this.item.StartDate);
     this.item.EndDate = lib.dateFormat(this.item.EndDate);
     super.loadedData(event, ignoredFromGroup);
-    this.formGroup.controls.Period.markAsDirty();
     this.formGroup.controls.IDBranch.markAsDirty();
     if (this.item.Id > 0) {
       this.item.ForeCastDetails?.forEach((i) => (i.Date = lib.dateFormat(i.Date)));
       this.renderView();
       this.patchCellsValue();
     }
+    this.schemaService.getAnItem(13)
+    .then((value: any) => {
+        if (value)
+            this.schema = value;
+    });
   }
 
   renderView(reRender = false) {
@@ -567,6 +573,32 @@ export class ForecastDetailPage extends PageBase {
           });
       });
   }
+  
+  saveConfig(e) {
+    e.Logicals?.unshift({
+        Dimension: 'IDBranch',
+        Logicals: [],
+        Operator: "=",
+        Value: this.formGroup.get('IDBranch').value
+    })
+
+    let config = {
+        Schema: { Id: 2, Type: "DBView", Code: "WMS_LotLocLPN", Name: "Báo cáo tồn kho" },
+        CompareBy: [{ Property: "ItemId" }, { Property: "ItemName" }, { Property: "UoMId" }],
+        MeasureBy: [{ Property: "QuantityOnHand", Method: "sum", Title: "CurrentQuantity" }],
+        Transform: { Filter: e }
+    }
+   
+        config.CompareBy.push({ Property: 'LocationId' }, { Property: 'LocationName' })
+        config.CompareBy.push({ Property: 'LotId' })
+        console.log(e);
+    // this.env.showLoading('Vui lòng chờ load dữ liệu...', this.pageProvider.commonService.connect('POST', 'BI/Schema/QueryReportData', config).toPromise())
+    //     .then((data: any) => {
+    //         if (data) {
+    //           console.log(data);
+    //         }
+    //     })
+}
 
   toggleSelectAll() {
     if (!this.pageConfig.canEdit) return;
