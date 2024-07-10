@@ -62,21 +62,22 @@ export class ForecastDetailPage extends PageBase {
       }),
       StartDate: ['', Validators.required],
       EndDate: ['', Validators.required],
-      Name: ['',Validators.required],
+      Name: ['', Validators.required],
       Period: ['Daily', Validators.required],
       Rows: this.formBuilder.array([]),
       Cells: this.formBuilder.array([]),
       Remark: [''],
+      Multiply: 0,
       IsDisabled: new FormControl({ value: '', disabled: true }),
       IsDeleted: [''],
       CreatedBy: new FormControl({ value: '', disabled: true }),
       CreatedDate: new FormControl({ value: '', disabled: true }),
       ModifiedBy: new FormControl({ value: '', disabled: true }),
       ModifiedDate: new FormControl({ value: '', disabled: true }),
+      LinePeriod: this.formBuilder.array([]),
     });
   }
 
-  
   preLoadData(event) {
     this.viewDataSource = [
       { Name: 'Daily', Code: 'Daily' },
@@ -114,6 +115,8 @@ export class ForecastDetailPage extends PageBase {
       this.renderView();
       this.patchCellsValue();
     }
+
+    this.loadDataTemp();
   }
 
   renderView(reRender = false) {
@@ -271,7 +274,7 @@ export class ForecastDetailPage extends PageBase {
           searchProvider: this.itemProvider,
           loading: false,
           input$: new Subject<string>(),
-          existedItems : groups.controls.map(d=>d.get('IDItem').value),
+          existedItems: groups.controls.map((d) => d.get('IDItem').value),
           selected: [
             {
               Id: row?.IDItem,
@@ -293,7 +296,7 @@ export class ForecastDetailPage extends PageBase {
                       Take: 20,
                       Skip: 0,
                       Term: term,
-                      Id_ne:this.existedItems.length>0? this.existedItems:''
+                      Id_ne: this.existedItems.length > 0 ? this.existedItems : '',
                     })
                     .pipe(
                       catchError(() => of([])), // empty list on error
@@ -368,8 +371,7 @@ export class ForecastDetailPage extends PageBase {
           });
       }
     } else {
-     
-          this.saveChange2(); // savechange View hoặc Date
+      this.saveChange2(); // savechange View hoặc Date
     }
   }
   changeItem(ev, row) {
@@ -458,7 +460,7 @@ export class ForecastDetailPage extends PageBase {
         Id: fg.get('Id').value,
       };
     });
-    if(deletedIds.length==0){
+    if (deletedIds.length == 0) {
       if (!fg.get('IDItem').value) {
         let rowsEmpty = groupRows.controls.filter((d) => d.get('Key').value === 'undefined-undefined');
         for (let i = rowsEmpty.length - 1; i >= 0; i--) {
@@ -469,14 +471,15 @@ export class ForecastDetailPage extends PageBase {
           }
         }
         return;
-      }
-      else{
-        let index = groupRows.controls.findIndex((d) => d.get('Key').value == 'undefined-undefined' && d.get('IDItem').value == fg.get('IDItem').value);
+      } else {
+        let index = groupRows.controls.findIndex(
+          (d) => d.get('Key').value == 'undefined-undefined' && d.get('IDItem').value == fg.get('IDItem').value,
+        );
         if (index) groupRows.removeAt(index);
         return;
       }
     }
-    
+
     //  let deleteIds = filteredIds?.map((filteredControl) => filteredControl.get('Id').value);
     this.env.showPrompt('Bạn chắc muốn xóa ?', null, 'Xóa ' + deletedIds.length + ' dòng').then((_) => {
       this.forecastDetailService.delete(deletedIds).then((_) => {
@@ -514,7 +517,7 @@ export class ForecastDetailPage extends PageBase {
     if (i.get('IsChecked').value) {
       this.checkedRows.push(i);
     } else {
-      let index = this.checkedRows.getRawValue().indexOf(i);//getRawValue().findIndex((d) => d.Id == i.get('Id').value);
+      let index = this.checkedRows.getRawValue().indexOf(i); //getRawValue().findIndex((d) => d.Id == i.get('Id').value);
       this.checkedRows.removeAt(index);
     }
   }
@@ -580,20 +583,18 @@ export class ForecastDetailPage extends PageBase {
     });
   }
   changePeriodAndDate() {
-    if(this.submitAttempt){
+    if (this.submitAttempt) {
       return;
     }
     console.log('Initial value:', this.formGroup.controls.StartDate.value);
     this.submitAttempt = true;
     let groupCells = <FormArray>this.formGroup.controls.Cells;
     if (groupCells.controls.length > 0) {
-      
       this.env
         .showPrompt('Thay đổi chu kỳ sẽ xoá hết dữ liệu dự báo, bạn có tiếp tục?', null, 'Xóa')
         .then((_) => {
           this.submitAttempt = false;
           this.renderView(true);
-
         })
         .catch((er) => {
           this.submitAttempt = false;
@@ -609,26 +610,25 @@ export class ForecastDetailPage extends PageBase {
     }
   }
 
-  createBOMRecommendation(){
+  createBOMRecommendation() {
     let subQuery = {
       Id: this.item.Id,
-    }
-      this.env
-          .showLoading('Xin vui lòng chờ trong giây lát...',  this.commonService
-          .connect('POST', 'SALE/Forecast/CreateBOMRecommendation/'+ this.item.Id, subQuery).toPromise())
-          .then((result) => {
-            console.log(result);
-            if(result){
-              this.env.showTranslateMessage('Saved','success');
-
-            }
-            else
-            {
-              this.env.showTranslateMessage('Cannot save, please try again','danger');
-            }
-
-          })
-  
+    };
+    this.env
+      .showLoading(
+        'Xin vui lòng chờ trong giây lát...',
+        this.commonService
+          .connect('POST', 'SALE/Forecast/CreateBOMRecommendation/' + this.item.Id, subQuery)
+          .toPromise(),
+      )
+      .then((result) => {
+        console.log(result);
+        if (result) {
+          this.env.showTranslateMessage('Saved', 'success');
+        } else {
+          this.env.showTranslateMessage('Cannot save, please try again', 'danger');
+        }
+      });
   }
 
   @ViewChild('importfile') importfile: any;
@@ -737,5 +737,144 @@ export class ForecastDetailPage extends PageBase {
   segmentView = 's1';
   segmentChanged(ev: any) {
     this.segmentView = ev.detail.value;
+  }
+
+  addPeriod() {
+    console.log(this.columnView);
+  }
+
+  deletePeriod() {}
+
+  loadDataTemp() {
+    let dataTemp = [
+      {
+        Id: 1,
+        Period: 'Daily',
+        FromDate: '2024-07-01',
+        ToDate: '2024-07-07',
+        Multiply: 1,
+      },
+      {
+        Id: 2,
+        Period: 'Weekly',
+        FromDate: '2024-06-01',
+        ToDate: '2024-06-07',
+        Multiply: 2,
+      },
+      {
+        Id: 3,
+        Period: 'Daily',
+        FromDate: '2024-06-08',
+        ToDate: '2024-06-18',
+        Multiply: 5,
+      },
+    ];
+    console.log(JSON.stringify(dataTemp));
+
+    dataTemp.forEach((e) => {
+      this.addLinePeriod(e);
+    });
+  }
+
+  addLinePeriod(line: any, markAsDirty = false) {
+    let groups = <FormArray>this.formGroup.controls.LinePeriod;
+    let group = this.formBuilder.group({
+      Id: new FormControl({ value: line.Id, disabled: true }),
+      FromDate: [line?.FromDate],
+      ToDate: [line?.ToDate],
+      Multiply: [line?.Multiply],
+      Period: [line?.Period],
+      IsChecked: new FormControl({ value: false, disabled: false }),
+    });
+    //group.get('IDItem').markAsDirty();
+    groups.push(group);
+  }
+
+  generatorForecastPeriod() {
+    //let subQuery = '{"Schema":{"Id":2,"Type":"DBView","Code":"SALE_OrderDetail","Name":"Báo cáo đơn hàng chi tiết"},"TimeFrame":{"Dimension":"OrderDate","From":{"Type":"Absolute","IsPastDate":true,"Period":"Month","Amount":"15","Value":"2022-04-01T00:00:00"},"To":{"Type":"Absolute","IsPastDate":true,"Period":"Month","Amount":"14","Value":"2023-02-10T23:59:59"}},"CompareTo":{"Type":"Relative","IsPastDate":true,"Period":"Day","Amount":0,"Value":"2024-07-09T00:00:00"},"Interval":{"Property":"OrderDate","Type":"DayOfWeek","Title":null},"CompareBy":[{"Property":"ItemName","Title":""}],"MeasureBy":[{"Property":"ShippedQuantity","Method":"sum","Title":""}],"Transform":{"Filter":{"Dimension":"logical","Operator":"AND","Value":null,"Logicals":[{"UniqueId":"1720493421066b0a6132f4c5","Dimension":"IDItem","Operator":"IN","Value":"12003,52245,11642","Logicals":[]}],"UniqueId":"1720493421066a4aa799414a"}}}'
+
+    let subQuery = {
+      Schema: {
+        Id: 2,
+        Type: 'DBView',
+        Code: 'SALE_OrderDetail',
+        Name: 'Báo cáo đơn hàng chi tiết',
+      },
+      TimeFrame: {
+        Dimension: 'OrderDate',
+        From: {
+          Type: 'Absolute',
+          IsPastDate: true,
+          Period: 'Month',
+          Amount: '15',
+          Value: '2022-04-01T00:00:00',
+        },
+        To: {
+          Type: 'Absolute',
+          IsPastDate: true,
+          Period: 'Month',
+          Amount: '14',
+          Value: '2023-02-10T23:59:59',
+        },
+      },
+      CompareTo: {
+        Type: 'Relative',
+        IsPastDate: true,
+        Period: 'Day',
+        Amount: 0,
+        Value: '2024-07-09T00:00:00',
+      },
+      Interval: {
+        Property: 'OrderDate',
+        Type: 'DayOfWeek',
+        Title: null,
+      },
+      CompareBy: [
+        {
+          Property: 'ItemName',
+          Title: '',
+        },
+      ],
+      MeasureBy: [
+        {
+          Property: 'ShippedQuantity',
+          Method: 'sum',
+          Title: '',
+        },
+      ],
+      Transform: {
+        Filter: {
+          Dimension: 'logical',
+          Operator: 'AND',
+          Value: null,
+          Logicals: [
+            {
+              UniqueId: '1720493421066b0a6132f4c5',
+              Dimension: 'IDItem',
+              Operator: 'IN',
+              Value: '12003,52245,11642',
+              Logicals: [],
+            },
+          ],
+          UniqueId: '1720493421066a4aa799414a',
+        },
+      },
+    };
+
+    this.env
+      .showLoading(
+        'Xin vui lòng chờ trong giây lát...',
+        this.commonService
+          .connect('POST', 'SALE/Forecast/GeneratorForecastPeriod/' + this.item.Id, subQuery)
+          .toPromise(),
+      )
+      .then((result) => {
+        console.log(result);
+        if (result) {
+          this.env.showTranslateMessage('Saved', 'success');
+        } else {
+          this.env.showTranslateMessage('Cannot save, please try again', 'danger');
+        }
+      });
   }
 }
