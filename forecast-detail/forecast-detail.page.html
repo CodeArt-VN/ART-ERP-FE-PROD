@@ -45,7 +45,6 @@
             >
             </app-form-control>
           </ion-col>
-
           <ion-col size="12" size-sm size-xl="4">
             <app-form-control
               [field]="{id:'StartDate', label: 'Start date', type: 'date' , form : formGroup }"
@@ -55,6 +54,19 @@
               [field]="{id:'EndDate', label: 'End date', type: 'date' , form : formGroup }"
               (change)="changePeriodAndDate()"
             ></app-form-control>
+          </ion-col>
+        </ion-row>
+        <ion-row class="hr-group">
+          <ion-col size="12" size-sm="12" size-md="12" size-xl="3"></ion-col>
+          <ion-col size="12" size-sm="12" size-md="12" size-xl="8">
+            <app-filter
+              #appFilter
+              [schema]="schema"
+              [item]="config"
+              [smallWidth]="true"
+              (change)="appFilter.onFormSubmit($event)"
+              (submit)="saveConfig($event)"
+            ></app-filter>
           </ion-col>
         </ion-row>
       </form>

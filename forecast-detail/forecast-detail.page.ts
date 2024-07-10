@@ -7,6 +7,7 @@ import {
   BRA_BranchProvider,
   SALE_ForecastDetailProvider,
   SALE_ForecastProvider,
+  SYS_SchemaProvider,
   // PROD_ForecastDetailProvider,
   // PROD_ForecastProvider,
   SYS_TypeProvider,
@@ -29,9 +30,10 @@ export class ForecastDetailPage extends PageBase {
   branchList = [];
   itemsState = [];
   columnView = [];
-  //removedItem
+  schema: any;
   removedItems = [];
   periodSubscription: Subscription;
+  config;
 
   constructor(
     public pageProvider: SALE_ForecastProvider, //PROD_ForecastProvider,
@@ -41,6 +43,7 @@ export class ForecastDetailPage extends PageBase {
     public itemProvider: WMS_ItemProvider,
     public typeProvider: SYS_TypeProvider,
     public priceListProvider: WMS_PriceListProvider,
+    public schemaService: SYS_SchemaProvider,
 
     public env: EnvService,
     public navCtrl: NavController,
@@ -116,6 +119,10 @@ export class ForecastDetailPage extends PageBase {
       this.patchCellsValue();
     }
 
+    this.schemaService.getAnItem(2).then((value: any) => {
+      if (value) this.schema = value;
+    });
+    //this.config = this.saveConfig(null);
     this.loadDataTemp();
   }
 
@@ -571,6 +578,28 @@ export class ForecastDetailPage extends PageBase {
       });
   }
 
+  saveConfig(e) {
+    e?.Logicals?.unshift({
+      Dimension: 'IDBranch',
+      Logicals: [],
+      Operator: '=',
+      Value: this.formGroup.get('IDBranch').value,
+    });
+
+    let config = {
+      Schema: { Id: 2, Type: 'DBView', Code: 'SALE_OrderDetail', Name: 'Báo cáo đơn hàng chi tiết' },
+      Interval: {
+        Property: 'OrderDate',
+        Type: 'DayOfWeek',
+        Title: null,
+      },
+      CompareBy: [{ Property: 'ItemName' }],
+      MeasureBy: [{ Property: 'ShippedQuantity', Method: 'sum', Title: 'ShippedQuantity' }],
+      Transform: { Filter: e },
+    };
+    return config;
+  }
+
   toggleSelectAll() {
     if (!this.pageConfig.canEdit) return;
     let groups = <FormArray>this.formGroup.controls.Rows;
@@ -769,7 +798,6 @@ export class ForecastDetailPage extends PageBase {
         Multiply: 5,
       },
     ];
-    console.log(JSON.stringify(dataTemp));
 
     dataTemp.forEach((e) => {
       this.addLinePeriod(e);
@@ -831,6 +859,10 @@ export class ForecastDetailPage extends PageBase {
       },
       CompareBy: [
         {
+          Property: 'IDItem',
+          Title: '',
+        },
+        {
           Property: 'ItemName',
           Title: '',
         },
@@ -868,10 +900,55 @@ export class ForecastDetailPage extends PageBase {
           .connect('POST', 'SALE/Forecast/GeneratorForecastPeriod/' + this.item.Id, subQuery)
           .toPromise(),
       )
-      .then((result) => {
-        console.log(result);
+      .then((result: any) => {
         if (result) {
-          this.env.showTranslateMessage('Saved', 'success');
+          let dataItemPeriod: any = [];
+          let SumMultiply = 0;
+
+          result.forEach((e) => {
+            e.ListItem.forEach((e1) => {
+              e1.ShippedQuantity = e1.ShippedQuantity * e.Multiply;
+              dataItemPeriod.push(e1);
+            });
+            SumMultiply += e.Multiply;
+          });
+
+          const groupByDay = dataItemPeriod.reduce((group, day) => {
+            const { OrderDate } = day;
+            group[OrderDate] = group[OrderDate] ?? [];
+            group[OrderDate].push(day);
+            return group;
+          }, {});
+
+          console.log(groupByDay);
+
+          let groupCells = <FormArray>this.formGroup.controls.Cells;
+
+          let groupRow = <FormArray>this.formGroup.controls.Rows;
+
+          groupRow.value.forEach((row) => {
+            this.columnView.forEach((col) => {
+              let dataItemByDay = groupByDay[col.SubTitle.substr(0, 3)];
+              let itemFind = dataItemByDay.find((f) => f.IDItem == row.IDItem);
+              if (itemFind) {
+                let valueCell = groupCells.controls.find(
+                  (d) => d.value.Date == col.Date && d.value.IDItem == itemFind.IDItem,
+                );
+                if (valueCell) {
+                  valueCell.get('Quantity').setValue(Math.ceil(itemFind.ShippedQuantity / SumMultiply));
+                  valueCell.get('Quantity').markAsPristine();
+                }
+              }
+            });
+          });
+
+          //console.log(this.columnView);
+          //
+          //console.log(groupByDay);
+
+          // console.log(groupByDay);
+
+          //this.env.showTranslateMessage('Saved', 'success');
         } else {
           this.env.showTranslateMessage('Cannot save, please try again', 'danger');
         }
