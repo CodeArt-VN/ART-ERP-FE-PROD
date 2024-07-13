@@ -933,6 +933,12 @@ export class ForecastDetailPage extends PageBase {
     }
     this.submitAttempt = true;
 
+    if (this.formGroup.controls.Multiply.value <= 0) {
+      this.env.showTranslateMessage('Multiply cannot be less than 0', 'warning');
+      this.submitAttempt = false;
+      return;
+    }
+
     this.env
       .showPrompt(
         'Khi thay đổi hệ số nhân dũ liệu cũ sẽ bị thay đổi thành dữ liệu mới, bạn có muốn  thay đổi không?',
