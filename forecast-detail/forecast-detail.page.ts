@@ -34,6 +34,7 @@ export class ForecastDetailPage extends PageBase {
   removedItems = [];
   periodSubscription: Subscription;
   config;
+  multiplyOld = 0;
 
   constructor(
     public pageProvider: SALE_ForecastProvider, //PROD_ForecastProvider,
@@ -70,7 +71,7 @@ export class ForecastDetailPage extends PageBase {
       Rows: this.formBuilder.array([]),
       Cells: this.formBuilder.array([]),
       Remark: [''],
-      Multiply: 0,
+      Multiply: [''],
       IsDisabled: new FormControl({ value: '', disabled: true }),
       IsDeleted: [''],
       CreatedBy: new FormControl({ value: '', disabled: true }),
@@ -78,6 +79,9 @@ export class ForecastDetailPage extends PageBase {
       ModifiedBy: new FormControl({ value: '', disabled: true }),
       ModifiedDate: new FormControl({ value: '', disabled: true }),
       LinePeriod: this.formBuilder.array([]),
+      Config: [''],
+      Filter: [''],
+      _Filter: [''],
     });
   }
 
@@ -111,19 +115,24 @@ export class ForecastDetailPage extends PageBase {
     this.item.StartDate = lib.dateFormat(this.item.StartDate);
     this.item.EndDate = lib.dateFormat(this.item.EndDate);
     super.loadedData(event, ignoredFromGroup);
-    this.formGroup.controls.Period.markAsDirty();
-    this.formGroup.controls.IDBranch.markAsDirty();
+
     if (this.item.Id > 0) {
       this.item.ForeCastDetails?.forEach((i) => (i.Date = lib.dateFormat(i.Date)));
+      this.multiplyOld = this.item.Multiply;
       this.renderView();
       this.patchCellsValue();
+      this.patchPeriodValue();
+      this.formGroup.controls._Filter.setValue(JSON.parse(this.item.Filter));
+    } else {
+      this.formGroup.controls.Period.markAsDirty();
+      this.formGroup.controls.IDBranch.markAsDirty();
+      this.formGroup.controls.Multiply.setValue(100);
+      this.formGroup.controls.Multiply.markAsDirty();
     }
 
     this.schemaService.getAnItem(2).then((value: any) => {
       if (value) this.schema = value;
     });
-    //this.config = this.saveConfig(null);
-    this.loadDataTemp();
   }
 
   renderView(reRender = false) {
@@ -183,7 +192,6 @@ export class ForecastDetailPage extends PageBase {
         }
       });
     }
-    console.log(this.columnView);
 
     if (reRender) {
       if (this.columnView.length >= 100) {
@@ -241,8 +249,8 @@ export class ForecastDetailPage extends PageBase {
     }
 
     this.pageConfig.showSpinner = false;
-    console.log(this.formGroup);
   }
+
   addCell(cell: any, markAsDirty = false) {
     let groups = <FormArray>this.formGroup.controls.Cells;
     let group = this.formBuilder.group({
@@ -325,6 +333,7 @@ export class ForecastDetailPage extends PageBase {
     group.get('_IDItemDataSource').value?.initSearch();
     groups.push(group);
   }
+
   reRender() {
     const Cells = this.formGroup.get('Cells') as FormArray;
     if (Cells.controls.length > 0) {
@@ -381,6 +390,7 @@ export class ForecastDetailPage extends PageBase {
       this.saveChange2(); // savechange View hoặc Date
     }
   }
+
   changeItem(ev, row) {
     row.get('IDUoM').setValue('');
     row.get('IDItem').markAsPristine();
@@ -390,6 +400,7 @@ export class ForecastDetailPage extends PageBase {
       this.changeUoM(row);
     }
   }
+
   changeUoM(row) {
     let key = row.get('IDItem').value + '-' + row.get('IDUoM').value;
     let groupCells = <FormArray>this.formGroup.controls.Cells;
@@ -579,25 +590,10 @@ export class ForecastDetailPage extends PageBase {
   }
 
   saveConfig(e) {
-    e?.Logicals?.unshift({
-      Dimension: 'IDBranch',
-      Logicals: [],
-      Operator: '=',
-      Value: this.formGroup.get('IDBranch').value,
-    });
-
-    let config = {
-      Schema: { Id: 2, Type: 'DBView', Code: 'SALE_OrderDetail', Name: 'Báo cáo đơn hàng chi tiết' },
-      Interval: {
-        Property: 'OrderDate',
-        Type: 'DayOfWeek',
-        Title: null,
-      },
-      CompareBy: [{ Property: 'ItemName' }],
-      MeasureBy: [{ Property: 'ShippedQuantity', Method: 'sum', Title: 'ShippedQuantity' }],
-      Transform: { Filter: e },
-    };
-    return config;
+    this.formGroup.controls.Filter.setValue(JSON.stringify(e));
+    this.formGroup.controls.Filter.markAsDirty();
+    this.formGroup.controls._Filter.setValue(e);
+    this.saveChange2();
   }
 
   toggleSelectAll() {
@@ -615,20 +611,38 @@ export class ForecastDetailPage extends PageBase {
     if (this.submitAttempt) {
       return;
     }
-    console.log('Initial value:', this.formGroup.controls.StartDate.value);
     this.submitAttempt = true;
+    console.log('Initial value:', this.formGroup.controls.StartDate.value);
+    const dateNow = this.formatDate(new Date());
+    if (this.formGroup.controls.StartDate.value < dateNow || this.formGroup.controls.EndDate.value < dateNow) {
+      this.env.showTranslateMessage('Please select a future date', 'warning');
+      this.submitAttempt = false;
+      return;
+    }
+    if (this.formGroup.controls.StartDate.value > this.formGroup.controls.EndDate.value) {
+      this.env.showTranslateMessage('The end date cannot be less than the start date', 'warning');
+      this.submitAttempt = false;
+      return;
+    }
     let groupCells = <FormArray>this.formGroup.controls.Cells;
     if (groupCells.controls.length > 0) {
       this.env
         .showPrompt('Thay đổi chu kỳ sẽ xoá hết dữ liệu dự báo, bạn có tiếp tục?', null, 'Xóa')
         .then((_) => {
           this.submitAttempt = false;
+          var data = JSON.parse(this.formGroup.controls.Config.value);
+          data.forEach((element) => {
+            element.Period = this.formGroup.controls.Period.value;
+          });
+          this.formGroup.controls.Config.setValue(JSON.stringify(data));
+          this.formGroup.controls.Config.markAsDirty();
+          this.item.Config = this.formGroup.controls.Config.value;
+          this.patchPeriodValue();
           this.renderView(true);
         })
         .catch((er) => {
           this.submitAttempt = false;
-          this.refresh();
-
+          this.loadedData();
           // this.formGroup.get(a).setValue(that);
           // this.refresh();
         });
@@ -637,6 +651,13 @@ export class ForecastDetailPage extends PageBase {
       this.renderView();
       this.saveChange2();
     }
+  }
+
+  formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Thêm 1 vì tháng bắt đầu từ 0
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   createBOMRecommendation() {
@@ -769,189 +790,182 @@ export class ForecastDetailPage extends PageBase {
   }
 
   addPeriod() {
-    console.log(this.columnView);
+    let period = {
+      Id: 1,
+      Period: this.formGroup.get('Period').value,
+      FromDate: null,
+      ToDate: null,
+      Multiply: 1,
+    };
+    this.addLinePeriod(period);
   }
 
-  deletePeriod() {}
+  deletePeriods() {}
 
-  loadDataTemp() {
-    let dataTemp = [
-      {
-        Id: 1,
-        Period: 'Daily',
-        FromDate: '2024-07-01',
-        ToDate: '2024-07-07',
-        Multiply: 1,
-      },
-      {
-        Id: 2,
-        Period: 'Weekly',
-        FromDate: '2024-06-01',
-        ToDate: '2024-06-07',
-        Multiply: 2,
-      },
-      {
-        Id: 3,
-        Period: 'Daily',
-        FromDate: '2024-06-08',
-        ToDate: '2024-06-18',
-        Multiply: 5,
-      },
-    ];
+  deletePeriod(index) {
+    let groups = <FormArray>this.formGroup.controls.LinePeriod;
+    if (!groups.controls[index].valid) {
+      groups.removeAt(index);
+    } else {
+      this.env.showPrompt('Bạn chắc muốn xóa ?', null, 'Xóa 1 dòng').then((_) => {
+        groups.removeAt(index);
+        this.saveChangeConfig();
+      });
+    }
+  }
 
-    dataTemp.forEach((e) => {
-      this.addLinePeriod(e);
-    });
+  private patchPeriodValue() {
+    this.formGroup.controls.LinePeriod = new FormArray([]);
+    this.pageConfig.showSpinner = true;
+    let config = JSON.parse(this.item.Config);
+    if (config) {
+      config.forEach((e) => {
+        this.addLinePeriod(e);
+      });
+    }
+    this.pageConfig.showSpinner = false;
   }
 
   addLinePeriod(line: any, markAsDirty = false) {
     let groups = <FormArray>this.formGroup.controls.LinePeriod;
     let group = this.formBuilder.group({
-      Id: new FormControl({ value: line.Id, disabled: true }),
-      FromDate: [line?.FromDate],
-      ToDate: [line?.ToDate],
+      FromDate: [line?.FromDate, Validators.required],
+      ToDate: [line?.ToDate, Validators.required],
       Multiply: [line?.Multiply],
-      Period: [line?.Period],
+      Period: new FormControl({ value: line?.Period, disabled: true }),
       IsChecked: new FormControl({ value: false, disabled: false }),
     });
     //group.get('IDItem').markAsDirty();
     groups.push(group);
   }
 
-  generatorForecastPeriod() {
-    //let subQuery = '{"Schema":{"Id":2,"Type":"DBView","Code":"SALE_OrderDetail","Name":"Báo cáo đơn hàng chi tiết"},"TimeFrame":{"Dimension":"OrderDate","From":{"Type":"Absolute","IsPastDate":true,"Period":"Month","Amount":"15","Value":"2022-04-01T00:00:00"},"To":{"Type":"Absolute","IsPastDate":true,"Period":"Month","Amount":"14","Value":"2023-02-10T23:59:59"}},"CompareTo":{"Type":"Relative","IsPastDate":true,"Period":"Day","Amount":0,"Value":"2024-07-09T00:00:00"},"Interval":{"Property":"OrderDate","Type":"DayOfWeek","Title":null},"CompareBy":[{"Property":"ItemName","Title":""}],"MeasureBy":[{"Property":"ShippedQuantity","Method":"sum","Title":""}],"Transform":{"Filter":{"Dimension":"logical","Operator":"AND","Value":null,"Logicals":[{"UniqueId":"1720493421066b0a6132f4c5","Dimension":"IDItem","Operator":"IN","Value":"12003,52245,11642","Logicals":[]}],"UniqueId":"1720493421066a4aa799414a"}}}'
+  saveChangeConfig() {
+    this.formGroup.controls.Config.setValue(JSON.stringify(this.convertLinePeriodToString()));
+    this.formGroup.controls.Config.markAsDirty();
+    this.saveChange2();
+  }
 
-    let subQuery = {
-      Schema: {
-        Id: 2,
-        Type: 'DBView',
-        Code: 'SALE_OrderDetail',
-        Name: 'Báo cáo đơn hàng chi tiết',
-      },
-      TimeFrame: {
-        Dimension: 'OrderDate',
-        From: {
-          Type: 'Absolute',
-          IsPastDate: true,
-          Period: 'Month',
-          Amount: '15',
-          Value: '2022-04-01T00:00:00',
-        },
-        To: {
-          Type: 'Absolute',
-          IsPastDate: true,
-          Period: 'Month',
-          Amount: '14',
-          Value: '2023-02-10T23:59:59',
-        },
-      },
-      CompareTo: {
-        Type: 'Relative',
-        IsPastDate: true,
-        Period: 'Day',
-        Amount: 0,
-        Value: '2024-07-09T00:00:00',
-      },
-      Interval: {
-        Property: 'OrderDate',
-        Type: 'DayOfWeek',
-        Title: null,
-      },
-      CompareBy: [
-        {
-          Property: 'IDItem',
-          Title: '',
-        },
-        {
-          Property: 'ItemName',
-          Title: '',
-        },
-      ],
-      MeasureBy: [
-        {
-          Property: 'ShippedQuantity',
-          Method: 'sum',
-          Title: '',
-        },
-      ],
-      Transform: {
-        Filter: {
-          Dimension: 'logical',
-          Operator: 'AND',
-          Value: null,
-          Logicals: [
+  convertLinePeriodToString() {
+    let groups = <FormArray>this.formGroup.controls.LinePeriod;
+    let config = [];
+    groups.getRawValue().forEach((e) => {
+      config.push({
+        Period: e.Period,
+        FromDate: e.FromDate,
+        ToDate: e.ToDate,
+        Multiply: e.Multiply,
+      });
+    });
+    return config;
+  }
+
+  generatorForecastPeriod() {
+    this.env
+      .showPrompt('Khi dự đoán tự động sẽ xoá hết dữ liệu dự báo hiện tại, bạn có tiếp tục?', null, 'Xóa')
+      .then((_) => {
+        let subQuery = {
+          Schema: {
+            Id: 2,
+            Type: 'DBView',
+            Code: 'SALE_OrderDetail',
+            Name: 'Báo cáo đơn hàng chi tiết',
+          },
+          TimeFrame: {
+            Dimension: 'OrderDate',
+            From: {
+              Type: 'Absolute',
+              IsPastDate: true,
+            },
+            To: {
+              Type: 'Absolute',
+              IsPastDate: true,
+            },
+          },
+          Interval: {
+            Property: 'OrderDate',
+            Type: 'Day',
+            Title: null,
+          },
+          CompareBy: [
             {
-              UniqueId: '1720493421066b0a6132f4c5',
-              Dimension: 'IDItem',
-              Operator: 'IN',
-              Value: '12003,52245,11642',
-              Logicals: [],
+              Property: 'IDItem',
+              Title: '',
+            },
+            {
+              Property: 'ItemName',
+              Title: '',
             },
           ],
-          UniqueId: '1720493421066a4aa799414a',
-        },
-      },
-    };
+          MeasureBy: [
+            {
+              Property: 'ShippedQuantity',
+              Method: 'sum',
+              Title: '',
+            },
+          ],
+          Transform: {
+            Filter: JSON.parse(this.formGroup.get('Filter').value),
+          },
+        };
+
+        this.env
+          .showLoading(
+            'Xin vui lòng chờ trong giây lát...',
+            this.commonService
+              .connect('POST', 'SALE/Forecast/GeneratorForecastPeriod/' + this.item.Id, subQuery)
+              .toPromise(),
+          )
+          .then((result: any) => {
+            if (result) {
+              this.item = result;
+              this.loadedData();
+              this.env.showTranslateMessage('Saved', 'success');
+            } else {
+              this.env.showTranslateMessage('Cannot save, please try again', 'danger');
+            }
+          });
+      });
+  }
+
+  changeMultiply() {
+    if (this.submitAttempt) {
+      return;
+    }
+    this.submitAttempt = true;
 
     this.env
-      .showLoading(
-        'Xin vui lòng chờ trong giây lát...',
-        this.commonService
-          .connect('POST', 'SALE/Forecast/GeneratorForecastPeriod/' + this.item.Id, subQuery)
-          .toPromise(),
+      .showPrompt(
+        'Khi thay đổi hệ số nhân dũ liệu cũ sẽ bị thay đổi thành dữ liệu mới, bạn có muốn  thay đổi không?',
+        null,
+        'Thay đổi hệ số nhân',
       )
-      .then((result: any) => {
-        if (result) {
-          let dataItemPeriod: any = [];
-          let SumMultiply = 0;
-
-          result.forEach((e) => {
-            e.ListItem.forEach((e1) => {
-              e1.ShippedQuantity = e1.ShippedQuantity * e.Multiply;
-              dataItemPeriod.push(e1);
-            });
-            SumMultiply += e.Multiply;
+      .then((_) => {
+        this.env
+          .showLoading(
+            'Xin vui lòng chờ trong giây lát...',
+            this.commonService
+              .connect('POST', 'SALE/Forecast/UpdateQuantity/' + this.item.Id, {
+                multiply: this.formGroup.controls.Multiply.value,
+              })
+              .toPromise(),
+          )
+          .then((result: any) => {
+            if (result) {
+              this.item = result;
+              this.loadedData();
+              this.env.showTranslateMessage('Saved', 'success');
+            } else {
+              this.env.showTranslateMessage('Cannot save, please try again', 'danger');
+            }
+            this.submitAttempt = false;
+          })
+          .catch((er) => {
+            this.submitAttempt = false;
           });
-
-          const groupByDay = dataItemPeriod.reduce((group, day) => {
-            const { OrderDate } = day;
-            group[OrderDate] = group[OrderDate] ?? [];
-            group[OrderDate].push(day);
-            return group;
-          }, {});
-
-          console.log(groupByDay);
-
-          let groupCells = <FormArray>this.formGroup.controls.Cells;
-
-          let groupRow = <FormArray>this.formGroup.controls.Rows;
-
-          groupRow.value.forEach((row) => {
-            this.columnView.forEach((col) => {
-              let dataItemByDay = groupByDay[col.SubTitle.substr(0, 3)];
-              let itemFind = dataItemByDay.find((f) => f.IDItem == row.IDItem);
-              if (itemFind) {
-                let valueCell = groupCells.controls.find(
-                  (d) => d.value.Date == col.Date && d.value.IDItem == itemFind.IDItem,
-                );
-                if (valueCell) {
-                  valueCell.get('Quantity').setValue(Math.ceil(itemFind.ShippedQuantity / SumMultiply));
-                  valueCell.get('Quantity').markAsPristine();
-                }
-              }
-            });
-          });
-
-          //console.log(this.columnView);
-          //
-          //console.log(groupByDay);
-
-          // console.log(groupByDay);
-
-          //this.env.showTranslateMessage('Saved', 'success');
-        } else {
-          this.env.showTranslateMessage('Cannot save, please try again', 'danger');
-        }
+      })
+      .catch((er) => {
+        this.submitAttempt = false;
+        this.formGroup.controls.Multiply.setValue(this.multiplyOld);
       });
   }
 }
