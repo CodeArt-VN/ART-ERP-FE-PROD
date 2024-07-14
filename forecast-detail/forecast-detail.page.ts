@@ -7,6 +7,7 @@ import {
   BRA_BranchProvider,
   SALE_ForecastDetailProvider,
   SALE_ForecastProvider,
+  SYS_SchemaProvider,
   // PROD_ForecastDetailProvider,
   // PROD_ForecastProvider,
   SYS_TypeProvider,
@@ -29,9 +30,11 @@ export class ForecastDetailPage extends PageBase {
   branchList = [];
   itemsState = [];
   columnView = [];
-  //removedItem
+  schema: any;
   removedItems = [];
   periodSubscription: Subscription;
+  config;
+  multiplyOld = 0;
 
   constructor(
     public pageProvider: SALE_ForecastProvider, //PROD_ForecastProvider,
@@ -41,6 +44,7 @@ export class ForecastDetailPage extends PageBase {
     public itemProvider: WMS_ItemProvider,
     public typeProvider: SYS_TypeProvider,
     public priceListProvider: WMS_PriceListProvider,
+    public schemaService: SYS_SchemaProvider,
 
     public env: EnvService,
     public navCtrl: NavController,
@@ -62,21 +66,25 @@ export class ForecastDetailPage extends PageBase {
       }),
       StartDate: ['', Validators.required],
       EndDate: ['', Validators.required],
-      Name: ['',Validators.required],
+      Name: ['', Validators.required],
       Period: ['Daily', Validators.required],
       Rows: this.formBuilder.array([]),
       Cells: this.formBuilder.array([]),
       Remark: [''],
+      Multiply: [''],
       IsDisabled: new FormControl({ value: '', disabled: true }),
       IsDeleted: [''],
       CreatedBy: new FormControl({ value: '', disabled: true }),
       CreatedDate: new FormControl({ value: '', disabled: true }),
       ModifiedBy: new FormControl({ value: '', disabled: true }),
       ModifiedDate: new FormControl({ value: '', disabled: true }),
+      LinePeriod: this.formBuilder.array([]),
+      Config: [''],
+      Filter: [''],
+      _Filter: [''],
     });
   }
 
-  
   preLoadData(event) {
     this.viewDataSource = [
       { Name: 'Daily', Code: 'Daily' },
@@ -107,13 +115,24 @@ export class ForecastDetailPage extends PageBase {
     this.item.StartDate = lib.dateFormat(this.item.StartDate);
     this.item.EndDate = lib.dateFormat(this.item.EndDate);
     super.loadedData(event, ignoredFromGroup);
-    this.formGroup.controls.Period.markAsDirty();
-    this.formGroup.controls.IDBranch.markAsDirty();
+
     if (this.item.Id > 0) {
       this.item.ForeCastDetails?.forEach((i) => (i.Date = lib.dateFormat(i.Date)));
+      this.multiplyOld = this.item.Multiply;
       this.renderView();
       this.patchCellsValue();
+      this.patchPeriodValue();
+      this.formGroup.controls._Filter.setValue(JSON.parse(this.item.Filter));
+    } else {
+      this.formGroup.controls.Period.markAsDirty();
+      this.formGroup.controls.IDBranch.markAsDirty();
+      this.formGroup.controls.Multiply.setValue(100);
+      this.formGroup.controls.Multiply.markAsDirty();
     }
+
+    this.schemaService.getAnItem(2).then((value: any) => {
+      if (value) this.schema = value;
+    });
   }
 
   renderView(reRender = false) {
@@ -173,7 +192,6 @@ export class ForecastDetailPage extends PageBase {
         }
       });
     }
-    console.log(this.columnView);
 
     if (reRender) {
       if (this.columnView.length >= 100) {
@@ -231,8 +249,8 @@ export class ForecastDetailPage extends PageBase {
     }
 
     this.pageConfig.showSpinner = false;
-    console.log(this.formGroup);
   }
+
   addCell(cell: any, markAsDirty = false) {
     let groups = <FormArray>this.formGroup.controls.Cells;
     let group = this.formBuilder.group({
@@ -271,7 +289,7 @@ export class ForecastDetailPage extends PageBase {
           searchProvider: this.itemProvider,
           loading: false,
           input$: new Subject<string>(),
-          existedItems : groups.controls.map(d=>d.get('IDItem').value),
+          existedItems: groups.controls.map((d) => d.get('IDItem').value),
           selected: [
             {
               Id: row?.IDItem,
@@ -293,7 +311,7 @@ export class ForecastDetailPage extends PageBase {
                       Take: 20,
                       Skip: 0,
                       Term: term,
-                      Id_ne:this.existedItems.length>0? this.existedItems:''
+                      Id_ne: this.existedItems.length > 0 ? this.existedItems : '',
                     })
                     .pipe(
                       catchError(() => of([])), // empty list on error
@@ -315,6 +333,7 @@ export class ForecastDetailPage extends PageBase {
     group.get('_IDItemDataSource').value?.initSearch();
     groups.push(group);
   }
+
   reRender() {
     const Cells = this.formGroup.get('Cells') as FormArray;
     if (Cells.controls.length > 0) {
@@ -368,10 +387,10 @@ export class ForecastDetailPage extends PageBase {
           });
       }
     } else {
-     
-          this.saveChange2(); // savechange View hoặc Date
+      this.saveChange2(); // savechange View hoặc Date
     }
   }
+
   changeItem(ev, row) {
     row.get('IDUoM').setValue('');
     row.get('IDItem').markAsPristine();
@@ -381,6 +400,7 @@ export class ForecastDetailPage extends PageBase {
       this.changeUoM(row);
     }
   }
+
   changeUoM(row) {
     let key = row.get('IDItem').value + '-' + row.get('IDUoM').value;
     let groupCells = <FormArray>this.formGroup.controls.Cells;
@@ -458,7 +478,7 @@ export class ForecastDetailPage extends PageBase {
         Id: fg.get('Id').value,
       };
     });
-    if(deletedIds.length==0){
+    if (deletedIds.length == 0) {
       if (!fg.get('IDItem').value) {
         let rowsEmpty = groupRows.controls.filter((d) => d.get('Key').value === 'undefined-undefined');
         for (let i = rowsEmpty.length - 1; i >= 0; i--) {
@@ -469,14 +489,15 @@ export class ForecastDetailPage extends PageBase {
           }
         }
         return;
-      }
-      else{
-        let index = groupRows.controls.findIndex((d) => d.get('Key').value == 'undefined-undefined' && d.get('IDItem').value == fg.get('IDItem').value);
+      } else {
+        let index = groupRows.controls.findIndex(
+          (d) => d.get('Key').value == 'undefined-undefined' && d.get('IDItem').value == fg.get('IDItem').value,
+        );
         if (index) groupRows.removeAt(index);
         return;
       }
     }
-    
+
     //  let deleteIds = filteredIds?.map((filteredControl) => filteredControl.get('Id').value);
     this.env.showPrompt('Bạn chắc muốn xóa ?', null, 'Xóa ' + deletedIds.length + ' dòng').then((_) => {
       this.forecastDetailService.delete(deletedIds).then((_) => {
@@ -514,7 +535,7 @@ export class ForecastDetailPage extends PageBase {
     if (i.get('IsChecked').value) {
       this.checkedRows.push(i);
     } else {
-      let index = this.checkedRows.getRawValue().indexOf(i);//getRawValue().findIndex((d) => d.Id == i.get('Id').value);
+      let index = this.checkedRows.getRawValue().indexOf(i); //getRawValue().findIndex((d) => d.Id == i.get('Id').value);
       this.checkedRows.removeAt(index);
     }
   }
@@ -568,6 +589,13 @@ export class ForecastDetailPage extends PageBase {
       });
   }
 
+  saveConfig(e) {
+    this.formGroup.controls.Filter.setValue(JSON.stringify(e));
+    this.formGroup.controls.Filter.markAsDirty();
+    this.formGroup.controls._Filter.setValue(e);
+    this.saveChange2();
+  }
+
   toggleSelectAll() {
     if (!this.pageConfig.canEdit) return;
     let groups = <FormArray>this.formGroup.controls.Rows;
@@ -580,25 +608,41 @@ export class ForecastDetailPage extends PageBase {
     });
   }
   changePeriodAndDate() {
-    if(this.submitAttempt){
+    if (this.submitAttempt) {
       return;
     }
-    console.log('Initial value:', this.formGroup.controls.StartDate.value);
     this.submitAttempt = true;
+    console.log('Initial value:', this.formGroup.controls.StartDate.value);
+    const dateNow = this.formatDate(new Date());
+    if (this.formGroup.controls.StartDate.value < dateNow || this.formGroup.controls.EndDate.value < dateNow) {
+      this.env.showTranslateMessage('Please select a future date', 'warning');
+      this.submitAttempt = false;
+      return;
+    }
+    if (this.formGroup.controls.StartDate.value > this.formGroup.controls.EndDate.value) {
+      this.env.showTranslateMessage('The end date cannot be less than the start date', 'warning');
+      this.submitAttempt = false;
+      return;
+    }
     let groupCells = <FormArray>this.formGroup.controls.Cells;
     if (groupCells.controls.length > 0) {
-      
       this.env
         .showPrompt('Thay đổi chu kỳ sẽ xoá hết dữ liệu dự báo, bạn có tiếp tục?', null, 'Xóa')
         .then((_) => {
           this.submitAttempt = false;
+          var data = JSON.parse(this.formGroup.controls.Config.value);
+          data.forEach((element) => {
+            element.Period = this.formGroup.controls.Period.value;
+          });
+          this.formGroup.controls.Config.setValue(JSON.stringify(data));
+          this.formGroup.controls.Config.markAsDirty();
+          this.item.Config = this.formGroup.controls.Config.value;
+          this.patchPeriodValue();
           this.renderView(true);
-
         })
         .catch((er) => {
           this.submitAttempt = false;
-          this.refresh();
-
+          this.loadedData();
           // this.formGroup.get(a).setValue(that);
           // this.refresh();
         });
@@ -609,26 +653,32 @@ export class ForecastDetailPage extends PageBase {
     }
   }
 
-  createBOMRecommendation(){
+  formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Thêm 1 vì tháng bắt đầu từ 0
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  createBOMRecommendation() {
     let subQuery = {
       Id: this.item.Id,
-    }
-      this.env
-          .showLoading('Xin vui lòng chờ trong giây lát...',  this.commonService
-          .connect('POST', 'SALE/Forecast/CreateBOMRecommendation/'+ this.item.Id, subQuery).toPromise())
-          .then((result) => {
-            console.log(result);
-            if(result){
-              this.env.showTranslateMessage('Saved','success');
-
-            }
-            else
-            {
-              this.env.showTranslateMessage('Cannot save, please try again','danger');
-            }
-
-          })
-  
+    };
+    this.env
+      .showLoading(
+        'Xin vui lòng chờ trong giây lát...',
+        this.commonService
+          .connect('POST', 'SALE/Forecast/CreateBOMRecommendation/' + this.item.Id, subQuery)
+          .toPromise(),
+      )
+      .then((result) => {
+        console.log(result);
+        if (result) {
+          this.env.showTranslateMessage('Saved', 'success');
+        } else {
+          this.env.showTranslateMessage('Cannot save, please try again', 'danger');
+        }
+      });
   }
 
   @ViewChild('importfile') importfile: any;
@@ -737,5 +787,191 @@ export class ForecastDetailPage extends PageBase {
   segmentView = 's1';
   segmentChanged(ev: any) {
     this.segmentView = ev.detail.value;
+  }
+
+  addPeriod() {
+    let period = {
+      Id: 1,
+      Period: this.formGroup.get('Period').value,
+      FromDate: null,
+      ToDate: null,
+      Multiply: 1,
+    };
+    this.addLinePeriod(period);
+  }
+
+  deletePeriods() {}
+
+  deletePeriod(index) {
+    let groups = <FormArray>this.formGroup.controls.LinePeriod;
+    if (!groups.controls[index].valid) {
+      groups.removeAt(index);
+    } else {
+      this.env.showPrompt('Bạn chắc muốn xóa ?', null, 'Xóa 1 dòng').then((_) => {
+        groups.removeAt(index);
+        this.saveChangeConfig();
+      });
+    }
+  }
+
+  private patchPeriodValue() {
+    this.formGroup.controls.LinePeriod = new FormArray([]);
+    this.pageConfig.showSpinner = true;
+    let config = JSON.parse(this.item.Config);
+    if (config) {
+      config.forEach((e) => {
+        this.addLinePeriod(e);
+      });
+    }
+    this.pageConfig.showSpinner = false;
+  }
+
+  addLinePeriod(line: any, markAsDirty = false) {
+    let groups = <FormArray>this.formGroup.controls.LinePeriod;
+    let group = this.formBuilder.group({
+      FromDate: [line?.FromDate, Validators.required],
+      ToDate: [line?.ToDate, Validators.required],
+      Multiply: [line?.Multiply],
+      Period: new FormControl({ value: line?.Period, disabled: true }),
+      IsChecked: new FormControl({ value: false, disabled: false }),
+    });
+    //group.get('IDItem').markAsDirty();
+    groups.push(group);
+  }
+
+  saveChangeConfig() {
+    this.formGroup.controls.Config.setValue(JSON.stringify(this.convertLinePeriodToString()));
+    this.formGroup.controls.Config.markAsDirty();
+    this.saveChange2();
+  }
+
+  convertLinePeriodToString() {
+    let groups = <FormArray>this.formGroup.controls.LinePeriod;
+    let config = [];
+    groups.getRawValue().forEach((e) => {
+      config.push({
+        Period: e.Period,
+        FromDate: e.FromDate,
+        ToDate: e.ToDate,
+        Multiply: e.Multiply,
+      });
+    });
+    return config;
+  }
+
+  generatorForecastPeriod() {
+    this.env
+      .showPrompt('Khi dự đoán tự động sẽ xoá hết dữ liệu dự báo hiện tại, bạn có tiếp tục?', null, 'Xóa')
+      .then((_) => {
+        let subQuery = {
+          Schema: {
+            Id: 2,
+            Type: 'DBView',
+            Code: 'SALE_OrderDetail',
+            Name: 'Báo cáo đơn hàng chi tiết',
+          },
+          TimeFrame: {
+            Dimension: 'OrderDate',
+            From: {
+              Type: 'Absolute',
+              IsPastDate: true,
+            },
+            To: {
+              Type: 'Absolute',
+              IsPastDate: true,
+            },
+          },
+          Interval: {
+            Property: 'OrderDate',
+            Type: 'Day',
+            Title: null,
+          },
+          CompareBy: [
+            {
+              Property: 'IDItem',
+              Title: '',
+            },
+            {
+              Property: 'ItemName',
+              Title: '',
+            },
+          ],
+          MeasureBy: [
+            {
+              Property: 'ShippedQuantity',
+              Method: 'sum',
+              Title: '',
+            },
+          ],
+          Transform: {
+            Filter: JSON.parse(this.formGroup.get('Filter').value),
+          },
+        };
+
+        this.env
+          .showLoading(
+            'Xin vui lòng chờ trong giây lát...',
+            this.commonService
+              .connect('POST', 'SALE/Forecast/GeneratorForecastPeriod/' + this.item.Id, subQuery)
+              .toPromise(),
+          )
+          .then((result: any) => {
+            if (result) {
+              this.item = result;
+              this.loadedData();
+              this.env.showTranslateMessage('Saved', 'success');
+            } else {
+              this.env.showTranslateMessage('Cannot save, please try again', 'danger');
+            }
+          });
+      });
+  }
+
+  changeMultiply() {
+    if (this.submitAttempt) {
+      return;
+    }
+    this.submitAttempt = true;
+
+    if (this.formGroup.controls.Multiply.value <= 0) {
+      this.env.showTranslateMessage('Multiply cannot be less than 0', 'warning');
+      this.submitAttempt = false;
+      return;
+    }
+
+    this.env
+      .showPrompt(
+        'Khi thay đổi hệ số nhân dũ liệu cũ sẽ bị thay đổi thành dữ liệu mới, bạn có muốn  thay đổi không?',
+        null,
+        'Thay đổi hệ số nhân',
+      )
+      .then((_) => {
+        this.env
+          .showLoading(
+            'Xin vui lòng chờ trong giây lát...',
+            this.commonService
+              .connect('POST', 'SALE/Forecast/UpdateQuantity/' + this.item.Id, {
+                multiply: this.formGroup.controls.Multiply.value,
+              })
+              .toPromise(),
+          )
+          .then((result: any) => {
+            if (result) {
+              this.item = result;
+              this.loadedData();
+              this.env.showTranslateMessage('Saved', 'success');
+            } else {
+              this.env.showTranslateMessage('Cannot save, please try again', 'danger');
+            }
+            this.submitAttempt = false;
+          })
+          .catch((er) => {
+            this.submitAttempt = false;
+          });
+      })
+      .catch((er) => {
+        this.submitAttempt = false;
+        this.formGroup.controls.Multiply.setValue(this.multiplyOld);
+      });
   }
 }
