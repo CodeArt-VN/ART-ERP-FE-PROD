@@ -61,14 +61,14 @@
             </app-form-control>
 
             <div class="c-control">
-              <label class="c-label" for="IDWarehouse">{{'erp.app.pages.purchase.purchase-order.id-branch' | translate}}
+              <label class="c-label" for="IDWarehouse">{{'Warehouse' | translate}}
                 <span
                   *ngIf="!formGroup.controls.IDWarehouse.valid && !formGroup.controls.IDWarehouse.pending && (formGroup.controls.IDWarehouse.dirty || submitAttempt)"
                   ion-text color="danger">(*)</span>
               </label>
               <ng-select class="c-input" (change)="saveChange();" labelForId="IDWarehouse" formControlName="IDWarehouse"
                 [items]="branchList" [virtualScroll]="true" bindLabel="Name" bindValue="Id"
-                placeholder="{{'erp.app.pages.purchase.purchase-order.search-placeholder' | translate}}">
+                placeholder="{{'Search...' | translate}}">
                 <ng-template ng-option-tmp let-i="item" let-search="searchTerm">
                   <div *ngIf="i">
                     <div> <span *ngFor="let l of i.levels">&nbsp;&nbsp;&nbsp;</span> <span
