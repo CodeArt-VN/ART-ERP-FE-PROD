@@ -1,6 +1,6 @@
 import { PROD_OrderDetailProvider, PROD_OrderProvider } from './../../../services/static/services.service';
-import { Component, ChangeDetectorRef, ViewChild } from '@angular/core';
-import { NavController, LoadingController, AlertController } from '@ionic/angular';
+import { Component, ChangeDetectorRef } from '@angular/core';
+import { NavController, LoadingController, AlertController, PopoverController } from '@ionic/angular';
 import { PageBase } from 'src/app/page-base';
 import { ActivatedRoute } from '@angular/router';
 import { EnvService } from 'src/app/services/core/env.service';
@@ -8,9 +8,7 @@ import {
   BRA_BranchProvider,
   CRM_ContactProvider,
   PROD_BillOfMaterialsProvider,
-  SYS_TypeProvider,
   WMS_ItemProvider,
-  WMS_PriceListProvider,
 } from 'src/app/services/static/services.service';
 import { FormBuilder, Validators, FormControl, FormArray, FormGroup } from '@angular/forms';
 import { CommonService } from 'src/app/services/core/common.service';
@@ -37,6 +35,7 @@ export class ProductionOrderDetailPage extends PageBase {
     public contactProvider: CRM_ContactProvider,
     public branchProvider: BRA_BranchProvider,
     public itemProvider: WMS_ItemProvider,
+    public popoverCtrl: PopoverController,
     public env: EnvService,
     public navCtrl: NavController,
     public route: ActivatedRoute,
