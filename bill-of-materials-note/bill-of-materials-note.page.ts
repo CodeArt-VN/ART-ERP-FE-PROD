@@ -187,7 +187,7 @@ export class BillOfMaterialsNotePage extends PageBase {
           .catch((err) => {
             console.log(err);
             if (err.message != null) {
-              this.env.showMessage(err.message, 'danger');
+              this.env.showTranslateMessage(err.message, 'danger');
             } else {
               this.env.showTranslateMessage('Cannot create sales order. Please try again', 'danger');
             }
