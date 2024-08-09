@@ -382,7 +382,7 @@ export class ForecastDetailPage extends PageBase {
               });
           })
           .catch((err) => {
-            this.env.showMessage('Không xóa được, xin vui lòng kiểm tra lại.');
+            this.env.showTranslateMessage('Không xóa được, xin vui lòng kiểm tra lại.');
             console.log(err);
           });
       }
@@ -524,7 +524,7 @@ export class ForecastDetailPage extends PageBase {
             this.env.showTranslateMessage('erp.app.app-component.page-bage.delete-complete', 'success');
           })
           .catch((err) => {
-            this.env.showMessage('Không xóa được, xin vui lòng kiểm tra lại.');
+            this.env.showTranslateMessage('Không xóa được, xin vui lòng kiểm tra lại.');
             console.log(err);
           });
       });
@@ -583,7 +583,7 @@ export class ForecastDetailPage extends PageBase {
             this.checkedRows = new FormArray([]);
           })
           .catch((err) => {
-            this.env.showMessage('Không xóa được, xin vui lòng kiểm tra lại.');
+            this.env.showTranslateMessage('Không xóa được, xin vui lòng kiểm tra lại.');
             console.log(err);
           });
       });
