@@ -220,7 +220,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
       .create({
         header: 'Xóa cấu phần',
         //subHeader: '---',
-        message: 'Bạn chắc muốn xóa cấu phần này?',
+        message: 'Bạn có chắc muốn xóa cấu phần này?',
         buttons: [
           {
             text: 'Không',
@@ -396,7 +396,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
   }
 
   resetPrice() {
-    this.env.showPrompt('Bạn chắc muốn lấy lại giá theo bảng giá đang chọn?', null, 'Reset price').then((_) => {
+    this.env.showPrompt2('Bạn có chắc muốn lấy lại giá theo bảng giá đang chọn?', null, 'Reset price').then((_) => {
       this.calcTotalLine(true);
     });
   }
@@ -518,7 +518,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
     this.query.Id = this.formGroup.get('Id').value;
     this.submitAttempt = true;
     this.env
-      .showLoading('Vui lòng chờ export dữ liệu...', this.pageProvider.export(this.query))
+      .showLoading2('Vui lòng chờ export dữ liệu...', this.pageProvider.export(this.query))
       .then((response: any) => {
         this.downloadURLContent(response);
         this.submitAttempt = false;
@@ -532,7 +532,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
     let itemBOM = e.BOMs.find((f) => f.Type == this.formGroup.controls.Type.value && f.IDBOM != this.item.Id);
     if (itemBOM) {
       this.env
-        .showPrompt('Bạn có muốn xem định mức này không?', null, 'Đã thiết lập BOM cho sản phẩm ' + e.Name)
+        .showPrompt2('Bạn có muốn xem định mức này không?', null, 'Đã thiết lập BOM cho sản phẩm ' + e.Name)
         .then((_) => {
           this.nav('bill-of-materials/' + itemBOM.IDBOM);
           this.id = itemBOM.IDBOM;
