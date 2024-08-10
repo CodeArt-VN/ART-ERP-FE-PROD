@@ -243,7 +243,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
                 this.bomDetailProvider.delete(Ids).then((resp) => {
                   groups.removeAt(index);
                   this.calcTotalLine();
-                  this.env.showTranslateMessage('Deleted!', 'success');
+                  this.env.showMessage('Deleted!', 'success');
                 });
               }
             },
@@ -396,7 +396,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
   }
 
   resetPrice() {
-    this.env.showPrompt2('Bạn có chắc muốn lấy lại giá theo bảng giá đang chọn?', null, 'Reset price').then((_) => {
+    this.env.showPrompt('Bạn có chắc muốn lấy lại giá theo bảng giá đang chọn?', null, 'Reset price').then((_) => {
       this.calcTotalLine(true);
     });
   }
@@ -451,7 +451,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
 
     const loading = await this.loadingController.create({
       cssClass: 'my-custom-class',
-      message: 'Vui lòng chờ import dữ liệu',
+      message: 'Please wait for a few moments',
     });
     await loading.present().then(() => {
       const formData: FormData = new FormData();
@@ -498,7 +498,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
                 alert.present();
               });
           } else {
-            this.env.showTranslateMessage('Import completed!', 'success');
+            this.env.showMessage('Import completed!', 'success');
             this.env.publishEvent({
               Code: this.pageConfig.pageName,
             });
@@ -518,7 +518,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
     this.query.Id = this.formGroup.get('Id').value;
     this.submitAttempt = true;
     this.env
-      .showLoading2('Vui lòng chờ export dữ liệu...', this.pageProvider.export(this.query))
+      .showLoading('Please wait for a few moments', this.pageProvider.export(this.query))
       .then((response: any) => {
         this.downloadURLContent(response);
         this.submitAttempt = false;
@@ -532,7 +532,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
     let itemBOM = e.BOMs.find((f) => f.Type == this.formGroup.controls.Type.value && f.IDBOM != this.item.Id);
     if (itemBOM) {
       this.env
-        .showPrompt2('Bạn có muốn xem định mức này không?', null, 'Đã thiết lập BOM cho sản phẩm ' + e.Name)
+        .showPrompt('Bạn có muốn xem định mức này không?', null, 'Đã thiết lập BOM cho sản phẩm ' + e.Name)
         .then((_) => {
           this.nav('bill-of-materials/' + itemBOM.IDBOM);
           this.id = itemBOM.IDBOM;

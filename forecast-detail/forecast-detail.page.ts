@@ -196,7 +196,7 @@ export class ForecastDetailPage extends PageBase {
     if (reRender) {
       if (this.columnView.length >= 100) {
         this.env
-          .showPrompt2('Bạn đang load lượng lớn dữ liệu hơn 100 dòng, bạn có muốn tiếp tục ?', null, 'Tiếp tục')
+          .showPrompt('Bạn đang load lượng lớn dữ liệu hơn 100 dòng, bạn có muốn tiếp tục ?', null, 'Tiếp tục')
           .then((_) => {
             this.reRender();
           })
@@ -344,7 +344,7 @@ export class ForecastDetailPage extends PageBase {
       });
       if (this.pageConfig.canDelete) {
         this.env
-          .showLoading2('Xin vui lòng chờ trong giây lát...', this.forecastDetailService.delete(itemToDeletes))
+          .showLoading('Please wait for a few moments', this.forecastDetailService.delete(itemToDeletes))
           .then((_) => {
             this.isAllChecked = false;
             Cells.clear();
@@ -382,7 +382,7 @@ export class ForecastDetailPage extends PageBase {
               });
           })
           .catch((err) => {
-            this.env.showTranslateMessage('Không xóa được, xin vui lòng kiểm tra lại.');
+            this.env.showMessage('Không xóa được, xin vui lòng kiểm tra lại.');
             console.log(err);
           });
       }
@@ -430,7 +430,7 @@ export class ForecastDetailPage extends PageBase {
         .toPromise()
         .then((result: any) => {
           if (result) {
-            this.env.showTranslateMessage('erp.app.app-component.page-bage.delete-complete', 'success');
+            this.env.showMessage('erp.app.app-component.page-bage.delete-complete', 'success');
           }
         });
     } else {
@@ -500,11 +500,11 @@ export class ForecastDetailPage extends PageBase {
 
     //  let deleteIds = filteredIds?.map((filteredControl) => filteredControl.get('Id').value);
     this.env
-      .showPrompt2('Bạn có chắc muốn xóa không?', null, { code: 'Xóa {{value}} dòng', value: { value: deletedIds.length } })
+      .showPrompt('Bạn có chắc muốn xóa không?', null, { code: 'Xóa {{value}} dòng', value: { value: deletedIds.length } })
       .then((_) => {
         this.forecastDetailService.delete(deletedIds).then((_) => {
           this.env
-            .showLoading2('Xin vui lòng chờ trong giây lát...', this.forecastDetailService.delete(deletedIds))
+            .showLoading('Please wait for a few moments', this.forecastDetailService.delete(deletedIds))
             .then((_) => {
               const indexRowToRemove = groupRows.controls.findIndex(
                 (rowControl) => rowControl.get('Key').value === fg.get('Key').value,
@@ -523,10 +523,10 @@ export class ForecastDetailPage extends PageBase {
                 groupCells.removeAt(indexCellToRemove);
               });
 
-              this.env.showTranslateMessage('erp.app.app-component.page-bage.delete-complete', 'success');
+              this.env.showMessage('erp.app.app-component.page-bage.delete-complete', 'success');
             })
             .catch((err) => {
-              this.env.showTranslateMessage('Không xóa được, xin vui lòng kiểm tra lại.');
+              this.env.showMessage('Không xóa được, xin vui lòng kiểm tra lại.');
               console.log(err);
             });
         });
@@ -558,13 +558,13 @@ export class ForecastDetailPage extends PageBase {
     });
     deleteCells = [...new Set(deleteCells)];
     this.env
-      .showPrompt2({ code: 'Bạn có chắc muốn xóa {{value}} đang chọn?', value: { value: deleteCells.length } }, null, {
+      .showPrompt({ code: 'Bạn có chắc muốn xóa {{value}} đang chọn?', value: { value: deleteCells.length } }, null, {
         code: 'Xóa {{value}} dòng?',
         value: { value: deleteCells.length },
       })
       .then((_) => {
         this.env
-          .showLoading2('Xin vui lòng chờ trong giây lát...', this.forecastDetailService.delete(deleteCells))
+          .showLoading('Please wait for a few moments', this.forecastDetailService.delete(deleteCells))
           .then((_) => {
             this.checkedRows.controls.forEach((fg) => {
               const indexRowToRemove = groupRows.controls.findIndex(
@@ -579,12 +579,12 @@ export class ForecastDetailPage extends PageBase {
               );
               groupCells.removeAt(indexCellToRemove);
             });
-            this.env.showTranslateMessage('erp.app.app-component.page-bage.delete-complete', 'success');
+            this.env.showMessage('erp.app.app-component.page-bage.delete-complete', 'success');
             this.isAllChecked = false;
             this.checkedRows = new FormArray([]);
           })
           .catch((err) => {
-            this.env.showTranslateMessage('Không xóa được, xin vui lòng kiểm tra lại.');
+            this.env.showMessage('Không xóa được, xin vui lòng kiểm tra lại.');
             console.log(err);
           });
       });
@@ -616,19 +616,19 @@ export class ForecastDetailPage extends PageBase {
     console.log('Initial value:', this.formGroup.controls.StartDate.value);
     const dateNow = this.formatDate(new Date());
     if (this.formGroup.controls.StartDate.value < dateNow || this.formGroup.controls.EndDate.value < dateNow) {
-      this.env.showTranslateMessage('Please select a future date', 'warning');
+      this.env.showMessage('Please select a future date', 'warning');
       this.submitAttempt = false;
       return;
     }
     if (this.formGroup.controls.StartDate.value > this.formGroup.controls.EndDate.value) {
-      this.env.showTranslateMessage('The end date cannot be less than the start date', 'warning');
+      this.env.showMessage('The end date cannot be less than the start date', 'warning');
       this.submitAttempt = false;
       return;
     }
     let groupCells = <FormArray>this.formGroup.controls.Cells;
     if (groupCells.controls.length > 0) {
       this.env
-        .showPrompt2('Thay đổi chu kỳ sẽ xoá hết dữ liệu dự báo, bạn có tiếp tục?', null, 'Xóa')
+        .showPrompt('Thay đổi chu kỳ sẽ xoá hết dữ liệu dự báo, bạn có tiếp tục?', null, 'Xóa')
         .then((_) => {
           this.submitAttempt = false;
           var data = JSON.parse(this.formGroup.controls.Config.value);
@@ -666,7 +666,7 @@ export class ForecastDetailPage extends PageBase {
       Id: this.item.Id,
     };
     this.env
-      .showLoading2('Xin vui lòng chờ trong giây lát...',
+      .showLoading('Please wait for a few moments',
         this.commonService
           .connect('POST', 'SALE/Forecast/CreateBOMRecommendation/' + this.item.Id, subQuery)
           .toPromise(),
@@ -674,9 +674,9 @@ export class ForecastDetailPage extends PageBase {
       .then((result) => {
         console.log(result);
         if (result) {
-          this.env.showTranslateMessage('Saved', 'success');
+          this.env.showMessage('Saved', 'success');
         } else {
-          this.env.showTranslateMessage('Cannot save, please try again', 'danger');
+          this.env.showMessage('Cannot save, please try again', 'danger');
         }
       });
   }
@@ -689,7 +689,7 @@ export class ForecastDetailPage extends PageBase {
 
   async import(event) {
     if (this.submitAttempt) {
-      this.env.showTranslateMessage('erp.app.pages.sale.sale-order.message.importing', 'primary');
+      this.env.showMessage('erp.app.pages.sale.sale-order.message.importing', 'primary');
       return;
     }
     this.submitAttempt = true;
@@ -705,8 +705,8 @@ export class ForecastDetailPage extends PageBase {
     const formData: FormData = new FormData();
     formData.append('fileKey', event.target.files[0], event.target.files[0].name);
     this.env
-      .showLoading2(
-        'Vui lòng chờ import dữ liệu...',
+      .showLoading(
+        'Please wait for a few moments',
         this.commonService
           .connect('UPLOAD', 'SALE/Forecast/ImportExcel/' + this.formGroup.get('Id').value, formData)
           .toPromise(),
@@ -724,7 +724,7 @@ export class ForecastDetailPage extends PageBase {
               message += '<br> ' + e.Id + '. Tại dòng ' + e.Line + ': ' + e.Message;
             }
           this.env
-            .showPrompt2(
+            .showPrompt(
               {code:'Có {{value}} lỗi khi import: {{value1}}',value:{value:resp.ErrorList.length ,value1:message}},
               'Bạn có muốn xem lại các mục bị lỗi?',
               'Có lỗi import dữ liệu',
@@ -734,7 +734,7 @@ export class ForecastDetailPage extends PageBase {
             })
             .catch((e) => {});
         } else {
-          this.env.showTranslateMessage('Import completed!', 'success');
+          this.env.showMessage('Import completed!', 'success');
         }
         // this.download(data);
       })
@@ -742,7 +742,7 @@ export class ForecastDetailPage extends PageBase {
         this.submitAttempt = false;
         this.env.publishEvent({ Code: 'app:ShowAppMessage', IsShow: false, Id: 'FileImport' });
         this.refresh();
-        this.env.showTranslateMessage('erp.app.pages.sale.sale-order.message.import-error', 'danger');
+        this.env.showMessage('erp.app.pages.sale.sale-order.message.import-error', 'danger');
       });
   }
 
@@ -751,7 +751,7 @@ export class ForecastDetailPage extends PageBase {
     this.query.IDForecast = this.formGroup.get('Id').value;
     this.submitAttempt = true;
     this.env
-      .showLoading2('Vui lòng chờ export dữ liệu...', this.forecastDetailService.export(this.query))
+      .showLoading('Please wait for a few moments', this.forecastDetailService.export(this.query))
       .then((response: any) => {
         this.downloadURLContent(response);
         this.submitAttempt = false;
@@ -807,7 +807,7 @@ export class ForecastDetailPage extends PageBase {
     if (!groups.controls[index].valid) {
       groups.removeAt(index);
     } else {
-      this.env.showPrompt2('Bạn có chắc muốn xóa không?', null, 'Xóa 1 dòng').then((_) => {
+      this.env.showPrompt('Bạn có chắc muốn xóa không?', null, 'Xóa 1 dòng').then((_) => {
         groups.removeAt(index);
         this.saveChangeConfig();
       });
@@ -861,7 +861,7 @@ export class ForecastDetailPage extends PageBase {
 
   generatorForecastPeriod() {
     this.env
-      .showPrompt2('Khi dự đoán tự động sẽ xoá hết dữ liệu dự báo hiện tại, bạn có tiếp tục?', null, 'Xóa')
+      .showPrompt('Khi dự đoán tự động sẽ xoá hết dữ liệu dự báo hiện tại, bạn có tiếp tục?', null, 'Xóa')
       .then((_) => {
         let subQuery = {
           Schema: {
@@ -909,8 +909,8 @@ export class ForecastDetailPage extends PageBase {
         };
 
         this.env
-          .showLoading2(
-            'Xin vui lòng chờ trong giây lát...',
+          .showLoading(
+            'Please wait for a few moments',
             this.commonService
               .connect('POST', 'SALE/Forecast/GeneratorForecastPeriod/' + this.item.Id, subQuery)
               .toPromise(),
@@ -919,9 +919,9 @@ export class ForecastDetailPage extends PageBase {
             if (result) {
               this.item = result;
               this.loadedData();
-              this.env.showTranslateMessage('Saved', 'success');
+              this.env.showMessage('Saved', 'success');
             } else {
-              this.env.showTranslateMessage('Cannot save, please try again', 'danger');
+              this.env.showMessage('Cannot save, please try again', 'danger');
             }
           });
       });
@@ -934,21 +934,21 @@ export class ForecastDetailPage extends PageBase {
     this.submitAttempt = true;
 
     if (this.formGroup.controls.Multiply.value <= 0) {
-      this.env.showTranslateMessage('Multiply cannot be less than 0', 'warning');
+      this.env.showMessage('Multiply cannot be less than 0', 'warning');
       this.submitAttempt = false;
       return;
     }
 
     this.env
-      .showPrompt2(
+      .showPrompt(
         'Khi thay đổi hệ số nhân dũ liệu cũ sẽ bị thay đổi thành dữ liệu mới, bạn có muốn  thay đổi không?',
         null,
         'Thay đổi hệ số nhân',
       )
       .then((_) => {
         this.env
-          .showLoading2(
-            'Xin vui lòng chờ trong giây lát...',
+          .showLoading(
+            'Please wait for a few moments',
             this.commonService
               .connect('POST', 'SALE/Forecast/UpdateQuantity/' + this.item.Id, {
                 multiply: this.formGroup.controls.Multiply.value,
@@ -959,9 +959,9 @@ export class ForecastDetailPage extends PageBase {
             if (result) {
               this.item = result;
               this.loadedData();
-              this.env.showTranslateMessage('Saved', 'success');
+              this.env.showMessage('Saved', 'success');
             } else {
-              this.env.showTranslateMessage('Cannot save, please try again', 'danger');
+              this.env.showMessage('Cannot save, please try again', 'danger');
             }
             this.submitAttempt = false;
           })

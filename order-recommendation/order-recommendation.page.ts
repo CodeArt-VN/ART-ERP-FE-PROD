@@ -92,7 +92,7 @@ export class OrderRecommendationPage extends PageBase {
       });
       i.checked = checked;
 
-      this.env.showTranslateMessage('NCC {{value}} selected', 'success', i.VendorName);
+      this.env.showMessage('NCC {{value}} selected', 'success', i.VendorName);
       this.selectedCount = this.items.filter((d) => d.checked).length;
     });
   }
@@ -123,7 +123,7 @@ export class OrderRecommendationPage extends PageBase {
           .toPromise()
           .then((resp) => {
             if (loading) loading.dismiss();
-            this.env.showTranslateMessage('PO created!', 'success');
+            this.env.showMessage('PO created!', 'success');
             this.refresh();
             this.env.publishEvent({
               Code: this.pageConfig.pageName,
@@ -131,7 +131,7 @@ export class OrderRecommendationPage extends PageBase {
           })
           .catch((err) => {
             console.log(err);
-            this.env.showTranslateMessage('Cannot create PO, please try again later', 'danger');
+            this.env.showMessage('Cannot create PO, please try again later', 'danger');
             if (loading) loading.dismiss();
           });
       });
