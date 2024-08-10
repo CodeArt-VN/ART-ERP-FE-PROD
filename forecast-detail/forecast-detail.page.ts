@@ -500,7 +500,7 @@ export class ForecastDetailPage extends PageBase {
 
     //  let deleteIds = filteredIds?.map((filteredControl) => filteredControl.get('Id').value);
     this.env
-      .showPrompt('Bạn có chắc muốn xóa không?', null, { code: 'Xóa {{value}} dòng', value: { value: deletedIds.length } })
+      .showPrompt('Bạn có chắc muốn xóa không?', null, { code: 'Xóa {{value}} dòng', value: deletedIds.length })
       .then((_) => {
         this.forecastDetailService.delete(deletedIds).then((_) => {
           this.env
@@ -558,7 +558,7 @@ export class ForecastDetailPage extends PageBase {
     });
     deleteCells = [...new Set(deleteCells)];
     this.env
-      .showPrompt({ code: 'Bạn có chắc muốn xóa {{value}} đang chọn?', value: { value: deleteCells.length } }, null, {
+      .showPrompt({ code: 'Bạn có chắc muốn xóa {{value}} đang chọn?', value: deleteCells.length }, null, {
         code: 'Xóa {{value}} dòng?',
         value: { value: deleteCells.length },
       })
@@ -666,7 +666,8 @@ export class ForecastDetailPage extends PageBase {
       Id: this.item.Id,
     };
     this.env
-      .showLoading('Please wait for a few moments',
+      .showLoading(
+        'Please wait for a few moments',
         this.commonService
           .connect('POST', 'SALE/Forecast/CreateBOMRecommendation/' + this.item.Id, subQuery)
           .toPromise(),
@@ -725,7 +726,10 @@ export class ForecastDetailPage extends PageBase {
             }
           this.env
             .showPrompt(
-              {code:'Có {{value}} lỗi khi import: {{value1}}',value:{value:resp.ErrorList.length ,value1:message}},
+              {
+                code: 'Có {{value}} lỗi khi import: {{value1}}',
+                value: { value: resp.ErrorList.length, value1: message },
+              },
               'Bạn có muốn xem lại các mục bị lỗi?',
               'Có lỗi import dữ liệu',
             )
