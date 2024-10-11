@@ -15,7 +15,7 @@ import { FormBuilder, Validators, FormControl, FormArray, FormGroup } from '@ang
 import { CommonService } from 'src/app/services/core/common.service';
 import { lib } from 'src/app/services/static/global-functions';
 import { concat, of, Subject } from 'rxjs';
-import { catchError, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
+import { catchError, distinctUntilChanged, map, switchMap, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-bill-of-materials-detail',
@@ -110,7 +110,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
 
   loadedData(event) {
     if (this.item?._Item) {
-      this.itemListSelected.push(this.item._Item);
+      this._IDItemDataSource.selected.push(this.item._Item);
     }
     super.loadedData(event);
 
@@ -120,7 +120,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
       this.formGroup.controls.BatchSize.markAsDirty();
     }
     this.setLines();
-    this.itemSearch();
+    this._IDItemDataSource.initSearch();
   }
 
   markNestedNode(ls, Id) {
@@ -255,30 +255,35 @@ export class BillOfMaterialsDetailPage extends PageBase {
       });
   }
 
-  itemList$;
-  itemListLoading = false;
-  itemListInput$ = new Subject<string>();
-  itemListSelected = [];
-
-  itemSearch() {
-    this.itemListLoading = false;
-    this.itemList$ = concat(
-      of(this.itemListSelected),
-      this.itemListInput$.pipe(
-        distinctUntilChanged(),
-        tap(() => (this.itemListLoading = true)),
-        switchMap(
-          (term) =>
-            (this.query = this.commonService
-              .connect('GET', 'PROD/BillOfMaterials/ItemSearch/', { Take: 20, Skip: 0, Term: term })
-              .pipe(
-                catchError(() => of([])),
-                tap(() => (this.itemListLoading = false)),
-              )),
-        ),
-      ),
-    );
-  }
+  _IDItemDataSource =
+    {
+      searchProvider: this.commonService,
+      loading: false,
+      input$: new Subject<string>(),
+      selected: [],
+      items$: null,
+      initSearch() {
+        this.loading = false;
+        this.items$ = concat(
+          of(this.selected),
+          this.input$.pipe(
+            distinctUntilChanged(),
+            tap(() => (this.loading = true)),
+            switchMap((term) =>
+              this.searchProvider
+                .connect('GET', 'PROD/BillOfMaterials/ItemSearch/', { Take: 20, Skip: 0, Term: term })
+                .pipe( 
+                  map((result:any) => {
+                     return result = result.filter(d=> d.BOMs?.length == 0 );
+                  }),
+                  catchError(() => of([])),
+                  tap(() => (this.loading = false)),
+                ),
+            ),
+          ),
+        );
+      }
+    }
 
   changedIDItem(group, e) {
     if (e) {
@@ -540,7 +545,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
         })
         .catch((_) => {
           this.formGroup.controls.IDItem.setValue(this.item.IDItem);
-          this.itemSearch();
+          this._IDItemDataSource.initSearch();
         });
     } else {
       this.saveChange();
