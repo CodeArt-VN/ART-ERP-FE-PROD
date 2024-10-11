@@ -47,9 +47,6 @@ export class ProductionOrderDetailPage extends PageBase {
   ) {
     super();
     this.pageConfig.isDetailPage = true;
-    this.pageConfig.canEdit = true;
-    this.pageConfig.canAdd = true;
-    this.pageConfig.canDelete = true;
     this.formGroup = formBuilder.group({
       Id: new FormControl({ value: '', disabled: true }),
       IDBranch: [this.env.selectedBranch, Validators.required],
