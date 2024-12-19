@@ -18,9 +18,10 @@ import { concat, of, Subject } from 'rxjs';
 import { catchError, distinctUntilChanged, map, switchMap, tap } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-bill-of-materials-detail',
-  templateUrl: './bill-of-materials-detail.page.html',
-  styleUrls: ['./bill-of-materials-detail.page.scss'],
+    selector: 'app-bill-of-materials-detail',
+    templateUrl: './bill-of-materials-detail.page.html',
+    styleUrls: ['./bill-of-materials-detail.page.scss'],
+    standalone: false
 })
 export class BillOfMaterialsDetailPage extends PageBase {
   @ViewChild('importfile') importfile: any;

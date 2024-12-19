@@ -9,9 +9,10 @@ import { lib } from 'src/app/services/static/global-functions';
 import { HRM_StaffScheduleProvider } from 'src/app/services/static/services.service';
 
 @Component({
-  selector: 'app-catering-booking-schedule',
-  templateUrl: './catering-booking-schedule.component.html',
-  styleUrls: ['./catering-booking-schedule.component.scss'],
+    selector: 'app-catering-booking-schedule',
+    templateUrl: './catering-booking-schedule.component.html',
+    styleUrls: ['./catering-booking-schedule.component.scss'],
+    standalone: false
 })
 export class CateringBookingScheduleComponent extends PageBase {
   columns = [];

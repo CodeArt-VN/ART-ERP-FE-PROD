@@ -21,9 +21,10 @@ import { concat, of, Subject, Subscription } from 'rxjs';
 import { catchError, distinctUntilChanged, pairwise, scan, switchMap, tap } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-forecast-detail',
-  templateUrl: './forecast-detail.page.html',
-  styleUrls: ['./forecast-detail.page.scss'],
+    selector: 'app-forecast-detail',
+    templateUrl: './forecast-detail.page.html',
+    styleUrls: ['./forecast-detail.page.scss'],
+    standalone: false
 })
 export class ForecastDetailPage extends PageBase {
   viewDataSource = [];

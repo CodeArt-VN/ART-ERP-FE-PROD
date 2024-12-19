@@ -10,9 +10,10 @@ import QRCode from 'qrcode';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
-  selector: 'app-bill-of-materials-note',
-  templateUrl: 'bill-of-materials-note.page.html',
-  styleUrls: ['bill-of-materials-note.page.scss'],
+    selector: 'app-bill-of-materials-note',
+    templateUrl: 'bill-of-materials-note.page.html',
+    styleUrls: ['bill-of-materials-note.page.scss'],
+    standalone: false
 })
 export class BillOfMaterialsNotePage extends PageBase {
   constructor(

@@ -17,9 +17,10 @@ import { concat, of, Subject } from 'rxjs';
 import { catchError, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-production-order-detail',
-  templateUrl: './production-order-detail.page.html',
-  styleUrls: ['./production-order-detail.page.scss'],
+    selector: 'app-production-order-detail',
+    templateUrl: './production-order-detail.page.html',
+    styleUrls: ['./production-order-detail.page.scss'],
+    standalone: false
 })
 export class ProductionOrderDetailPage extends PageBase {
   typeList = [];

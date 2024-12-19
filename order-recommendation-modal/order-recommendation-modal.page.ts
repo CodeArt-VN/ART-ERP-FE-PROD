@@ -7,9 +7,10 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { lib } from 'src/app/services/static/global-functions';
 
 @Component({
-  selector: 'app-order-recommendation-modal',
-  templateUrl: './order-recommendation-modal.page.html',
-  styleUrls: ['./order-recommendation-modal.page.scss'],
+    selector: 'app-order-recommendation-modal',
+    templateUrl: './order-recommendation-modal.page.html',
+    styleUrls: ['./order-recommendation-modal.page.scss'],
+    standalone: false
 })
 export class OrderRecommendationModalPage extends PageBase {
   storerList = [];

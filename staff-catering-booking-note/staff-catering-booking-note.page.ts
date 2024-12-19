@@ -10,9 +10,10 @@ import QRCode from 'qrcode';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
-  selector: 'app-staff-catering-booking-note',
-  templateUrl: 'staff-catering-booking-note.page.html',
-  styleUrls: ['staff-catering-booking-note.page.scss'],
+    selector: 'app-staff-catering-booking-note',
+    templateUrl: 'staff-catering-booking-note.page.html',
+    styleUrls: ['staff-catering-booking-note.page.scss'],
+    standalone: false
 })
 export class StaffCateringBookingNotePage extends PageBase {
   constructor(

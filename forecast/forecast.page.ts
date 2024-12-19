@@ -9,7 +9,8 @@ import { SortConfig } from 'src/app/models/options-interface';
 @Component({
     selector: 'app-forecast',
     templateUrl: 'forecast.page.html',
-    styleUrls: ['forecast.page.scss']
+    styleUrls: ['forecast.page.scss'],
+    standalone: false
 })
 export class ForecastPage extends PageBase {
    

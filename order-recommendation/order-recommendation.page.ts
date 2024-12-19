@@ -10,9 +10,10 @@ import { ApiSetting } from 'src/app/services/static/api-setting';
 import { OrderRecommendationModalPage } from '../order-recommendation-modal/order-recommendation-modal.page';
 
 @Component({
-  selector: 'app-order-recommendation',
-  templateUrl: 'order-recommendation.page.html',
-  styleUrls: ['order-recommendation.page.scss'],
+    selector: 'app-order-recommendation',
+    templateUrl: 'order-recommendation.page.html',
+    styleUrls: ['order-recommendation.page.scss'],
+    standalone: false
 })
 export class OrderRecommendationPage extends PageBase {
   itemMRPList = [];

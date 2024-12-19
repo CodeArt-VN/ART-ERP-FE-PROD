@@ -7,9 +7,10 @@ import { BRA_BranchProvider } from 'src/app/services/static/services.service';
 import { Location } from '@angular/common';
 
 @Component({
-  selector: 'app-production-order',
-  templateUrl: 'production-order.page.html',
-  styleUrls: ['production-order.page.scss'],
+    selector: 'app-production-order',
+    templateUrl: 'production-order.page.html',
+    styleUrls: ['production-order.page.scss'],
+    standalone: false
 })
 export class ProductionOrderPage extends PageBase {
   typeList = [];

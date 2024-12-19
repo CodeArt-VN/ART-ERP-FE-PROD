@@ -7,9 +7,10 @@ import { Location } from '@angular/common';
 import { lib } from 'src/app/services/static/global-functions';
 
 @Component({
-  selector: 'app-bill-of-materials',
-  templateUrl: 'bill-of-materials.page.html',
-  styleUrls: ['bill-of-materials.page.scss'],
+    selector: 'app-bill-of-materials',
+    templateUrl: 'bill-of-materials.page.html',
+    styleUrls: ['bill-of-materials.page.scss'],
+    standalone: false
 })
 export class BillOfMaterialsPage extends PageBase {
   typeList = [];
