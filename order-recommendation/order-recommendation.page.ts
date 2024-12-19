@@ -169,6 +169,21 @@ export class OrderRecommendationPage extends PageBase {
     });
     this.selectedCount = this.items.filter((d) => d.checked).length;
   }
+  async createPurchaseRequest() {
+    this.env
+    .showPrompt('Do you want to create purchase requests?')
+    .then((_) => {
+      this.pageProvider.commonService.connect('GET', 'PROD/MRPRecommendation/CreatePurchaseRequest', this.query)
+      .toPromise().then((x) => {
+        this.env.showMessage('Saved','success');
+        this.refresh();
+      }).catch(() => {
+        this.env.showMessage('Failed','danger');
+      });
+    }).catch(err=>{
+    })
+   
+  }
 
   async showSaleOrderPickerModal() {}
 }

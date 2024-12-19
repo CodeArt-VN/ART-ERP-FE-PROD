@@ -1,19 +1,14 @@
 <ion-header>
-  <app-list-toolbar
-    [pageConfig]="pageConfig"
-    [selectedItems]="selectedItems"
-    [query]="query"
-    (add)="add()"
-    (refresh)="refresh()"
-    (export)="export()"
-    (import)="import($event)"
-    (help)="help()"
-    (unselect)="unselect()"
-    (archiveItems)="archiveItems()"
-    (deleteItems)="deleteItems()"
-    (changeBranch)="changeBranch($event)"
+  <app-toolbar [page]="this"
   >
     <ng-container>
+      <ion-button
+      (click)="createPurchaseRequest()"
+      title="{{'Create purchase request' | translate}}"
+    >
+    {{'Create purchase request' | translate}}
+      <!-- <ion-icon slot="icon-only" name="basket-outline"></ion-icon> -->
+    </ion-button>
       <ion-button
         *ngIf="pageConfig.canCreatePO && selectedCount"
         (click)="createPO()"
@@ -29,7 +24,7 @@
         <ion-icon slot="icon-only" name="bulb-outline"></ion-icon>
       </ion-button>
     </ng-container>
-  </app-list-toolbar>
+  </app-toolbar>
   <!-- <section class="table">
 		
 	</section> -->

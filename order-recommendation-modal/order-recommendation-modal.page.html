@@ -16,37 +16,12 @@
     <form [formGroup]="formGroup">
       <ion-row>
         <ion-col size="12" size-sm="12" size-md="12">
-          <div class="c-control">
-            <label class="c-label" for="IDWarehouse"
-              >{{'Warehouse' | translate}}
-              <span
-                *ngIf="!formGroup.controls.IDWarehouse.valid && !formGroup.controls.IDWarehouse.pending && (formGroup.controls.IDWarehouse.dirty || submitAttempt)"
-                ion-text
-                color="danger"
-                >(*)</span
-              >
-            </label>
-            <ng-select
-              class="c-input"
-              labelForId="IDWarehouse"
-              formControlName="IDWarehouse"
-              [items]="branchList"
-              [virtualScroll]="true"
-              bindLabel="Name"
-              bindValue="Id"
-              placeholder="{{'Search...' | translate}}"
-            >
-              <ng-template ng-option-tmp let-i="item" let-search="searchTerm">
-                <div *ngIf="i">
-                  <div>
-                    <span *ngFor="let l of i.levels">&nbsp;&nbsp;&nbsp;</span>
-                    <span [ngOptionHighlight]="search">{{i.Name}}</span>
-                  </div>
-                </div>
-              </ng-template>
-            </ng-select>
-          </div>
-
+          <app-form-control
+          [field]="{branchConfig:{showingType:'Warehouse',selectedBranch:this.env.selectedBranch},
+            id:'IDWarehouse',label:'Warehouse',type:'ng-select-branch',
+            dataSource:branchList,bindLabel:'Name',bindValue:'Id', placeholder:'Search',
+            form:formGroup}">
+          </app-form-control>
           <div class="c-control">
             <label class="c-label" for="IDStorer"
               >{{'Goods owner' | translate}}
