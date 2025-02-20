@@ -10,14 +10,14 @@
       <!-- <ion-icon slot="icon-only" name="basket-outline"></ion-icon> -->
     </ion-button>
       <ion-button
-        *ngIf="pageConfig.canCreatePO && selectedCount"
+        *ngIf="pageConfig.canCopyToPO && selectedCount"
         (click)="createPO()"
         title="{{'Create PO' | translate}}"
       >
         <ion-icon slot="icon-only" name="basket-outline"></ion-icon>
       </ion-button>
       <ion-button
-        *ngIf="pageConfig.canCreatePO"
+        *ngIf="pageConfig.canCopyToPO"
         (click)="suggestVendors()"
         title="{{'Vendors recommendation' | translate}}"
       >
