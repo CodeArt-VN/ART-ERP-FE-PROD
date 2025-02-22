@@ -6,16 +6,15 @@ import { IonicModule } from '@ionic/angular';
 import { ShareModule } from 'src/app/share.module';
 import { ForecastDetailPage } from './forecast-detail.page';
 
-
 const routes: Routes = [
-  {
-    path: '',
-    component: ForecastDetailPage,
-  },
+	{
+		path: '',
+		component: ForecastDetailPage,
+	},
 ];
 
 @NgModule({
-  imports: [CommonModule, FormsModule, IonicModule, ReactiveFormsModule, ShareModule, RouterModule.forChild(routes)],
-  declarations: [ForecastDetailPage],
+	imports: [CommonModule, FormsModule, IonicModule, ReactiveFormsModule, ShareModule, RouterModule.forChild(routes)],
+	declarations: [ForecastDetailPage],
 })
 export class ForecastDetailPageModule {}

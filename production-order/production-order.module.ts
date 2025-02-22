@@ -7,13 +7,7 @@ import { ProductionOrderPage } from './production-order.page';
 import { ShareModule } from 'src/app/share.module';
 
 @NgModule({
-  imports: [
-    IonicModule,
-    CommonModule,
-    FormsModule,
-    ShareModule,
-    RouterModule.forChild([{ path: '', component: ProductionOrderPage }]),
-  ],
-  declarations: [ProductionOrderPage],
+	imports: [IonicModule, CommonModule, FormsModule, ShareModule, RouterModule.forChild([{ path: '', component: ProductionOrderPage }])],
+	declarations: [ProductionOrderPage],
 })
 export class ProductionOrderPageModule {}

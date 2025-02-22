@@ -8,14 +8,7 @@ import { ShareModule } from 'src/app/share.module';
 import { OrderRecommendationModalPage } from '../order-recommendation-modal/order-recommendation-modal.page';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    FormsModule,
-    IonicModule,
-    ReactiveFormsModule,
-    ShareModule,
-    RouterModule.forChild([{ path: '', component: OrderRecommendationPage }]),
-  ],
-  declarations: [OrderRecommendationPage, OrderRecommendationModalPage],
+	imports: [CommonModule, FormsModule, IonicModule, ReactiveFormsModule, ShareModule, RouterModule.forChild([{ path: '', component: OrderRecommendationPage }])],
+	declarations: [OrderRecommendationPage, OrderRecommendationModalPage],
 })
 export class OrderRecommendationPageModule {}

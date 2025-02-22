@@ -8,15 +8,15 @@ import { ShareModule } from 'src/app/share.module';
 import { StaffCateringBookingComponentsModule } from './components/staff-catering-booking-components.module';
 
 @NgModule({
-  imports: [
-    IonicModule,
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    ShareModule,
-    StaffCateringBookingComponentsModule,
-    RouterModule.forChild([{ path: '', component: StaffCateringBookingNotePage }]),
-  ],
-  declarations: [StaffCateringBookingNotePage],
+	imports: [
+		IonicModule,
+		CommonModule,
+		FormsModule,
+		ReactiveFormsModule,
+		ShareModule,
+		StaffCateringBookingComponentsModule,
+		RouterModule.forChild([{ path: '', component: StaffCateringBookingNotePage }]),
+	],
+	declarations: [StaffCateringBookingNotePage],
 })
 export class StaffCateringBookingNotePageModule {}

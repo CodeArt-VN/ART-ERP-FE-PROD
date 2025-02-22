@@ -1,549 +1,549 @@
 .full-screen {
-  min-height: calc(100vh - 385px);
-  margin-bottom: 30px !important;
-  border-radius: 10px;
+	min-height: calc(100vh - 385px);
+	margin-bottom: 30px !important;
+	border-radius: 10px;
 }
 
 .table-contain {
-  max-width: 1440px;
-  margin: auto;
+	max-width: 1440px;
+	margin: auto;
 
-  section.table header {
-    height: 45px;
-  }
-  .row {
-    width: unset;
+	section.table header {
+		height: 45px;
+	}
+	.row {
+		width: unset;
 
-    &.sub-header {
-      background-color: rgba(var(--ion-color-light-rgb, 0, 0, 0), 0.5);
-    }
-  }
+		&.sub-header {
+			background-color: rgba(var(--ion-color-light-rgb, 0, 0, 0), 0.5);
+		}
+	}
 
-  .col-id {
-    max-width: 60px;
-    min-width: 60px;
-    text-align: left !important;
-    font-weight: bold;
-  }
-  .col-code,
-  .col-date {
-    .c-input {
-      text-align: left;
-    }
-  }
-  .col-name {
-    min-width: 150px;
-    b {
-      color: var(--ion-color-primary);
-    }
-  }
-  .col-uom {
-    max-width: 90px;
-    min-width: 90px;
-    justify-content: center;
-    .c-input {
-      text-align: center;
-    }
-  }
+	.col-id {
+		max-width: 60px;
+		min-width: 60px;
+		text-align: left !important;
+		font-weight: bold;
+	}
+	.col-code,
+	.col-date {
+		.c-input {
+			text-align: left;
+		}
+	}
+	.col-name {
+		min-width: 150px;
+		b {
+			color: var(--ion-color-primary);
+		}
+	}
+	.col-uom {
+		max-width: 90px;
+		min-width: 90px;
+		justify-content: center;
+		.c-input {
+			text-align: center;
+		}
+	}
 
-  .col-qty {
-    min-width: 110px;
-    max-width: 110px;
-    justify-content: flex-end;
-    .c-input {
-      text-align: right;
-      font-weight: bold;
-      color: var(--ion-color-primary);
-    }
-  }
+	.col-qty {
+		min-width: 110px;
+		max-width: 110px;
+		justify-content: flex-end;
+		.c-input {
+			text-align: right;
+			font-weight: bold;
+			color: var(--ion-color-primary);
+		}
+	}
 
-  .col-total {
-    min-width: 110px;
-    max-width: 110px;
-    text-align: right;
-    justify-content: flex-end;
-    .c-input {
-      text-align: right;
-      font-weight: bold;
-      color: var(--ion-color-primary);
-    }
-  }
-  .col-del {
-    max-width: 40px;
-    min-width: 40px;
-    justify-content: center;
-    cursor: pointer;
-  }
-  .c-input {
-    text-align: right;
-  }
+	.col-total {
+		min-width: 110px;
+		max-width: 110px;
+		text-align: right;
+		justify-content: flex-end;
+		.c-input {
+			text-align: right;
+			font-weight: bold;
+			color: var(--ion-color-primary);
+		}
+	}
+	.col-del {
+		max-width: 40px;
+		min-width: 40px;
+		justify-content: center;
+		cursor: pointer;
+	}
+	.c-input {
+		text-align: right;
+	}
 
-  .cell {
-    padding: 2px 2px;
+	.cell {
+		padding: 2px 2px;
 
-    .min-btn {
-      height: 1.8rem !important;
-      min-width: 1.8rem !important;
-    }
-  }
+		.min-btn {
+			height: 1.8rem !important;
+			min-width: 1.8rem !important;
+		}
+	}
 
-  .row.header {
-    height: 38px !important;
-  }
+	.row.header {
+		height: 38px !important;
+	}
 
-  .disable.cell,
-  input[disabled],
-  input[readonly],
-  select[disabled],
-  .c-input.disabled {
-    background: linear-gradient(180deg, var(--main-background-top), var(--main-background-top));
-  }
+	.disable.cell,
+	input[disabled],
+	input[readonly],
+	select[disabled],
+	.c-input.disabled {
+		background: linear-gradient(180deg, var(--main-background-top), var(--main-background-top));
+	}
 }
 
 ion-row.ion-no-padding {
-  padding-top: 0;
-  padding-bottom: 0px;
+	padding-top: 0;
+	padding-bottom: 0px;
 }
 
 .caption {
-  text-align: center;
-  text-transform: uppercase;
-  margin-bottom: 30px;
+	text-align: center;
+	text-transform: uppercase;
+	margin-bottom: 30px;
 }
 .bomtabs {
-  border-radius: 10px 10px 0 0;
-  max-width: 500px;
-  margin: auto;
+	border-radius: 10px 10px 0 0;
+	max-width: 500px;
+	margin: auto;
 }
 
 .mobile-only {
-  display: none;
+	display: none;
 }
 
 .full-screen.mobile-screen,
 ion-row.mobile-screen {
-  max-width: 500px;
-  min-height: auto;
-  margin: auto;
-  overflow: visible;
-  //border-radius: 0 0 10px 10px;
+	max-width: 500px;
+	min-height: auto;
+	margin: auto;
+	overflow: visible;
+	//border-radius: 0 0 10px 10px;
 }
 
 ion-card.bom-details {
-  color: var(--ion-color-dark);
-  box-shadow: none;
-  line-height: 20px;
-  cursor: pointer;
-  padding-top: 20px;
-
-  .mobile-only {
-    display: block;
-  }
-  .desktop-only {
-    display: none !important;
-  }
-
-  .barcode {
-    border-top: none !important;
-  }
-
-  .c-dropdown {
-    background: transparent;
-    border: none;
-  }
-
-  ion-card-content.ctheader {
-    border-bottom: solid 2px var(--ion-color-primary) !important;
-    border-top: 2px var(--main-background-bottom) dashed !important;
-    padding: 10px 20px;
-    text-align: left;
-    margin-top: -2px;
-
-    .c-dropdown,
-    .c-input {
-      background-color: rgba(var(--ion-color-primary-rgb, 0, 0, 0), 0.05);
-      //color: #fff;
-      font-size: calc(10/16 * 1.2rem);
-    }
-
-    .c-dropdown {
-      margin-right: 5px;
-    }
-
-    .c-input {
-      width: calc(100% - 115px);
-    }
-
-    .ct-stage {
-      display: block;
-
-      .ct-del-item {
-        margin-top: 5px;
-      }
-    }
-  }
-
-  .ct-other {
-    display: block;
-    margin-top: 15px;
-
-    .ct-del-item {
-      margin-top: 5px;
-    }
-
-    .c-dropdown {
-      margin-right: 5px;
-    }
-
-    .c-text-area {
-      border: 1px solid var(--menu-right-border-color) !important;
-      outline: none;
-      min-height: 80px;
-      border-radius: 3px;
-      font-weight: normal;
-      margin-top: 10px;
-      padding: 0 10px;
-      background-color: rgba(var(--ion-color-primary-rgb, 0, 0, 0), 0.05);
-    }
-  }
-
-  .c-dropdown {
-    border: 1px solid var(--menu-right-border-color) !important;
-    outline: none;
-    height: calc(10/16 * 2.5rem);
-    border-radius: 3px;
-    font-weight: normal;
-    background-color: rgba(var(--ion-color-primary-rgb, 0, 0, 0), 0.05);
-  }
-
-  .c-dropdown option {
-    color: #000;
-  }
-
-  .c-quantity {
-    margin: 10px 0 10px;
-    float: left;
-    width: 100%;
-
-    .ct-save-quantity {
-      float: left;
-    }
-
-    .ct-additional-quantity {
-      width: 100%;
-      float: left;
-      margin-top: 10px;
-      position: relative;
-
-      ion-text {
-        position: absolute;
-        margin-left: -38px;
-        line-height: calc(10/16 * 2.4rem);
-      }
-
-      .txtAddQtyInput {
-        width: 86px;
-        text-align: left;
-        border-radius: 3px;
-        padding: 8px !important;
-        height: calc(10/16 * 2.5rem);
-        float: left;
-        margin-right: 20px;
-      }
-
-      ion-range {
-        width: calc(100% - 108px);
-      }
-    }
-
-    ion-icon {
-      margin-top: 10px;
-    }
-
-    ion-badge {
-      float: left;
-      background: rgba(var(--ion-color-primary-rgb, 0, 0, 0), 0.05);
-      margin: 3px 20px 0 0;
-      padding: 2px 6px;
-      color: #000;
-      border-radius: 3px;
-      border: 1px solid var(--menu-right-border-color) !important;
-      min-width: 86px;
-
-      .c-dropdown {
-        border: none !important;
-        float: right;
-        background: none;
-        font-size: calc(10/16 * 1.2rem);
-        height: calc(10/16 * 2rem);
-      }
-
-      .txtQtyInput {
-        border: none !important;
-        //border-bottom: dotted 1px #fff !important;
-        background-color: transparent;
-        //color: #fff;
-        width: 35px;
-        font-size: calc(10/16 * 1.2rem);
-        font-weight: normal;
-        height: calc(10/16 * 2rem);
-      }
-    }
-
-    ion-range {
-      padding: 0;
-      margin-top: -4px;
-    }
-
-    ion-range {
-      pointer-events: none;
-    }
-
-    ion-range::part(bar) {
-      pointer-events: none;
-    }
-    ion-range::part(bar-active) {
-      pointer-events: none;
-    }
-
-    ion-range::part(knob) {
-      pointer-events: auto;
-    }
-
-    ion-range::part(tick) {
-      pointer-events: none;
-    }
-    ion-range::part(tick-active) {
-      pointer-events: none;
-    }
-  }
-
-  .c-input {
-    border: 1px solid var(--menu-right-border-color) !important;
-    outline: none;
-    height: calc(10/16 * 2.5rem);
-    border-radius: 3px;
-    font-weight: normal;
-    background-color: rgba(var(--ion-color-primary-rgb, 0, 0, 0), 0.05);
-  }
-
-  .ct-item {
-    padding: 20px 0 0;
-  }
-
-  .ct-del-item {
-    float: right;
-  }
-
-  .ct-item > select {
-    margin-bottom: 10px;
-    font-size: calc(10/16 * 1.2rem);
-  }
-
-  .ct-item > ng-select {
-    height: 45px;
-    font-size: calc(10/16 * 1.2rem);
-  }
-
-  .ct-item > ng-select .ng-select-container {
-    height: calc(10/16 * 3rem);
-  }
-
-  .btnShowPrice {
-    cursor: pointer;
-    color: var(--ion-color-primary);
-    text-align: center;
-    display: inline-block;
-    border: solid 1px var(--ion-color-primary);
-    border-radius: 3px;
-    padding: 2px 16px;
-  }
-
-  .btnShowPrice.showned {
-    color: #000;
-    border-color: #000;
-  }
-
-  .additional-info {
-    display: block;
-
-    .hidden-field {
-      display: none;
-    }
-
-    .c-input {
-      width: 100px;
-      text-align: right;
-    }
-
-    .c-input {
-      height: calc(10/16 * 2.5rem);
-      line-height: calc(10/16 * 2.5rem);
-      padding: 0 5px;
-    }
-
-    table {
-      width: 100%;
-      margin-top: 20px;
-      text-align: center;
-    }
-
-    table td {
-      text-align: left;
-      border: none;
-      padding: 5px 0;
-      width: 50%;
-    }
-
-    table td.align-right {
-      text-align: right;
-    }
-  }
-
-  .total-price {
-    position: relative;
-    bottom: 0;
-    background-color: var(--ion-color-primary);
-    width: 100%;
-    height: 80px;
-    padding: 15px 20px 15px 10px !important;
-  }
-
-  .btn-add-new {
-    display: block;
-    padding: 20px;
-    text-align: center;
-
-    .btnAddNewContainer {
-      display: inline-block;
-      padding: 10px 30px;
-      background-color: #fff;
-      border-radius: 5px;
-      border: solid 1px var(--ion-color-primary);
-    }
-
-    .min-btn {
-      margin-right: 5px;
-      margin-bottom: -2px;
-      color: var(--ion-color-primary);
-    }
-
-    .btnAdd {
-      color: var(--ion-color-primary);
-    }
-  }
-
-  .btn-save {
-    display: block;
-    padding: 25px;
-    margin: 20px;
-    text-align: center;
-
-    .btnSaveContainer {
-      padding: 10px 30px;
-      background-color: var(--ion-color-primary);
-      border-radius: 5px;
-    }
-
-    .min-btn {
-      margin-right: 5px;
-      margin-bottom: -2px;
-      color: #fff;
-    }
-
-    .btnSave {
-      color: #fff;
-      text-transform: uppercase;
-      font-size: larger;
-      font-weight: normal;
-    }
-  }
-
-  .logo {
-    position: absolute;
-    z-index: 1;
-    left: calc(50% - 25px);
-    margin-top: -16px;
-    display: inline-block;
-    width: 50px;
-    height: 50px;
-    background-color: white;
-    border-radius: 100px;
-    background-image: url('../../../../assets/icons/icon-256.webp');
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 30px;
-    border: 2px solid var(--main-background-bottom);
-  }
-
-  ion-card-header {
-    padding-top: 45px;
-    background: var(--table-row-background);
-    border-radius: 10px 10px 0 0;
-    .ngay-hd {
-      font-size: calc(10/16 * 1.1rem);
-      font-weight: bold;
-      vertical-align: text-top;
-      line-height: 24px;
-    }
-  }
-
-  ion-card-content {
-    background: var(--table-row-background);
-    color: var(--ion-color-dark);
-    padding-bottom: 0;
-    // padding-top: 20px;
-    border-top: none;
-    border-bottom: 2px var(--main-background-bottom) dashed;
-  }
-
-  ion-card-title {
-    text-align: center;
-    font-size: 2.6rem !important;
-    padding-top: 0 !important;
-    font-weight: normal !important;
-  }
-
-  .card-footer {
-    background: var(--table-row-background);
-    border-radius: 0 0 10px 10px;
-  }
-
-  .info {
-    padding: 20px;
-    padding-top: 0;
-
-    .field {
-      font-size: calc(10/16 * 1.2rem);
-      padding-top: 16px;
-      text-transform: uppercase;
-    }
-
-    .field-value {
-      font-weight: bold;
-      line-height: 30px;
-    }
-
-    .address {
-      font-size: calc(10/16 * 1.2rem);
-    }
-  }
-
-  .barcode {
-    border-top: dashed 4px var(--menu-right-border-color);
-  }
-
-  table.card {
-    td {
-      vertical-align: top;
-      padding: 2px 5px;
-    }
-
-    td:first-child {
-      width: 10px;
-    }
-
-    .td-address {
-    }
-  }
+	color: var(--ion-color-dark);
+	box-shadow: none;
+	line-height: 20px;
+	cursor: pointer;
+	padding-top: 20px;
+
+	.mobile-only {
+		display: block;
+	}
+	.desktop-only {
+		display: none !important;
+	}
+
+	.barcode {
+		border-top: none !important;
+	}
+
+	.c-dropdown {
+		background: transparent;
+		border: none;
+	}
+
+	ion-card-content.ctheader {
+		border-bottom: solid 2px var(--ion-color-primary) !important;
+		border-top: 2px var(--main-background-bottom) dashed !important;
+		padding: 10px 20px;
+		text-align: left;
+		margin-top: -2px;
+
+		.c-dropdown,
+		.c-input {
+			background-color: rgba(var(--ion-color-primary-rgb, 0, 0, 0), 0.05);
+			//color: #fff;
+			font-size: calc(10 / 16 * 1.2rem);
+		}
+
+		.c-dropdown {
+			margin-right: 5px;
+		}
+
+		.c-input {
+			width: calc(100% - 115px);
+		}
+
+		.ct-stage {
+			display: block;
+
+			.ct-del-item {
+				margin-top: 5px;
+			}
+		}
+	}
+
+	.ct-other {
+		display: block;
+		margin-top: 15px;
+
+		.ct-del-item {
+			margin-top: 5px;
+		}
+
+		.c-dropdown {
+			margin-right: 5px;
+		}
+
+		.c-text-area {
+			border: 1px solid var(--menu-right-border-color) !important;
+			outline: none;
+			min-height: 80px;
+			border-radius: 3px;
+			font-weight: normal;
+			margin-top: 10px;
+			padding: 0 10px;
+			background-color: rgba(var(--ion-color-primary-rgb, 0, 0, 0), 0.05);
+		}
+	}
+
+	.c-dropdown {
+		border: 1px solid var(--menu-right-border-color) !important;
+		outline: none;
+		height: calc(10 / 16 * 2.5rem);
+		border-radius: 3px;
+		font-weight: normal;
+		background-color: rgba(var(--ion-color-primary-rgb, 0, 0, 0), 0.05);
+	}
+
+	.c-dropdown option {
+		color: #000;
+	}
+
+	.c-quantity {
+		margin: 10px 0 10px;
+		float: left;
+		width: 100%;
+
+		.ct-save-quantity {
+			float: left;
+		}
+
+		.ct-additional-quantity {
+			width: 100%;
+			float: left;
+			margin-top: 10px;
+			position: relative;
+
+			ion-text {
+				position: absolute;
+				margin-left: -38px;
+				line-height: calc(10 / 16 * 2.4rem);
+			}
+
+			.txtAddQtyInput {
+				width: 86px;
+				text-align: left;
+				border-radius: 3px;
+				padding: 8px !important;
+				height: calc(10 / 16 * 2.5rem);
+				float: left;
+				margin-right: 20px;
+			}
+
+			ion-range {
+				width: calc(100% - 108px);
+			}
+		}
+
+		ion-icon {
+			margin-top: 10px;
+		}
+
+		ion-badge {
+			float: left;
+			background: rgba(var(--ion-color-primary-rgb, 0, 0, 0), 0.05);
+			margin: 3px 20px 0 0;
+			padding: 2px 6px;
+			color: #000;
+			border-radius: 3px;
+			border: 1px solid var(--menu-right-border-color) !important;
+			min-width: 86px;
+
+			.c-dropdown {
+				border: none !important;
+				float: right;
+				background: none;
+				font-size: calc(10 / 16 * 1.2rem);
+				height: calc(10 / 16 * 2rem);
+			}
+
+			.txtQtyInput {
+				border: none !important;
+				//border-bottom: dotted 1px #fff !important;
+				background-color: transparent;
+				//color: #fff;
+				width: 35px;
+				font-size: calc(10 / 16 * 1.2rem);
+				font-weight: normal;
+				height: calc(10 / 16 * 2rem);
+			}
+		}
+
+		ion-range {
+			padding: 0;
+			margin-top: -4px;
+		}
+
+		ion-range {
+			pointer-events: none;
+		}
+
+		ion-range::part(bar) {
+			pointer-events: none;
+		}
+		ion-range::part(bar-active) {
+			pointer-events: none;
+		}
+
+		ion-range::part(knob) {
+			pointer-events: auto;
+		}
+
+		ion-range::part(tick) {
+			pointer-events: none;
+		}
+		ion-range::part(tick-active) {
+			pointer-events: none;
+		}
+	}
+
+	.c-input {
+		border: 1px solid var(--menu-right-border-color) !important;
+		outline: none;
+		height: calc(10 / 16 * 2.5rem);
+		border-radius: 3px;
+		font-weight: normal;
+		background-color: rgba(var(--ion-color-primary-rgb, 0, 0, 0), 0.05);
+	}
+
+	.ct-item {
+		padding: 20px 0 0;
+	}
+
+	.ct-del-item {
+		float: right;
+	}
+
+	.ct-item > select {
+		margin-bottom: 10px;
+		font-size: calc(10 / 16 * 1.2rem);
+	}
+
+	.ct-item > ng-select {
+		height: 45px;
+		font-size: calc(10 / 16 * 1.2rem);
+	}
+
+	.ct-item > ng-select .ng-select-container {
+		height: calc(10 / 16 * 3rem);
+	}
+
+	.btnShowPrice {
+		cursor: pointer;
+		color: var(--ion-color-primary);
+		text-align: center;
+		display: inline-block;
+		border: solid 1px var(--ion-color-primary);
+		border-radius: 3px;
+		padding: 2px 16px;
+	}
+
+	.btnShowPrice.showned {
+		color: #000;
+		border-color: #000;
+	}
+
+	.additional-info {
+		display: block;
+
+		.hidden-field {
+			display: none;
+		}
+
+		.c-input {
+			width: 100px;
+			text-align: right;
+		}
+
+		.c-input {
+			height: calc(10 / 16 * 2.5rem);
+			line-height: calc(10 / 16 * 2.5rem);
+			padding: 0 5px;
+		}
+
+		table {
+			width: 100%;
+			margin-top: 20px;
+			text-align: center;
+		}
+
+		table td {
+			text-align: left;
+			border: none;
+			padding: 5px 0;
+			width: 50%;
+		}
+
+		table td.align-right {
+			text-align: right;
+		}
+	}
+
+	.total-price {
+		position: relative;
+		bottom: 0;
+		background-color: var(--ion-color-primary);
+		width: 100%;
+		height: 80px;
+		padding: 15px 20px 15px 10px !important;
+	}
+
+	.btn-add-new {
+		display: block;
+		padding: 20px;
+		text-align: center;
+
+		.btnAddNewContainer {
+			display: inline-block;
+			padding: 10px 30px;
+			background-color: #fff;
+			border-radius: 5px;
+			border: solid 1px var(--ion-color-primary);
+		}
+
+		.min-btn {
+			margin-right: 5px;
+			margin-bottom: -2px;
+			color: var(--ion-color-primary);
+		}
+
+		.btnAdd {
+			color: var(--ion-color-primary);
+		}
+	}
+
+	.btn-save {
+		display: block;
+		padding: 25px;
+		margin: 20px;
+		text-align: center;
+
+		.btnSaveContainer {
+			padding: 10px 30px;
+			background-color: var(--ion-color-primary);
+			border-radius: 5px;
+		}
+
+		.min-btn {
+			margin-right: 5px;
+			margin-bottom: -2px;
+			color: #fff;
+		}
+
+		.btnSave {
+			color: #fff;
+			text-transform: uppercase;
+			font-size: larger;
+			font-weight: normal;
+		}
+	}
+
+	.logo {
+		position: absolute;
+		z-index: 1;
+		left: calc(50% - 25px);
+		margin-top: -16px;
+		display: inline-block;
+		width: 50px;
+		height: 50px;
+		background-color: white;
+		border-radius: 100px;
+		background-image: url('../../../../assets/icons/icon-256.webp');
+		background-repeat: no-repeat;
+		background-position: center;
+		background-size: 30px;
+		border: 2px solid var(--main-background-bottom);
+	}
+
+	ion-card-header {
+		padding-top: 45px;
+		background: var(--table-row-background);
+		border-radius: 10px 10px 0 0;
+		.ngay-hd {
+			font-size: calc(10 / 16 * 1.1rem);
+			font-weight: bold;
+			vertical-align: text-top;
+			line-height: 24px;
+		}
+	}
+
+	ion-card-content {
+		background: var(--table-row-background);
+		color: var(--ion-color-dark);
+		padding-bottom: 0;
+		// padding-top: 20px;
+		border-top: none;
+		border-bottom: 2px var(--main-background-bottom) dashed;
+	}
+
+	ion-card-title {
+		text-align: center;
+		font-size: 2.6rem !important;
+		padding-top: 0 !important;
+		font-weight: normal !important;
+	}
+
+	.card-footer {
+		background: var(--table-row-background);
+		border-radius: 0 0 10px 10px;
+	}
+
+	.info {
+		padding: 20px;
+		padding-top: 0;
+
+		.field {
+			font-size: calc(10 / 16 * 1.2rem);
+			padding-top: 16px;
+			text-transform: uppercase;
+		}
+
+		.field-value {
+			font-weight: bold;
+			line-height: 30px;
+		}
+
+		.address {
+			font-size: calc(10 / 16 * 1.2rem);
+		}
+	}
+
+	.barcode {
+		border-top: dashed 4px var(--menu-right-border-color);
+	}
+
+	table.card {
+		td {
+			vertical-align: top;
+			padding: 2px 5px;
+		}
+
+		td:first-child {
+			width: 10px;
+		}
+
+		.td-address {
+		}
+	}
 }

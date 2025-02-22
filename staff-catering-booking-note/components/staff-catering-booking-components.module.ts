@@ -6,8 +6,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CateringBookingScheduleComponent } from './catering-booking-schedule/catering-booking-schedule.component';
 
 @NgModule({
-  imports: [IonicModule, CommonModule, ShareModule, FormsModule, ReactiveFormsModule],
-  declarations: [CateringBookingScheduleComponent],
-  exports: [CateringBookingScheduleComponent],
+	imports: [IonicModule, CommonModule, ShareModule, FormsModule, ReactiveFormsModule],
+	declarations: [CateringBookingScheduleComponent],
+	exports: [CateringBookingScheduleComponent],
 })
 export class StaffCateringBookingComponentsModule {}

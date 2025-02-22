@@ -7,13 +7,7 @@ import { ShareModule } from 'src/app/share.module';
 import { ForecastPage } from './forecast.page';
 
 @NgModule({
-  imports: [
-    IonicModule,
-    CommonModule,
-    FormsModule,
-    ShareModule,
-    RouterModule.forChild([{ path: '', component: ForecastPage }])
-  ],
-  declarations: [ForecastPage]
+	imports: [IonicModule, CommonModule, FormsModule, ShareModule, RouterModule.forChild([{ path: '', component: ForecastPage }])],
+	declarations: [ForecastPage],
 })
 export class ForecastPageModule {}

@@ -7,13 +7,7 @@ import { BillOfMaterialsPage } from './bill-of-materials.page';
 import { ShareModule } from 'src/app/share.module';
 
 @NgModule({
-  imports: [
-    IonicModule,
-    CommonModule,
-    FormsModule,
-    ShareModule,
-    RouterModule.forChild([{ path: '', component: BillOfMaterialsPage }]),
-  ],
-  declarations: [BillOfMaterialsPage],
+	imports: [IonicModule, CommonModule, FormsModule, ShareModule, RouterModule.forChild([{ path: '', component: BillOfMaterialsPage }])],
+	declarations: [BillOfMaterialsPage],
 })
 export class BillOfMaterialsPageModule {}

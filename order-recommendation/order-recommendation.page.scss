@@ -1,31 +1,31 @@
 .cell b {
-  color: var(--ion-color-primary);
+	color: var(--ion-color-primary);
 }
 
 .table {
-  background: transparent;
-  .row.header {
-    height: calc(10/16 * 4.5rem);
-    padding-top: calc(10/16 * 1rem);
-    background: transparent;
-  }
-  .row {
-    background: var(--table-row-background);
+	background: transparent;
+	.row.header {
+		height: calc(10 / 16 * 4.5rem);
+		padding-top: calc(10 / 16 * 1rem);
+		background: transparent;
+	}
+	.row {
+		background: var(--table-row-background);
 
-    &.selected {
-      font-weight: bold;
-    }
-  }
+		&.selected {
+			font-weight: bold;
+		}
+	}
 }
 
 .col-mrpname {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 150px;
-  max-width: 200px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	min-width: 150px;
+	max-width: 200px;
 }
 
 .vendor-name {
-  font-size: 80%;
+	font-size: 80%;
 }

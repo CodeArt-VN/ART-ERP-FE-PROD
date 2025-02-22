@@ -1,185 +1,99 @@
 <ion-header>
-  <app-list-toolbar
-    pageTitle="{{'List' | translate}}"
-    [pageConfig]="pageConfig"
-    [selectedItems]="selectedItems"
-    [query]="query"
-    (add)="add()"
-    (refresh)="refresh()"
-    (export)="exportClick()"
-    (import)="import($event)"
-    (help)="help()"
-    (unselect)="unselect()"
-    (archiveItems)="archiveItems()"
-    (deleteItems)="deleteItems()"
-    (changeBranch)="changeBranch($event)"
-  ></app-list-toolbar>
+	<app-list-toolbar
+		pageTitle="{{'List' | translate}}"
+		[pageConfig]="pageConfig"
+		[selectedItems]="selectedItems"
+		[query]="query"
+		(add)="add()"
+		(refresh)="refresh()"
+		(export)="exportClick()"
+		(import)="import($event)"
+		(help)="help()"
+		(unselect)="unselect()"
+		(archiveItems)="archiveItems()"
+		(deleteItems)="deleteItems()"
+		(changeBranch)="changeBranch($event)"
+	></app-list-toolbar>
 
-  <section class="table desktop-only">
-    <header class="bold">
-      <div class="col-checkbox cell"></div>
-      <div class="col-id cell" (click)="sortToggle('Id')">
-        {{'Id' | translate}}
-        <ion-icon class="min-btn" *ngIf="sort.Id" [name]="sort.Id == 'Id'?'arrow-down': 'arrow-up'"></ion-icon>
-        <ion-icon
-          class="min-btn"
-          (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch"
-          *ngIf="query.Id"
-          name="search"
-          color="primary"
-        ></ion-icon>
-      </div>
-      <div class="col-name cell" (click)="sortToggle('ItemName')">
-        {{'Finished goods with BOM' | translate}}
-        <ion-icon
-          class="min-btn"
-          *ngIf="sort.ItemName"
-          [name]="sort.ItemName == 'ItemName'?'arrow-down': 'arrow-up'"
-        ></ion-icon>
-        <ion-icon
-          class="min-btn"
-          (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch"
-          *ngIf="query.Keyword"
-          name="search"
-          color="primary"
-        ></ion-icon>
-      </div>
-      <div class="col-number cell" (click)="sortToggle('BatchSize')">
-        {{'Quantity/batch' | translate}}
-        <ion-icon
-          class="min-btn"
-          *ngIf="sort.BatchSize"
-          [name]="sort.BatchSize == 'BatchSize'?'arrow-down': 'arrow-up'"
-        ></ion-icon>
-        <ion-icon
-          class="min-btn"
-          (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch"
-          *ngIf="query.BatchSize"
-          name="search"
-          color="primary"
-        ></ion-icon>
-      </div>
-      <div class="col-code cell" (click)="sortToggle('Type')">
-        {{'Classification' | translate}}
-        <ion-icon class="min-btn" *ngIf="sort.Type" [name]="sort.Type == 'Type'?'arrow-down': 'arrow-up'"></ion-icon>
-        <ion-icon
-          class="min-btn"
-          (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch"
-          *ngIf="query.Type"
-          name="search"
-          color="primary"
-        ></ion-icon>
-      </div>
-    </header>
-    <form (submit)="refresh()" action="#">
-      <header class="filter" *ngIf="pageConfig.isShowSearch">
-        <div class="col-checkbox cell"></div>
-        <div class="col-id cell">
-          <input
-            [ngModelOptions]="{standalone: true}"
-            [(ngModel)]="query.Id"
-            class="c-input"
-            [ngClass]="{active: query.Id}"
-            type="text"
-          />
-          <ion-icon
-            class="min-btn"
-            (click)="query.Id=''; refresh()"
-            *ngIf="query.Id"
-            name="close-circle-outline"
-          ></ion-icon>
-        </div>
-        <div class="col-name cell">
-          <input
-            [ngModelOptions]="{standalone: true}"
-            [(ngModel)]="query.Keyword"
-            class="c-input"
-            [ngClass]="{active: query.Keyword}"
-            type="text"
-          />
-          <ion-icon
-            class="min-btn"
-            (click)="query.Keyword=''; refresh()"
-            *ngIf="query.Keyword"
-            name="close-circle-outline"
-          ></ion-icon>
-        </div>
-        <div class="col-number cell">
-          <input
-            [ngModelOptions]="{standalone: true}"
-            [(ngModel)]="query.BatchSize"
-            class="c-input"
-            [ngClass]="{active: query.BatchSize}"
-            type="text"
-          />
-          <ion-icon
-            class="min-btn"
-            (click)="query.BatchSize=''; refresh()"
-            *ngIf="query.BatchSize"
-            name="close-circle-outline"
-          ></ion-icon>
-        </div>
-        <div class="col-code cell">
-          <select
-            (change)="refresh()"
-            class="c-input c-dropdown"
-            [ngModelOptions]="{standalone: true}"
-            [(ngModel)]="query.Type"
-            [ngClass]="{active: query.Type}"
-          >
-            <option *ngFor="let t of typeList" [value]="t.Code">{{t.Name}}</option>
-          </select>
-          <ion-icon
-            class="min-btn"
-            (click)="query.Type=''; refresh()"
-            *ngIf="query.Type"
-            name="close-circle-outline"
-          ></ion-icon>
-        </div>
+	<section class="table desktop-only">
+		<header class="bold">
+			<div class="col-checkbox cell"></div>
+			<div class="col-id cell" (click)="sortToggle('Id')">
+				{{'Id' | translate}}
+				<ion-icon class="min-btn" *ngIf="sort.Id" [name]="sort.Id == 'Id'?'arrow-down': 'arrow-up'"></ion-icon>
+				<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.Id" name="search" color="primary"></ion-icon>
+			</div>
+			<div class="col-name cell" (click)="sortToggle('ItemName')">
+				{{'Finished goods with BOM' | translate}}
+				<ion-icon class="min-btn" *ngIf="sort.ItemName" [name]="sort.ItemName == 'ItemName'?'arrow-down': 'arrow-up'"></ion-icon>
+				<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.Keyword" name="search" color="primary"></ion-icon>
+			</div>
+			<div class="col-number cell" (click)="sortToggle('BatchSize')">
+				{{'Quantity/batch' | translate}}
+				<ion-icon class="min-btn" *ngIf="sort.BatchSize" [name]="sort.BatchSize == 'BatchSize'?'arrow-down': 'arrow-up'"></ion-icon>
+				<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.BatchSize" name="search" color="primary"></ion-icon>
+			</div>
+			<div class="col-code cell" (click)="sortToggle('Type')">
+				{{'Classification' | translate}}
+				<ion-icon class="min-btn" *ngIf="sort.Type" [name]="sort.Type == 'Type'?'arrow-down': 'arrow-up'"></ion-icon>
+				<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.Type" name="search" color="primary"></ion-icon>
+			</div>
+		</header>
+		<form (submit)="refresh()" action="#">
+			<header class="filter" *ngIf="pageConfig.isShowSearch">
+				<div class="col-checkbox cell"></div>
+				<div class="col-id cell">
+					<input [ngModelOptions]="{standalone: true}" [(ngModel)]="query.Id" class="c-input" [ngClass]="{active: query.Id}" type="text" />
+					<ion-icon class="min-btn" (click)="query.Id=''; refresh()" *ngIf="query.Id" name="close-circle-outline"></ion-icon>
+				</div>
+				<div class="col-name cell">
+					<input [ngModelOptions]="{standalone: true}" [(ngModel)]="query.Keyword" class="c-input" [ngClass]="{active: query.Keyword}" type="text" />
+					<ion-icon class="min-btn" (click)="query.Keyword=''; refresh()" *ngIf="query.Keyword" name="close-circle-outline"></ion-icon>
+				</div>
+				<div class="col-number cell">
+					<input [ngModelOptions]="{standalone: true}" [(ngModel)]="query.BatchSize" class="c-input" [ngClass]="{active: query.BatchSize}" type="text" />
+					<ion-icon class="min-btn" (click)="query.BatchSize=''; refresh()" *ngIf="query.BatchSize" name="close-circle-outline"></ion-icon>
+				</div>
+				<div class="col-code cell">
+					<select (change)="refresh()" class="c-input c-dropdown" [ngModelOptions]="{standalone: true}" [(ngModel)]="query.Type" [ngClass]="{active: query.Type}">
+						<option *ngFor="let t of typeList" [value]="t.Code">{{t.Name}}</option>
+					</select>
+					<ion-icon class="min-btn" (click)="query.Type=''; refresh()" *ngIf="query.Type" name="close-circle-outline"></ion-icon>
+				</div>
 
-        <button mat-raised-button type="submit" style="display: none">Search</button>
-      </header>
-    </form>
-  </section>
+				<button mat-raised-button type="submit" style="display: none">Search</button>
+			</header>
+		</form>
+	</section>
 </ion-header>
 
 <ion-content appScrollbarTheme class="header-table">
-  <app-page-message [itemsLength]="items.length" [showSpinner]="pageConfig.showSpinner"></app-page-message>
-  <div *ngIf="items.length && pageConfig.showSpinner==false">
-    <section class="table">
-      <div
-        *ngFor="let i of items; let j = index;"
-        class="row"
-        [ngClass]="{odd: j % 2 != 0}"
-        [ngClass]="{selected: i.checked}"
-      >
-        <div class="col-checkbox cell">
-          <input (click)="changeSelection(i, $event)" class="c-checkbox" [(ngModel)]="i.checked" type="checkbox" />
-        </div>
-        <div class="col-id cell">
-          <a [routerLink]="['/'+pageConfig.pageName+'/'+i.Id]">{{i.Id}}</a>
-        </div>
-        <div (click)="nav('bill-of-materials/'+i.Id,'forward')" class="col-name cell">
-          <b>{{i._Item.Code}}</b>
-          <span>
-            -
-            <span> {{i._Item.Name}} </span>
-            <small *ngIf="i.Quantity"
-              ><b><ion-text color="primary">X {{i.Quantity}}</ion-text></b></small
-            >
-          </span>
-        </div>
-        <div class="col-number cell">{{i.BatchSize}}</div>
-        <div class="col-code cell">{{i.TypeName}}</div>
-      </div>
-    </section>
-  </div>
-  <ion-infinite-scroll
-    color="primary"
-    threshold="20%"
-    (ionInfinite)="loadData($event)"
-    [disabled]="!pageConfig.infiniteScroll || pageConfig.isEndOfData"
-  >
-    <ion-infinite-scroll-content loadingSpinner="dots"></ion-infinite-scroll-content>
-  </ion-infinite-scroll>
+	<app-page-message [itemsLength]="items.length" [showSpinner]="pageConfig.showSpinner"></app-page-message>
+	<div *ngIf="items.length && pageConfig.showSpinner==false">
+		<section class="table">
+			<div *ngFor="let i of items; let j = index;" class="row" [ngClass]="{odd: j % 2 != 0}" [ngClass]="{selected: i.checked}">
+				<div class="col-checkbox cell">
+					<input (click)="changeSelection(i, $event)" class="c-checkbox" [(ngModel)]="i.checked" type="checkbox" />
+				</div>
+				<div class="col-id cell">
+					<a [routerLink]="['/'+pageConfig.pageName+'/'+i.Id]">{{i.Id}}</a>
+				</div>
+				<div (click)="nav('bill-of-materials/'+i.Id,'forward')" class="col-name cell">
+					<b>{{i._Item.Code}}</b>
+					<span>
+						-
+						<span> {{i._Item.Name}} </span>
+						<small *ngIf="i.Quantity"
+							><b><ion-text color="primary">X {{i.Quantity}}</ion-text></b></small
+						>
+					</span>
+				</div>
+				<div class="col-number cell">{{i.BatchSize}}</div>
+				<div class="col-code cell">{{i.TypeName}}</div>
+			</div>
+		</section>
+	</div>
+	<ion-infinite-scroll color="primary" threshold="20%" (ionInfinite)="loadData($event)" [disabled]="!pageConfig.infiniteScroll || pageConfig.isEndOfData">
+		<ion-infinite-scroll-content loadingSpinner="dots"></ion-infinite-scroll-content>
+	</ion-infinite-scroll>
 </ion-content>

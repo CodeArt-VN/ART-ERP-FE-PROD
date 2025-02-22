@@ -1,622 +1,563 @@
 <ion-header>
-  <app-toolbar [page]="this">
-    <div *ngIf="pageConfig.canEdit && this.id">
-      <ion-button (click)="exportClick()" title="{{'Export component' | translate}}">
-        <ion-icon slot="icon-only" name="cloud-download-outline"></ion-icon>
-      </ion-button>
-      <ion-button (click)="importClick()" title="{{'Import component' | translate}}">
-        <ion-icon slot="icon-only" name="cloud-upload-outline"></ion-icon>
-      </ion-button>
+	<app-toolbar [page]="this">
+		<div *ngIf="pageConfig.canEdit && this.id">
+			<ion-button (click)="exportClick()" title="{{'Export component' | translate}}">
+				<ion-icon slot="icon-only" name="cloud-download-outline"></ion-icon>
+			</ion-button>
+			<ion-button (click)="importClick()" title="{{'Import component' | translate}}">
+				<ion-icon slot="icon-only" name="cloud-upload-outline"></ion-icon>
+			</ion-button>
 
-      <ion-button
-        (click)="addOrderLine({ Type: 'CTItem', IDBOM: item.Id, Id: 0, AdditionalQuantity: 0, IssueMethod: 'Backflush'  })"
-        title="{{'Add product' | translate}}"
-      >
-        <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
-      </ion-button>
-      <span class="split ion-hide-sm-down">|</span>
-    </div>
-    <ion-button (click)="printBOM()" title="{{'Print BOM' | translate}}" *ngIf="pageConfig.canPrint">
-      <ion-icon slot="icon-only" name="print"></ion-icon>
-    </ion-button>
-  </app-toolbar>
+			<ion-button (click)="addOrderLine({ Type: 'CTItem', IDBOM: item.Id, Id: 0, AdditionalQuantity: 0, IssueMethod: 'Backflush'  })" title="{{'Add product' | translate}}">
+				<ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
+			</ion-button>
+			<span class="split ion-hide-sm-down">|</span>
+		</div>
+		<ion-button (click)="printBOM()" title="{{'Print BOM' | translate}}" *ngIf="pageConfig.canPrint">
+			<ion-icon slot="icon-only" name="print"></ion-icon>
+		</ion-button>
+	</app-toolbar>
 </ion-header>
 
 <ion-content appScrollbarTheme class="ion-padding">
-  <div id="order-detail-page" style="position: absolute"></div>
-  <form [formGroup]="formGroup">
-    <ion-row class="hr-group ion-no-padding caption" *ngIf="env.isMobile">
-      <ion-col size="12" size-sm="12" size-md="12" size-xl="12">
-        <ion-list-header class="ion-no-padding">
-          <ion-label color="primary">{{'BOM' | translate}} <span *ngIf="id">#{{id}}</span> </ion-label>
-        </ion-list-header>
-      </ion-col>
-    </ion-row>
-    <ion-row class="hr-group ion-no-padding mobile-screen" *ngIf="segmentView.Page == 's2'">
-      <ion-col size="12" size-sm="6" size-xl="6">
-        <app-form-control [readonly]="true"
-        [field]="{id :'Quantity', label:'BOM for', type:'number', form:formGroup }" (change)="saveChange()">
-      </app-form-control>
-      </ion-col>
-      <ion-col size="12" size-sm="6" size-xl="6">
-        <app-form-control [readonly]="true"
-        [field]="{id :'BatchSize', label:'Quantity/batch', type:'number', form:formGroup }" (change)="saveChange()">
-      </app-form-control>
-    
-      </ion-col>
-    </ion-row>
-  </form>
-  <ion-toolbar *ngIf="env.isMobile" color="primary" class="bomtabs">
-    <ion-segment scrollable="true" (ionChange)="segmentChanged($event)" [value]="segmentView.Page">
-      <ion-segment-button value="s1">
-        <ion-label>{{'General information' | translate}}</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="s2">
-        <ion-label>{{'Production BOM' | translate}}</ion-label>
-      </ion-segment-button>
-    </ion-segment>
-  </ion-toolbar>
-  <div class="main-view" *ngIf="item && pageConfig.showSpinner==false">
-    <div *ngIf="segmentView.Page == 's1'">
-      <div [ngClass]="{'row-full shadow full-screen mobile-screen': env.isMobile}">
-        <ion-grid fixed>
-          <form [formGroup]="formGroup">
-            <ion-row class="hr-group ion-no-padding">
-              <ion-col [size]="env.isMobile ? 12: 4" *ngIf="!env.isMobile">
-                <ion-list-header class="ion-no-padding">
-                  <ion-label color="primary"
-                    >{{'BOM' | translate}}
-                    <span *ngIf="id">#{{id}}</span>
-                  </ion-label>
-                </ion-list-header>
-                <ion-item class="ion-no-padding" lines="none">
-                  <ion-label color="medium" class="ion-text-wrap">
-                    {{'To enhance account security, your password should have…' | translate}}
-                    <ul>
-                      <li>{{'Standard costing' | translate}}</li>
-                      <li>
-                        {{'Total standard cost =' | translate}}
-                        <ul>
-                          <li>{{'[StdCost] * [quantity] / [number of finished goods]' | translate}}</li>
-                          <li>+</li>
-                          <li>{{'[StdCost] * ([Additional]/ [production quantity])' | translate}}</li>
-                        </ul>
-                      </li>
-                    </ul>
-                  </ion-label>
-                </ion-item>
-              </ion-col>
-              <ion-col [size]="env.isMobile ? 12: 4">
-                <app-form-control
-                  [field]="{id :'IDItem', label:'Finished goods',dataSource:_IDItemDataSource, type:'ng-select-item',bindValue:'Id', bindLabel:'Name', form:formGroup }" (change)="IDItemChange($event)">
-                </app-form-control>
-             
-                <app-form-control 
-                [field]="{id :'BatchSize', label:'Quantity/batch', type:'number', form:formGroup }" (change)="saveChange()">
-              </app-form-control>
-               
-              </ion-col>
+	<div id="order-detail-page" style="position: absolute"></div>
+	<form [formGroup]="formGroup">
+		<ion-row class="hr-group ion-no-padding caption" *ngIf="env.isMobile">
+			<ion-col size="12" size-sm="12" size-md="12" size-xl="12">
+				<ion-list-header class="ion-no-padding">
+					<ion-label color="primary">{{'BOM' | translate}} <span *ngIf="id">#{{id}}</span> </ion-label>
+				</ion-list-header>
+			</ion-col>
+		</ion-row>
+		<ion-row class="hr-group ion-no-padding mobile-screen" *ngIf="segmentView.Page == 's2'">
+			<ion-col size="12" size-sm="6" size-xl="6">
+				<app-form-control [readonly]="true" [field]="{id :'Quantity', label:'BOM for', type:'number', form:formGroup }" (change)="saveChange()"> </app-form-control>
+			</ion-col>
+			<ion-col size="12" size-sm="6" size-xl="6">
+				<app-form-control [readonly]="true" [field]="{id :'BatchSize', label:'Quantity/batch', type:'number', form:formGroup }" (change)="saveChange()"> </app-form-control>
+			</ion-col>
+		</ion-row>
+	</form>
+	<ion-toolbar *ngIf="env.isMobile" color="primary" class="bomtabs">
+		<ion-segment scrollable="true" (ionChange)="segmentChanged($event)" [value]="segmentView.Page">
+			<ion-segment-button value="s1">
+				<ion-label>{{'General information' | translate}}</ion-label>
+			</ion-segment-button>
+			<ion-segment-button value="s2">
+				<ion-label>{{'Production BOM' | translate}}</ion-label>
+			</ion-segment-button>
+		</ion-segment>
+	</ion-toolbar>
+	<div class="main-view" *ngIf="item && pageConfig.showSpinner==false">
+		<div *ngIf="segmentView.Page == 's1'">
+			<div [ngClass]="{'row-full shadow full-screen mobile-screen': env.isMobile}">
+				<ion-grid fixed>
+					<form [formGroup]="formGroup">
+						<ion-row class="hr-group ion-no-padding">
+							<ion-col [size]="env.isMobile ? 12: 4" *ngIf="!env.isMobile">
+								<ion-list-header class="ion-no-padding">
+									<ion-label color="primary"
+										>{{'BOM' | translate}}
+										<span *ngIf="id">#{{id}}</span>
+									</ion-label>
+								</ion-list-header>
+								<ion-item class="ion-no-padding" lines="none">
+									<ion-label color="medium" class="ion-text-wrap">
+										{{'To enhance account security, your password should have…' | translate}}
+										<ul>
+											<li>{{'Standard costing' | translate}}</li>
+											<li>
+												{{'Total standard cost =' | translate}}
+												<ul>
+													<li>{{'[StdCost] * [quantity] / [number of finished goods]' | translate}}</li>
+													<li>+</li>
+													<li>{{'[StdCost] * ([Additional]/ [production quantity])' | translate}}</li>
+												</ul>
+											</li>
+										</ul>
+									</ion-label>
+								</ion-item>
+							</ion-col>
+							<ion-col [size]="env.isMobile ? 12: 4">
+								<app-form-control
+									[field]="{id :'IDItem', label:'Finished goods',dataSource:_IDItemDataSource, type:'ng-select-item',bindValue:'Id', bindLabel:'Name', form:formGroup }"
+									(change)="IDItemChange($event)"
+								>
+								</app-form-control>
 
-              <ion-col [size]="env.isMobile ? 12: 4">
-           
-                <app-form-control 
-                [field]="{id :'Type', label:'Classification', type:'ng-select-level',dataSource:typeList, bindLabel:'Name',bindValue:'Code', form:formGroup ,  placeholder:'Search'}" (controlChange)="saveChange()">
-                </app-form-control>
-                <app-form-control  *ngIf="pageConfig.canViewPrice"
-                [field]="{id :'IDPriceList', label:'Selling price list', type:'ng-select-level',dataSource:priceList, bindLabel:'Name',bindValue:'Id', form:formGroup ,  placeholder:'Select price list'}" (controlChange)="changePriceList()">
-                </app-form-control>
-                <app-form-control  *ngIf="pageConfig.canViewStdCost"
-                [field]="{id :'IDStdCostPriceList', label:'BOM price list', type:'ng-select-level',dataSource:priceList, bindLabel:'Name',bindValue:'Id', form:formGroup ,  placeholder:'Select price list'}" (controlChange)="changePriceList()">
-                </app-form-control>
-              </ion-col>
-            </ion-row>
-          </form>
-        </ion-grid>
-      </div>
-      <div *ngIf="!env.isMobile" class="row-full shadow full-screen" [ngClass]="{'mobile-screen': env.isMobile}">
-        <form [formGroup]="formGroup">
-          <ng-container formArrayName="Lines">
-            <div class="table-contain">
-              <section class="table" style="min-width: 1270px">
-                <header class="bold" style="padding-right: 0">
-                  <div class="col-reorder cell" *ngIf="pageConfig.canEdit"></div>
-                  <div class="col-id cell">#</div>
-                  <div class="col-uom cell">{{'Type' | translate}}</div>
-                  <div class="col-name cell">{{'Component' | translate}}</div>
-                  <div class="col-uom cell">{{'Unit' | translate}}</div>
-                  <div class="col-qty cell">{{'Quantity' | translate}}</div>
-                  <div
-                    class="col-qty cell"
-                    title="{{'Is the required resource to start or finish the production' | translate}}"
-                  >
-                    {{'Add' | translate}}
-                  </div>
-                  <div class="col-uom cell">{{'Provide' | translate}}</div>
-                  <div class="col-total cell" *ngIf="pageConfig.canViewPrice">
-                    <small class="clickable" (click)="resetPrice()" *ngIf="pageConfig.canEditPrice"
-                      >{{'Reset' | translate}}</small
-                    >
-                    {{'Price' | translate}}
-                  </div>
-                  <div class="col-total cell" *ngIf="pageConfig.canViewPrice">{{'Total price' | translate}}</div>
-                  <div class="col-total cell" *ngIf="pageConfig.canViewStdCost">{{'Std Cost' | translate}}</div>
-                  <div class="col-total cell" *ngIf="pageConfig.canViewStdCost">{{'Total Std Cost' | translate}}</div>
-                  <div class="col-del cell" *ngIf="pageConfig.canEdit"></div>
-                </header>
-                <ion-reorder-group
-                  (ionItemReorder)="doReorder($event, formGroup.get('Lines')['controls'])"
-                  [disabled]="!pageConfig.canEdit"
-                >
-                  <ng-container *ngFor="let g of formGroup.get('Lines')['controls']; let idx = index;">
-                    <ng-container [formGroup]="g">
-                      <div class="row" [ngClass]="{'header': g.controls.Type.value=='CTStage'}">
-                        <ion-reorder slot="start"></ion-reorder>
-                        <div class="col-id cell">{{idx+1}}</div>
+								<app-form-control [field]="{id :'BatchSize', label:'Quantity/batch', type:'number', form:formGroup }" (change)="saveChange()"> </app-form-control>
+							</ion-col>
 
-                        <div class="col-uom cell">
-                          <div class="col-uom cell">
-                            <select
-                              formControlName="Type"
-                              [attr.disabled]="(!pageConfig.canEdit || submitAttempt)?'':null"
-                              class="c-input c-dropdown"
-                              (change)="changedType(g)"
-                            >
-                              <option [disabled]="t.Flag" *ngFor="let t of componentTypeList" [value]="t.Code">
-                                {{t.Name}}
-                              </option>
-                            </select>
-                          </div>
-                        </div>
-                        <ng-container *ngIf="g.controls.Type.value!='CTItem'">
-                          <div class="col-name cell">
-                            <input
-                              formControlName="Name"
-                              [readonly]="!pageConfig.canEdit || submitAttempt"
-                              (change)="saveChange()"
-                              class="c-input ion-text-left"
-                            />
-                          </div>
-                        </ng-container>
-                        <ng-container *ngIf="g.controls.Type.value=='CTItem'">
-                          <div class="col-name cell">
-                            <ng-select
-                              formControlName="_Item"
-                              appendTo="#order-detail-page"
-                              [readonly]="!pageConfig.canEdit || submitAttempt"
-                              class="c-input"
-                              (change)="changedIDItem(g, $event)"
-                              [labelForId]="'IDItem'+idx"
-                              [items]="g.controls._ItemDataSource.value | async"
-                              [clearable]="false"
-                              [typeahead]="g.controls._ItemSearchInput.value"
-                              [loading]="g.controls._ItemSearchLoading.value"
-                              [virtualScroll]="true"
-                              bindLabel="Name"
-                              placeholder="{{'Search for name or product code' | translate}}"
-                            >
-                              <ng-template ng-label-tmp let-i="item">
-                                <div *ngIf="i.Id">
-                                  <a [routerLink]="['/item/'+i.Id]" (mousedown)="$event.stopPropagation()"
-                                    >#{{i.Id}} <ion-icon name="open-outline"></ion-icon
-                                  ></a>
-                                  <span [title]="i.Name">
-                                    <b *ngIf="i.Code" (mousedown)="$event.stopPropagation()">{{i.Code}}</b>
-                                    {{i.Name}}</span
-                                  >
-                                </div>
-                              </ng-template>
-                              <ng-template ng-option-tmp let-i="item" let-search="searchTerm">
-                                <div *ngIf="i">
-                                  <div>
-                                    <span [ngOptionHighlight]="search">{{i.Name}}</span>
-                                  </div>
-                                  <small
-                                    >#<b
-                                      ><span class="important" [ngOptionHighlight]="search"
-                                        >{{i.Id}} - {{i.Code}}</span
-                                      ></b
-                                    ></small
-                                  >
-                                </div>
-                              </ng-template>
-                            </ng-select>
-                          </div>
-                          <div class="col-uom cell">
-                            <select
-                              formControlName="IDUoM"
-                              [attr.disabled]="(!pageConfig.canEdit || submitAttempt)?'':null"
-                              class="c-input c-dropdown"
-                              (change)="changedIDUoM(g)"
-                            >
-                              <option [disabled]="t.Flag" *ngFor="let t of g.controls._UoMs.value" [value]="t.Id">
-                                {{t.Name}}
-                              </option>
-                            </select>
-                          </div>
-                          <div class="col-qty cell">
-                            <input
-                              formControlName="Quantity"
-                              [readonly]="!pageConfig.canEdit || submitAttempt"
-                              (focus)="$event.target.select()"
-                              (change)="saveChange()"
-                              class="c-input"
-                              type="number"
-                              [min]="0.000000001"
-                              [max]="999999999999999999"
-                              onkeydown="return event.keyCode !== 190"
-                            />
-                          </div>
-                          <div class="col-qty cell">
-                            <input
-                              formControlName="AdditionalQuantity"
-                              [readonly]="!pageConfig.canEdit || submitAttempt"
-                              (focus)="$event.target.select()"
-                              (change)="saveChange()"
-                              class="c-input"
-                              type="number"
-                              [min]="0"
-                              [max]="999999999999999999"
-                              onkeydown="return event.keyCode !== 190"
-                            />
-                          </div>
-                          <div class="col-uom cell">
-                            <select
-                              formControlName="IssueMethod"
-                              [attr.disabled]="(!pageConfig.canEdit || submitAttempt)?'':null"
-                              class="c-input c-dropdown"
-                              (change)="saveChange()"
-                            >
-                              <option [disabled]="t.Flag" *ngFor="let t of issueMethodList" [value]="t.Code">
-                                {{t.Name}}
-                              </option>
-                            </select>
-                          </div>
-                          <div class="col-total cell" *ngIf="pageConfig.canViewPrice">
-                            <input
-                              formControlName="UoMPrice"
-                              class="c-input"
-                              [readonly]="!(pageConfig.canEdit && pageConfig.canEditPrice)"
-                              (focus)="$event.target.select()"
-                              (change)="saveChange()"
-                              mask="separator.0"
-                              thousandSeparator=","
-                              [allowNegativeNumbers]="false"
-                            />
-                          </div>
-                          <div class="col-total cell disable" *ngIf="pageConfig.canViewPrice">
-                            {{ (g.controls.TotalPrice.value ) | number: '1.0-0'}}
-                          </div>
-                          <div class="col-total cell disable" *ngIf="pageConfig.canViewStdCost">
-                            {{ g.controls.StdCost.value | number: '1.0-0'}}
-                          </div>
-                          <div class="col-total cell disable" *ngIf="pageConfig.canViewStdCost">
-                            {{ (g.controls.TotalStdCost.value ) | number: '1.0-0'}}
-                          </div>
-                        </ng-container>
-                        <div class="col-del cell" *ngIf="pageConfig.canEdit" (click)="removeOrderLine(idx, true)">
-                          <ion-icon color="danger" class="min-btn" name="trash-outline"></ion-icon>
-                        </div>
-                      </div>
-                    </ng-container>
-                  </ng-container>
-                </ion-reorder-group>
-                <div class="row" *ngIf="pageConfig.canEdit && item?.Lines?.length > 1">
-                  <div
-                    class="col-id cell"
-                    *ngIf="pageConfig.canEdit"
-                    (click)="addOrderLine({ Type: 'CTItem', IDBOM: item.Id, Id: 0, AdditionalQuantity: 0, IssueMethod: 'Backflush'  })"
-                  >
-                    <ion-icon
-                      class="min-btn"
-                      title="{{'Add product' | translate}}"
-                      name="add-circle-outline"
-                    ></ion-icon>
-                  </div>
-                  <div class="col-id cell" *ngIf="!pageConfig.canEdit"></div>
-                  <div class="col-name cell">
-                    <b
-                      *ngIf="pageConfig.canEdit && this.id"
-                      (click)="addOrderLine({ Type: 'CTItem', IDBOM: item.Id, Id: 0, AdditionalQuantity: 0, IssueMethod: 'Backflush'  })"
-                      >{{'Add component' | translate}}</b
-                    >
-                  </div>
-                  <div class="col-uom cell">
-                    <div style="height: 35px"></div>
-                  </div>
-                  <div class="col-total cell">
-                    <b>Tổng cộng:</b>
-                  </div>
-                  <div class="col-total cell disable" *ngIf="pageConfig.canViewPrice">
-                    <b>{{ item.TotalPrice | number: '1.0-0' }}</b>
-                  </div>
-                  <div class="col-total cell disable" *ngIf="pageConfig.canViewStdCost">
-                    <b></b>
-                  </div>
-                  <div class="col-total cell disable" *ngIf="pageConfig.canViewStdCost">
-                    <b>{{ item.TotalStdCost | number: '1.0-0' }}</b>
-                  </div>
-                  <div class="col-del cell disable" *ngIf="pageConfig.canEdit"></div>
-                </div>
-              </section>
-            </div>
-          </ng-container>
-        </form>
+							<ion-col [size]="env.isMobile ? 12: 4">
+								<app-form-control
+									[field]="{id :'Type', label:'Classification', type:'ng-select-level',dataSource:typeList, bindLabel:'Name',bindValue:'Code', form:formGroup ,  placeholder:'Search'}"
+									(controlChange)="saveChange()"
+								>
+								</app-form-control>
+								<app-form-control
+									*ngIf="pageConfig.canViewPrice"
+									[field]="{id :'IDPriceList', label:'Selling price list', type:'ng-select-level',dataSource:priceList, bindLabel:'Name',bindValue:'Id', form:formGroup ,  placeholder:'Select price list'}"
+									(controlChange)="changePriceList()"
+								>
+								</app-form-control>
+								<app-form-control
+									*ngIf="pageConfig.canViewStdCost"
+									[field]="{id :'IDStdCostPriceList', label:'BOM price list', type:'ng-select-level',dataSource:priceList, bindLabel:'Name',bindValue:'Id', form:formGroup ,  placeholder:'Select price list'}"
+									(controlChange)="changePriceList()"
+								>
+								</app-form-control>
+							</ion-col>
+						</ion-row>
+					</form>
+				</ion-grid>
+			</div>
+			<div *ngIf="!env.isMobile" class="row-full shadow full-screen" [ngClass]="{'mobile-screen': env.isMobile}">
+				<form [formGroup]="formGroup">
+					<ng-container formArrayName="Lines">
+						<div class="table-contain">
+							<section class="table" style="min-width: 1270px">
+								<header class="bold" style="padding-right: 0">
+									<div class="col-reorder cell" *ngIf="pageConfig.canEdit"></div>
+									<div class="col-id cell">#</div>
+									<div class="col-uom cell">{{'Type' | translate}}</div>
+									<div class="col-name cell">{{'Component' | translate}}</div>
+									<div class="col-uom cell">{{'Unit' | translate}}</div>
+									<div class="col-qty cell">{{'Quantity' | translate}}</div>
+									<div class="col-qty cell" title="{{'Is the required resource to start or finish the production' | translate}}">{{'Add' | translate}}</div>
+									<div class="col-uom cell">{{'Provide' | translate}}</div>
+									<div class="col-total cell" *ngIf="pageConfig.canViewPrice">
+										<small class="clickable" (click)="resetPrice()" *ngIf="pageConfig.canEditPrice">{{'Reset' | translate}}</small>
+										{{'Price' | translate}}
+									</div>
+									<div class="col-total cell" *ngIf="pageConfig.canViewPrice">{{'Total price' | translate}}</div>
+									<div class="col-total cell" *ngIf="pageConfig.canViewStdCost">{{'Std Cost' | translate}}</div>
+									<div class="col-total cell" *ngIf="pageConfig.canViewStdCost">{{'Total Std Cost' | translate}}</div>
+									<div class="col-del cell" *ngIf="pageConfig.canEdit"></div>
+								</header>
+								<ion-reorder-group (ionItemReorder)="doReorder($event, formGroup.get('Lines')['controls'])" [disabled]="!pageConfig.canEdit">
+									<ng-container *ngFor="let g of formGroup.get('Lines')['controls']; let idx = index;">
+										<ng-container [formGroup]="g">
+											<div class="row" [ngClass]="{'header': g.controls.Type.value=='CTStage'}">
+												<ion-reorder slot="start"></ion-reorder>
+												<div class="col-id cell">{{idx+1}}</div>
 
-        <div class="table-contain">
-          <div class="row" *ngIf="pageConfig.canEdit && this.id && item?.Lines?.length < 2">
-            <div class="cell">
-              <ion-button
-                fill="clear"
-                size="small"
-                (click)="addOrderLine({ Type: 'CTItem', IDBOM: item.Id, Id: 0, AdditionalQuantity: 0, IssueMethod: 'Backflush'  })"
-              >
-                <ion-icon slot="start" name="add-circle"></ion-icon>
-                {{'Add component' | translate}}
-              </ion-button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div *ngIf="segmentView.Page == 's2'">
-      <div class="row-full shadow full-screen" [ngClass]="{'mobile-screen': env.isMobile}">
-        <form [formGroup]="formGroup">
-          <ng-container formArrayName="Lines">
-            <!-- mobile version -->
-            <div *ngIf="env.isMobile" style="min-height: calc(100vh - 410px)">
-              <ion-card class="bom-details ion-no-margin">
-                <ng-container *ngFor="let g of formGroup.get('Lines')['controls']; let idx = index;">
-                  <ng-container [formGroup]="g">
-                    <ion-card-content class="info barcode" [ngClass]="{'ctheader': g.controls.Type.value=='CTStage'}">
-                      <ng-container *ngIf="g.controls.Type.value!='CTItem'">
-                        <div
-                          [ngClass]="{'ct-other': g.controls.Type.value!='CTStage', 'ct-stage': g.controls.Type.value=='CTStage'}"
-                        >
-                          <div class="ct-del-item" *ngIf="pageConfig.canEdit" (click)="removeOrderLine(idx, false)">
-                            <ion-icon color="danger" class="min-btn" name="trash-outline"></ion-icon>
-                          </div>
-                          <select formControlName="Type" class="c-dropdown" (change)="changedType(g)">
-                            <option [disabled]="t.Flag" *ngFor="let t of componentTypeList" [value]="t.Code">
-                              {{t.Name}}
-                            </option>
-                          </select>
-                          <input
-                            *ngIf="g.controls.Type.value=='CTStage'"
-                            formControlName="Name"
-                            [readonly]="!pageConfig.canEdit || submitAttempt || item.Status=='Palletized'"
-                            class="c-input ion-text-left"
-                          />
-                          <ion-textarea
-                            *ngIf="g.controls.Type.value!='CTStage'"
-                            formControlName="Name"
-                            [readonly]="!pageConfig.canEdit || submitAttempt || item.Status=='Palletized'"
-                            class="c-text-area ion-text-left"
-                          ></ion-textarea>
-                        </div>
-                      </ng-container>
-                      <ng-container *ngIf="g.controls.Type.value=='CTItem'">
-                        <div class="ct-item">
-                          <div class="ct-del-item" *ngIf="pageConfig.canEdit" (click)="removeOrderLine(idx, false)">
-                            <ion-icon color="danger" class="min-btn" name="trash-outline"></ion-icon>
-                          </div>
-                          <select formControlName="Type" class="c-input c-dropdown" (change)="changedType(g)">
-                            <option [disabled]="t.Flag" *ngFor="let t of componentTypeList" [value]="t.Code">
-                              {{t.Name}}
-                            </option>
-                          </select>
-                          <br />
-                          <ng-select
-                            formControlName="_Item"
-                            appendTo="#order-detail-page"
-                            [readonly]="!pageConfig.canEdit || submitAttempt || item.Status=='Palletized'"
-                            class="c-input"
-                            (change)="changedIDItem(g, $event)"
-                            [labelForId]="'IDItem'+idx"
-                            [items]="g.controls._ItemDataSource.value | async"
-                            [typeahead]="g.controls._ItemSearchInput.value"
-                            [loading]="g.controls._ItemSearchLoading.value"
-                            [virtualScroll]="true"
-                            bindLabel="Name"
-                            placeholder="{{'Search for name or product code' | translate}}"
-                          >
-                            <ng-template ng-label-tmp let-i="item">
-                              <b *ngIf="i.Code" [title]="i.Id"> {{i.Code}} </b>
-                              {{i.Name}}
-                            </ng-template>
-                            <ng-template ng-option-tmp let-i="item" let-search="searchTerm">
-                              <div *ngIf="i">
-                                <div>
-                                  <span [ngOptionHighlight]="search">{{i.Name}}</span>
-                                </div>
-                                <small
-                                  >#<b
-                                    ><span class="important" [ngOptionHighlight]="search"
-                                      >{{i.Id}} - {{i.Code}}</span
-                                    ></b
-                                  ></small
-                                >
-                              </div>
-                            </ng-template>
-                          </ng-select>
-                        </div>
+												<div class="col-uom cell">
+													<div class="col-uom cell">
+														<select
+															formControlName="Type"
+															[attr.disabled]="(!pageConfig.canEdit || submitAttempt)?'':null"
+															class="c-input c-dropdown"
+															(change)="changedType(g)"
+														>
+															<option [disabled]="t.Flag" *ngFor="let t of componentTypeList" [value]="t.Code">{{t.Name}}</option>
+														</select>
+													</div>
+												</div>
+												<ng-container *ngIf="g.controls.Type.value!='CTItem'">
+													<div class="col-name cell">
+														<input
+															formControlName="Name"
+															[readonly]="!pageConfig.canEdit || submitAttempt"
+															(change)="saveChange()"
+															class="c-input ion-text-left"
+														/>
+													</div>
+												</ng-container>
+												<ng-container *ngIf="g.controls.Type.value=='CTItem'">
+													<div class="col-name cell">
+														<ng-select
+															formControlName="_Item"
+															appendTo="#order-detail-page"
+															[readonly]="!pageConfig.canEdit || submitAttempt"
+															class="c-input"
+															(change)="changedIDItem(g, $event)"
+															[labelForId]="'IDItem'+idx"
+															[items]="g.controls._ItemDataSource.value | async"
+															[clearable]="false"
+															[typeahead]="g.controls._ItemSearchInput.value"
+															[loading]="g.controls._ItemSearchLoading.value"
+															[virtualScroll]="true"
+															bindLabel="Name"
+															placeholder="{{'Search for name or product code' | translate}}"
+														>
+															<ng-template ng-label-tmp let-i="item">
+																<div *ngIf="i.Id">
+																	<a [routerLink]="['/item/'+i.Id]" (mousedown)="$event.stopPropagation()"
+																		>#{{i.Id}} <ion-icon name="open-outline"></ion-icon
+																	></a>
+																	<span [title]="i.Name">
+																		<b *ngIf="i.Code" (mousedown)="$event.stopPropagation()">{{i.Code}}</b>
+																		{{i.Name}}</span
+																	>
+																</div>
+															</ng-template>
+															<ng-template ng-option-tmp let-i="item" let-search="searchTerm">
+																<div *ngIf="i">
+																	<div>
+																		<span [ngOptionHighlight]="search">{{i.Name}}</span>
+																	</div>
+																	<small
+																		>#<b><span class="important" [ngOptionHighlight]="search">{{i.Id}} - {{i.Code}}</span></b></small
+																	>
+																</div>
+															</ng-template>
+														</ng-select>
+													</div>
+													<div class="col-uom cell">
+														<select
+															formControlName="IDUoM"
+															[attr.disabled]="(!pageConfig.canEdit || submitAttempt)?'':null"
+															class="c-input c-dropdown"
+															(change)="changedIDUoM(g)"
+														>
+															<option [disabled]="t.Flag" *ngFor="let t of g.controls._UoMs.value" [value]="t.Id">{{t.Name}}</option>
+														</select>
+													</div>
+													<div class="col-qty cell">
+														<input
+															formControlName="Quantity"
+															[readonly]="!pageConfig.canEdit || submitAttempt"
+															(focus)="$event.target.select()"
+															(change)="saveChange()"
+															class="c-input"
+															type="number"
+															[min]="0.000000001"
+															[max]="999999999999999999"
+															onkeydown="return event.keyCode !== 190"
+														/>
+													</div>
+													<div class="col-qty cell">
+														<input
+															formControlName="AdditionalQuantity"
+															[readonly]="!pageConfig.canEdit || submitAttempt"
+															(focus)="$event.target.select()"
+															(change)="saveChange()"
+															class="c-input"
+															type="number"
+															[min]="0"
+															[max]="999999999999999999"
+															onkeydown="return event.keyCode !== 190"
+														/>
+													</div>
+													<div class="col-uom cell">
+														<select
+															formControlName="IssueMethod"
+															[attr.disabled]="(!pageConfig.canEdit || submitAttempt)?'':null"
+															class="c-input c-dropdown"
+															(change)="saveChange()"
+														>
+															<option [disabled]="t.Flag" *ngFor="let t of issueMethodList" [value]="t.Code">{{t.Name}}</option>
+														</select>
+													</div>
+													<div class="col-total cell" *ngIf="pageConfig.canViewPrice">
+														<input
+															formControlName="UoMPrice"
+															class="c-input"
+															[readonly]="!(pageConfig.canEdit && pageConfig.canEditPrice)"
+															(focus)="$event.target.select()"
+															(change)="saveChange()"
+															mask="separator.0"
+															thousandSeparator=","
+															[allowNegativeNumbers]="false"
+														/>
+													</div>
+													<div class="col-total cell disable" *ngIf="pageConfig.canViewPrice">{{ (g.controls.TotalPrice.value ) | number: '1.0-0'}}</div>
+													<div class="col-total cell disable" *ngIf="pageConfig.canViewStdCost">{{ g.controls.StdCost.value | number: '1.0-0'}}</div>
+													<div class="col-total cell disable" *ngIf="pageConfig.canViewStdCost">
+														{{ (g.controls.TotalStdCost.value ) | number: '1.0-0'}}
+													</div>
+												</ng-container>
+												<div class="col-del cell" *ngIf="pageConfig.canEdit" (click)="removeOrderLine(idx, true)">
+													<ion-icon color="danger" class="min-btn" name="trash-outline"></ion-icon>
+												</div>
+											</div>
+										</ng-container>
+									</ng-container>
+								</ion-reorder-group>
+								<div class="row" *ngIf="pageConfig.canEdit && item?.Lines?.length > 1">
+									<div
+										class="col-id cell"
+										*ngIf="pageConfig.canEdit"
+										(click)="addOrderLine({ Type: 'CTItem', IDBOM: item.Id, Id: 0, AdditionalQuantity: 0, IssueMethod: 'Backflush'  })"
+									>
+										<ion-icon class="min-btn" title="{{'Add product' | translate}}" name="add-circle-outline"></ion-icon>
+									</div>
+									<div class="col-id cell" *ngIf="!pageConfig.canEdit"></div>
+									<div class="col-name cell">
+										<b
+											*ngIf="pageConfig.canEdit && this.id"
+											(click)="addOrderLine({ Type: 'CTItem', IDBOM: item.Id, Id: 0, AdditionalQuantity: 0, IssueMethod: 'Backflush'  })"
+											>{{'Add component' | translate}}</b
+										>
+									</div>
+									<div class="col-uom cell">
+										<div style="height: 35px"></div>
+									</div>
+									<div class="col-total cell">
+										<b>Tổng cộng:</b>
+									</div>
+									<div class="col-total cell disable" *ngIf="pageConfig.canViewPrice">
+										<b>{{ item.TotalPrice | number: '1.0-0' }}</b>
+									</div>
+									<div class="col-total cell disable" *ngIf="pageConfig.canViewStdCost">
+										<b></b>
+									</div>
+									<div class="col-total cell disable" *ngIf="pageConfig.canViewStdCost">
+										<b>{{ item.TotalStdCost | number: '1.0-0' }}</b>
+									</div>
+									<div class="col-del cell disable" *ngIf="pageConfig.canEdit"></div>
+								</div>
+							</section>
+						</div>
+					</ng-container>
+				</form>
 
-                        <div slot="start" class="c-quantity">
-                          <ion-badge class="ion-text-lowercase" slot="start">
-                            <input
-                              formControlName="Quantity"
-                              (focus)="$event.target.select()"
-                              [readonly]="!pageConfig.canEdit || submitAttempt"
-                              [disabled]="!pageConfig.canEdit"
-                              class="txtQtyInput"
-                              type="number"
-                              [ngModel]="g.controls.Quantity.value"
-                              (ionChange)="this.calcTotalLine()"
-                            />
+				<div class="table-contain">
+					<div class="row" *ngIf="pageConfig.canEdit && this.id && item?.Lines?.length < 2">
+						<div class="cell">
+							<ion-button
+								fill="clear"
+								size="small"
+								(click)="addOrderLine({ Type: 'CTItem', IDBOM: item.Id, Id: 0, AdditionalQuantity: 0, IssueMethod: 'Backflush'  })"
+							>
+								<ion-icon slot="start" name="add-circle"></ion-icon>
+								{{'Add component' | translate}}
+							</ion-button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div *ngIf="segmentView.Page == 's2'">
+			<div class="row-full shadow full-screen" [ngClass]="{'mobile-screen': env.isMobile}">
+				<form [formGroup]="formGroup">
+					<ng-container formArrayName="Lines">
+						<!-- mobile version -->
+						<div *ngIf="env.isMobile" style="min-height: calc(100vh - 410px)">
+							<ion-card class="bom-details ion-no-margin">
+								<ng-container *ngFor="let g of formGroup.get('Lines')['controls']; let idx = index;">
+									<ng-container [formGroup]="g">
+										<ion-card-content class="info barcode" [ngClass]="{'ctheader': g.controls.Type.value=='CTStage'}">
+											<ng-container *ngIf="g.controls.Type.value!='CTItem'">
+												<div [ngClass]="{'ct-other': g.controls.Type.value!='CTStage', 'ct-stage': g.controls.Type.value=='CTStage'}">
+													<div class="ct-del-item" *ngIf="pageConfig.canEdit" (click)="removeOrderLine(idx, false)">
+														<ion-icon color="danger" class="min-btn" name="trash-outline"></ion-icon>
+													</div>
+													<select formControlName="Type" class="c-dropdown" (change)="changedType(g)">
+														<option [disabled]="t.Flag" *ngFor="let t of componentTypeList" [value]="t.Code">{{t.Name}}</option>
+													</select>
+													<input
+														*ngIf="g.controls.Type.value=='CTStage'"
+														formControlName="Name"
+														[readonly]="!pageConfig.canEdit || submitAttempt || item.Status=='Palletized'"
+														class="c-input ion-text-left"
+													/>
+													<ion-textarea
+														*ngIf="g.controls.Type.value!='CTStage'"
+														formControlName="Name"
+														[readonly]="!pageConfig.canEdit || submitAttempt || item.Status=='Palletized'"
+														class="c-text-area ion-text-left"
+													></ion-textarea>
+												</div>
+											</ng-container>
+											<ng-container *ngIf="g.controls.Type.value=='CTItem'">
+												<div class="ct-item">
+													<div class="ct-del-item" *ngIf="pageConfig.canEdit" (click)="removeOrderLine(idx, false)">
+														<ion-icon color="danger" class="min-btn" name="trash-outline"></ion-icon>
+													</div>
+													<select formControlName="Type" class="c-input c-dropdown" (change)="changedType(g)">
+														<option [disabled]="t.Flag" *ngFor="let t of componentTypeList" [value]="t.Code">{{t.Name}}</option>
+													</select>
+													<br />
+													<ng-select
+														formControlName="_Item"
+														appendTo="#order-detail-page"
+														[readonly]="!pageConfig.canEdit || submitAttempt || item.Status=='Palletized'"
+														class="c-input"
+														(change)="changedIDItem(g, $event)"
+														[labelForId]="'IDItem'+idx"
+														[items]="g.controls._ItemDataSource.value | async"
+														[typeahead]="g.controls._ItemSearchInput.value"
+														[loading]="g.controls._ItemSearchLoading.value"
+														[virtualScroll]="true"
+														bindLabel="Name"
+														placeholder="{{'Search for name or product code' | translate}}"
+													>
+														<ng-template ng-label-tmp let-i="item">
+															<b *ngIf="i.Code" [title]="i.Id"> {{i.Code}} </b>
+															{{i.Name}}
+														</ng-template>
+														<ng-template ng-option-tmp let-i="item" let-search="searchTerm">
+															<div *ngIf="i">
+																<div>
+																	<span [ngOptionHighlight]="search">{{i.Name}}</span>
+																</div>
+																<small
+																	>#<b><span class="important" [ngOptionHighlight]="search">{{i.Id}} - {{i.Code}}</span></b></small
+																>
+															</div>
+														</ng-template>
+													</ng-select>
+												</div>
 
-                            <select
-                              formControlName="IDUoM"
-                              [attr.disabled]="(!pageConfig.canEdit || submitAttempt)?'':null"
-                              class="c-input c-dropdown"
-                              (change)="changedIDUoM(g)"
-                            >
-                              <option [disabled]="t.Flag" *ngFor="let t of g.controls._UoMs.value" [value]="t.Id">
-                                {{t.Name}}
-                              </option>
-                            </select>
+												<div slot="start" class="c-quantity">
+													<ion-badge class="ion-text-lowercase" slot="start">
+														<input
+															formControlName="Quantity"
+															(focus)="$event.target.select()"
+															[readonly]="!pageConfig.canEdit || submitAttempt"
+															[disabled]="!pageConfig.canEdit"
+															class="txtQtyInput"
+															type="number"
+															[ngModel]="g.controls.Quantity.value"
+															(ionChange)="this.calcTotalLine()"
+														/>
 
-                            <!-- <ion-text>{{g.controls.Quantity.value}} </ion-text> -->
-                          </ion-badge>
-                          <ion-range
-                            formControlName="Quantity"
-                            (click)="g.txtQtyShow = !g.txtQtyShow"
-                            (ionChange)="this.calcTotalLine()"
-                            [ngModel]="g.controls.Quantity.value"
-                            [disabled]="!pageConfig.canEdit"
-                            debounce="300"
-                            min="0"
-                            max="1000"
-                            color="success"
-                            pin="true"
-                            step="1"
-                            [snaps]="false"
-                          >
-                          </ion-range>
-                          <div class="ct-additional-quantity">
-                            <input
-                              formControlName="AdditionalQuantity"
-                              (change)="this.calcTotalLine()"
-                              [ngModel]="g.controls.AdditionalQuantity.value"
-                              [readonly]="!pageConfig.canEdit || submitAttempt || item.Status=='Palletized'"
-                              (focus)="$event.target.select()"
-                              class="c-input txtAddQtyInput"
-                              type="number"
-                              [min]="0"
-                              [max]="999999999999999999"
-                              onkeydown="return event.keyCode !== 190"
-                            />
-                            <ion-text>±</ion-text>
-                            <ion-range
-                              formControlName="AdditionalQuantity"
-                              (click)="g.txtAddQtyShow = !g.txtAddQtyShow"
-                              (ionChange)="this.calcTotalLine()"
-                              [ngModel]="g.controls.AdditionalQuantity.value"
-                              [disabled]="!pageConfig.canEdit"
-                              debounce="300"
-                              min="0"
-                              max="100"
-                              color="success"
-                              pin="true"
-                              step="1"
-                              [snaps]="false"
-                            >
-                            </ion-range>
-                          </div>
-                        </div>
-                        <div *ngIf="pageConfig.canEditPrice">
-                          <ion-text
-                            class="btnShowPrice"
-                            (click)="togglePrice(idx)"
-                            [ngClass]="{'showned' : isShowPrice[idx]}"
-                            >{{'View price' | translate}}</ion-text
-                          >
-                        </div>
-                        <div
-                          class="additional-info"
-                          *ngIf="isShowPrice[idx]"
-                          [ngClass]="{'hidden-field' : !pageConfig.canEditPrice}"
-                        >
-                          <table class="table">
-                            <tr>
-                              <td>{{'Unit selling price' | translate}}</td>
+														<select
+															formControlName="IDUoM"
+															[attr.disabled]="(!pageConfig.canEdit || submitAttempt)?'':null"
+															class="c-input c-dropdown"
+															(change)="changedIDUoM(g)"
+														>
+															<option [disabled]="t.Flag" *ngFor="let t of g.controls._UoMs.value" [value]="t.Id">{{t.Name}}</option>
+														</select>
 
-                              <td class="align-right">
-                                <input
-                                  formControlName="UoMPrice"
-                                  [ngModel]="g.controls.UoMPrice.value"
-                                  class="c-input"
-                                  [readonly]="!(pageConfig.canEdit && pageConfig.canEditPrice)"
-                                  (focus)="$event.target.select()"
-                                  (change)="this.calcTotalLine()"
-                                  mask="separator.0"
-                                  thousandSeparator=","
-                                  [allowNegativeNumbers]="false"
-                                />
-                                {{'đ' | translate}}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>{{'Suggested selling price' | translate}}</td>
+														<!-- <ion-text>{{g.controls.Quantity.value}} </ion-text> -->
+													</ion-badge>
+													<ion-range
+														formControlName="Quantity"
+														(click)="g.txtQtyShow = !g.txtQtyShow"
+														(ionChange)="this.calcTotalLine()"
+														[ngModel]="g.controls.Quantity.value"
+														[disabled]="!pageConfig.canEdit"
+														debounce="300"
+														min="0"
+														max="1000"
+														color="success"
+														pin="true"
+														step="1"
+														[snaps]="false"
+													>
+													</ion-range>
+													<div class="ct-additional-quantity">
+														<input
+															formControlName="AdditionalQuantity"
+															(change)="this.calcTotalLine()"
+															[ngModel]="g.controls.AdditionalQuantity.value"
+															[readonly]="!pageConfig.canEdit || submitAttempt || item.Status=='Palletized'"
+															(focus)="$event.target.select()"
+															class="c-input txtAddQtyInput"
+															type="number"
+															[min]="0"
+															[max]="999999999999999999"
+															onkeydown="return event.keyCode !== 190"
+														/>
+														<ion-text>±</ion-text>
+														<ion-range
+															formControlName="AdditionalQuantity"
+															(click)="g.txtAddQtyShow = !g.txtAddQtyShow"
+															(ionChange)="this.calcTotalLine()"
+															[ngModel]="g.controls.AdditionalQuantity.value"
+															[disabled]="!pageConfig.canEdit"
+															debounce="300"
+															min="0"
+															max="100"
+															color="success"
+															pin="true"
+															step="1"
+															[snaps]="false"
+														>
+														</ion-range>
+													</div>
+												</div>
+												<div *ngIf="pageConfig.canEditPrice">
+													<ion-text class="btnShowPrice" (click)="togglePrice(idx)" [ngClass]="{'showned' : isShowPrice[idx]}"
+														>{{'View price' | translate}}</ion-text
+													>
+												</div>
+												<div class="additional-info" *ngIf="isShowPrice[idx]" [ngClass]="{'hidden-field' : !pageConfig.canEditPrice}">
+													<table class="table">
+														<tr>
+															<td>{{'Unit selling price' | translate}}</td>
 
-                              <td class="align-right">
-                                <b> {{ (g.controls.TotalPrice.value ) | number: '1.0-0'}} {{'đ' | translate}}</b>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>{{'Production unit price' | translate}}</td>
+															<td class="align-right">
+																<input
+																	formControlName="UoMPrice"
+																	[ngModel]="g.controls.UoMPrice.value"
+																	class="c-input"
+																	[readonly]="!(pageConfig.canEdit && pageConfig.canEditPrice)"
+																	(focus)="$event.target.select()"
+																	(change)="this.calcTotalLine()"
+																	mask="separator.0"
+																	thousandSeparator=","
+																	[allowNegativeNumbers]="false"
+																/>
+																{{'đ' | translate}}
+															</td>
+														</tr>
+														<tr>
+															<td>{{'Suggested selling price' | translate}}</td>
 
-                              <td class="align-right">
-                                {{ (g.controls.StdCost.value ) | number: '1.0-0'}} {{'đ' | translate}}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>{{'Production cost' | translate}}</td>
+															<td class="align-right">
+																<b> {{ (g.controls.TotalPrice.value ) | number: '1.0-0'}} {{'đ' | translate}}</b>
+															</td>
+														</tr>
+														<tr>
+															<td>{{'Production unit price' | translate}}</td>
 
-                              <td class="align-right">
-                                <b>{{ (g.controls.TotalStdCost.value ) | number: '1.0-0'}} {{'đ' | translate}}</b>
-                              </td>
-                            </tr>
-                          </table>
-                        </div>
-                      </ng-container>
-                    </ion-card-content>
-                  </ng-container>
-                </ng-container>
+															<td class="align-right">{{ (g.controls.StdCost.value ) | number: '1.0-0'}} {{'đ' | translate}}</td>
+														</tr>
+														<tr>
+															<td>{{'Production cost' | translate}}</td>
 
-                <div class="btn-add-new" *ngIf="pageConfig.canEdit">
-                  <div class="btnAddNewContainer" *ngIf="pageConfig.canEdit">
-                    <ion-icon
-                      class="min-btn"
-                      title="{{'Add product' | translate}}"
-                      name="add-circle-outline"
-                    ></ion-icon>
-                    <b
-                      class="btnAdd"
-                      *ngIf="pageConfig.canEdit && this.id"
-                      (click)="addOrderLine({ Type: 'CTItem', IDBOM: item.Id, Id: 0, AdditionalQuantity: 0, IssueMethod: 'Backflush'  })"
-                      >{{'Add component' | translate}}</b
-                    >
-                  </div>
-                </div>
+															<td class="align-right">
+																<b>{{ (g.controls.TotalStdCost.value ) | number: '1.0-0'}} {{'đ' | translate}}</b>
+															</td>
+														</tr>
+													</table>
+												</div>
+											</ng-container>
+										</ion-card-content>
+									</ng-container>
+								</ng-container>
 
-                <ion-card-content class="info barcode secondary total-price" *ngIf="pageConfig.canEdit">
-                  <div>
-                    <ion-badge class="ion-float-right">
-                      {{ item.TotalPrice | number: '1.0-0' }} {{'đ' | translate}}</ion-badge
-                    >
-                    <ion-badge color="secondary">{{'Suggested selling price' | translate}}</ion-badge>
-                  </div>
+								<div class="btn-add-new" *ngIf="pageConfig.canEdit">
+									<div class="btnAddNewContainer" *ngIf="pageConfig.canEdit">
+										<ion-icon class="min-btn" title="{{'Add product' | translate}}" name="add-circle-outline"></ion-icon>
+										<b
+											class="btnAdd"
+											*ngIf="pageConfig.canEdit && this.id"
+											(click)="addOrderLine({ Type: 'CTItem', IDBOM: item.Id, Id: 0, AdditionalQuantity: 0, IssueMethod: 'Backflush'  })"
+											>{{'Add component' | translate}}</b
+										>
+									</div>
+								</div>
 
-                  <div>
-                    <ion-badge class="ion-float-right">
-                      {{ item.TotalStdCost | number: '1.0-0' }} {{'đ' | translate}}</ion-badge
-                    >
-                    <ion-badge color="secondary">{{'Production cost' | translate}}</ion-badge>
-                  </div>
-                </ion-card-content>
+								<ion-card-content class="info barcode secondary total-price" *ngIf="pageConfig.canEdit">
+									<div>
+										<ion-badge class="ion-float-right"> {{ item.TotalPrice | number: '1.0-0' }} {{'đ' | translate}}</ion-badge>
+										<ion-badge color="secondary">{{'Suggested selling price' | translate}}</ion-badge>
+									</div>
 
-                <div class="btn-save" *ngIf="pageConfig.canEdit">
-                  <div class="btnSaveContainer" *ngIf="pageConfig.canEdit">
-                    <!-- <ion-icon class="min-btn" title="{{'save-change' | translate}}" name="save-outline"></ion-icon> -->
-                    <b class="btnSave" *ngIf="pageConfig.canEdit" (click)="saveAll()">{{'Save' | translate}}</b>
-                  </div>
-                </div>
-              </ion-card>
-            </div>
-          </ng-container>
-        </form>
-      </div>
-    </div>
-  </div>
-  <app-page-message [itemsLength]="item? 1: 0" [showSpinner]="pageConfig.showSpinner"></app-page-message>
-  <input class="hide-all" #importfile type="file" accept=".xlsx" (change)="uploadBOMDetail($event)" />
+									<div>
+										<ion-badge class="ion-float-right"> {{ item.TotalStdCost | number: '1.0-0' }} {{'đ' | translate}}</ion-badge>
+										<ion-badge color="secondary">{{'Production cost' | translate}}</ion-badge>
+									</div>
+								</ion-card-content>
+
+								<div class="btn-save" *ngIf="pageConfig.canEdit">
+									<div class="btnSaveContainer" *ngIf="pageConfig.canEdit">
+										<!-- <ion-icon class="min-btn" title="{{'save-change' | translate}}" name="save-outline"></ion-icon> -->
+										<b class="btnSave" *ngIf="pageConfig.canEdit" (click)="saveAll()">{{'Save' | translate}}</b>
+									</div>
+								</div>
+							</ion-card>
+						</div>
+					</ng-container>
+				</form>
+			</div>
+		</div>
+	</div>
+	<app-page-message [itemsLength]="item? 1: 0" [showSpinner]="pageConfig.showSpinner"></app-page-message>
+	<input class="hide-all" #importfile type="file" accept=".xlsx" (change)="uploadBOMDetail($event)" />
 </ion-content>

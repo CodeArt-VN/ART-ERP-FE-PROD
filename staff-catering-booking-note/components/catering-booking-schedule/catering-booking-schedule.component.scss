@@ -1,44 +1,44 @@
 .cell b {
-  color: var(--ion-color-primary);
+	color: var(--ion-color-primary);
 }
 
 header {
-  height: 60px;
-  .cell.col-number {
-    white-space: normal !important;
-    justify-content: flex-end;
-    text-align: right;
-  }
+	height: 60px;
+	.cell.col-number {
+		white-space: normal !important;
+		justify-content: flex-end;
+		text-align: right;
+	}
 }
 
 header.filter {
-  height: 30px;
+	height: 30px;
 }
 
 .table .col-number {
-  max-width: 50px;
-  min-width: 50px;
+	max-width: 50px;
+	min-width: 50px;
 }
 .col-name {
-  white-space: normal;
+	white-space: normal;
 }
 .col-date {
-  max-width: 150px;
-  min-width: 150px;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+	max-width: 150px;
+	min-width: 150px;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
 
-  .date {
-    text-align: center;
-    line-height: 32px;
-  }
-  .cols {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-  }
+	.date {
+		text-align: center;
+		line-height: 32px;
+	}
+	.cols {
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+	}
 }
 
 // app-page-message {

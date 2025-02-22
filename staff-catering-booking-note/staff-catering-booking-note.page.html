@@ -1,112 +1,86 @@
 <ion-header>
-  <app-list-toolbar
-    pageTitle="{{'Meals summary' | translate}}"
-    [pageConfig]="pageConfig"
-    [ShowSearch]="true"
-    [selectedItems]="selectedItems"
-    [query]="query"
-    (add)="add()"
-    (refresh)="refresh()"
-    (export)="export()"
-    (import)="import($event)"
-    (help)="help()"
-    (unselect)="unselect()"
-    (archiveItems)="archiveItems()"
-    (deleteItems)="deleteItems()"
-    (changeBranch)="changeBranch($event)"
-  ></app-list-toolbar>
+	<app-list-toolbar
+		pageTitle="{{'Meals summary' | translate}}"
+		[pageConfig]="pageConfig"
+		[ShowSearch]="true"
+		[selectedItems]="selectedItems"
+		[query]="query"
+		(add)="add()"
+		(refresh)="refresh()"
+		(export)="export()"
+		(import)="import($event)"
+		(help)="help()"
+		(unselect)="unselect()"
+		(archiveItems)="archiveItems()"
+		(deleteItems)="deleteItems()"
+		(changeBranch)="changeBranch($event)"
+	></app-list-toolbar>
 </ion-header>
 
-<ion-content
-  appScrollbarTheme
-  class="left scrollx"
-  [ngClass]="{withFeature: pageConfig.isShowFeature}"
-  forceOverscroll="false"
->
-  <ion-fab *ngIf="pageConfig.isShowFeature" class="feature no-print" vertical="bottom" horizontal="start" slot="fixed">
-    <div class="ion-padding" style="padding-bottom: 0">
-      <div class="c-control">
-        <label class="c-label" for="IDBranch">
-          <ion-text color="primary">{{'Unit' | translate}}</ion-text>
-        </label>
-        <ng-select
-          class="c-input no-check-dirty"
-          appendTo="#ng-select-holder"
-          #IDBranch
-          (change)="refresh();"
-          labelForId="IDBranch"
-          [items]="env.branchList"
-          [(ngModel)]="query.IDBranch"
-          bindLabel="Name"
-          bindValue="Query"
-          placeholder="{{'unit-placeholder' | translate}}"
-        >
-          <ng-template ng-option-tmp let-i="item" let-search="searchTerm">
-            <div *ngIf="i">
-              <div>
-                <span *ngFor="let l of i.levels">&nbsp;&nbsp;&nbsp;</span>
-                <ion-text [color]=" i.Type == 'Company'? 'primary':'dark'" [ngOptionHighlight]="search"
-                  >{{i.Name}}</ion-text
-                >
-              </div>
-            </div>
-          </ng-template>
-        </ng-select>
-      </div>
-      <div class="c-control">
-        <label class="c-label" for="ValidFrom">
-          <ion-text color="primary">{{'From date' | translate}}</ion-text>
-        </label>
-        <input [(ngModel)]="query.WorkingDateFrom" class="c-input no-check-dirty" type="date" />
-      </div>
+<ion-content appScrollbarTheme class="left scrollx" [ngClass]="{withFeature: pageConfig.isShowFeature}" forceOverscroll="false">
+	<ion-fab *ngIf="pageConfig.isShowFeature" class="feature no-print" vertical="bottom" horizontal="start" slot="fixed">
+		<div class="ion-padding" style="padding-bottom: 0">
+			<div class="c-control">
+				<label class="c-label" for="IDBranch">
+					<ion-text color="primary">{{'Unit' | translate}}</ion-text>
+				</label>
+				<ng-select
+					class="c-input no-check-dirty"
+					appendTo="#ng-select-holder"
+					#IDBranch
+					(change)="refresh();"
+					labelForId="IDBranch"
+					[items]="env.branchList"
+					[(ngModel)]="query.IDBranch"
+					bindLabel="Name"
+					bindValue="Query"
+					placeholder="{{'unit-placeholder' | translate}}"
+				>
+					<ng-template ng-option-tmp let-i="item" let-search="searchTerm">
+						<div *ngIf="i">
+							<div>
+								<span *ngFor="let l of i.levels">&nbsp;&nbsp;&nbsp;</span>
+								<ion-text [color]=" i.Type == 'Company'? 'primary':'dark'" [ngOptionHighlight]="search">{{i.Name}}</ion-text>
+							</div>
+						</div>
+					</ng-template>
+				</ng-select>
+			</div>
+			<div class="c-control">
+				<label class="c-label" for="ValidFrom">
+					<ion-text color="primary">{{'From date' | translate}}</ion-text>
+				</label>
+				<input [(ngModel)]="query.WorkingDateFrom" class="c-input no-check-dirty" type="date" />
+			</div>
 
-      <div class="c-control">
-        <label class="c-label" for="ValidTo">
-          <ion-text color="primary">{{'To date' | translate}}</ion-text>
-        </label>
-        <input
-          [(ngModel)]="query.WorkingDateTo"
-          class="c-input no-check-dirty"
-          [min]="query.WorkingDateFrom"
-          type="date"
-        />
-      </div>
-      <div class="c-control">
-        <label class="c-label"></label>
-        <ion-button (click)="refresh()" expand="block" [disabled]="submitAttempt">
-          {{'Create list' | translate}}
-        </ion-button>
-      </div>
-    </div>
+			<div class="c-control">
+				<label class="c-label" for="ValidTo">
+					<ion-text color="primary">{{'To date' | translate}}</ion-text>
+				</label>
+				<input [(ngModel)]="query.WorkingDateTo" class="c-input no-check-dirty" [min]="query.WorkingDateFrom" type="date" />
+			</div>
+			<div class="c-control">
+				<label class="c-label"></label>
+				<ion-button (click)="refresh()" expand="block" [disabled]="submitAttempt"> {{'Create list' | translate}} </ion-button>
+			</div>
+		</div>
 
-    <div>
-      <ion-list-header lines="full">
-        <ion-label color="dark">{{'Detail listing' | translate}}</ion-label>
-      </ion-list-header>
-      <ion-list>
-        <ion-item
-          *ngFor="let i of optionGroup"
-          [color]="segmentView == i.Code? 'primary': '' "
-          button
-          detail="true"
-          lines="full"
-          class="clickable"
-          (click)="loadNode(i)"
-        >
-          <ion-label class="ion-text-wrap">
-            <h3>{{i.Name}}</h3>
-            <p *ngIf="i.Remark">{{i.Remark}}</p>
-          </ion-label>
-        </ion-item>
-      </ion-list>
-    </div>
-  </ion-fab>
+		<div>
+			<ion-list-header lines="full">
+				<ion-label color="dark">{{'Detail listing' | translate}}</ion-label>
+			</ion-list-header>
+			<ion-list>
+				<ion-item *ngFor="let i of optionGroup" [color]="segmentView == i.Code? 'primary': '' " button detail="true" lines="full" class="clickable" (click)="loadNode(i)">
+					<ion-label class="ion-text-wrap">
+						<h3>{{i.Name}}</h3>
+						<p *ngIf="i.Remark">{{i.Remark}}</p>
+					</ion-label>
+				</ion-item>
+			</ion-list>
+		</div>
+	</ion-fab>
 
-  <div style="min-width: 300px; height: calc(100vh - 65px)">
-    <app-catering-booking-schedule
-      [showSearch]="pageConfig.isShowSearch"
-      [setQuery]="query"
-      *ngIf="segmentView=='schedule'"
-    ></app-catering-booking-schedule>
-  </div>
+	<div style="min-width: 300px; height: calc(100vh - 65px)">
+		<app-catering-booking-schedule [showSearch]="pageConfig.isShowSearch" [setQuery]="query" *ngIf="segmentView=='schedule'"></app-catering-booking-schedule>
+	</div>
 </ion-content>

@@ -1,178 +1,170 @@
 <ion-header>
-  <ion-toolbar>
-    <ion-buttons slot="start" class="ion-hide-sm-down_">
-      <ion-back-button [defaultHref]="'bill-of-materials/'+id"></ion-back-button>
-      <ion-button color="dark" class="ion-hide-sm-down"> {{'Print the BOM slip' | translate}} </ion-button>
-    </ion-buttons>
-    <ion-buttons slot="end">
-      <!-- <ion-button (click)="changePrintMode()" title="{{'print-mode' | translate}}">
+	<ion-toolbar>
+		<ion-buttons slot="start" class="ion-hide-sm-down_">
+			<ion-back-button [defaultHref]="'bill-of-materials/'+id"></ion-back-button>
+			<ion-button color="dark" class="ion-hide-sm-down"> {{'Print the BOM slip' | translate}} </ion-button>
+		</ion-buttons>
+		<ion-buttons slot="end">
+			<!-- <ion-button (click)="changePrintMode()" title="{{'print-mode' | translate}}">
 				<ion-icon slot="icon-only" [name]="printMode == 'A4' ? 'cut-outline':'file-tray-full-outline'"></ion-icon>
 			</ion-button>
 			<span class="split ion-hide-sm-down">|</span> -->
-      <ion-button (click)="print()" title="{{'Form printing' | translate}}">
-        <ion-icon slot="icon-only" name="print"></ion-icon>
-      </ion-button>
-      <ion-button (click)="refresh()" title="{{'Refresh' | translate}}">
-        <ion-icon slot="icon-only" name="reload-outline"></ion-icon>
-      </ion-button>
-      <ion-button
-        title="{{'Expanded function' | translate}}"
-        (click)="pageConfig.isShowFeature = !pageConfig.isShowFeature;"
-      >
-        <ion-icon slot="icon-only" [name]="pageConfig.isShowFeature? 'close-outline':'list-circle-outline'"> </ion-icon>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
+			<ion-button (click)="print()" title="{{'Form printing' | translate}}">
+				<ion-icon slot="icon-only" name="print"></ion-icon>
+			</ion-button>
+			<ion-button (click)="refresh()" title="{{'Refresh' | translate}}">
+				<ion-icon slot="icon-only" name="reload-outline"></ion-icon>
+			</ion-button>
+			<ion-button title="{{'Expanded function' | translate}}" (click)="pageConfig.isShowFeature = !pageConfig.isShowFeature;">
+				<ion-icon slot="icon-only" [name]="pageConfig.isShowFeature? 'close-outline':'list-circle-outline'"> </ion-icon>
+			</ion-button>
+		</ion-buttons>
+	</ion-toolbar>
 </ion-header>
 
 <ion-content appScrollbarTheme appPrintFix class="A4 left" [ngClass]="{withFeature: pageConfig.isShowFeature}">
-  <app-page-message
-    [message]="!pageConfig.canPrint? '{{`erp.app.pages.product.bill-of-material-note.cannot-print` | translate}}' : '' "
-    [itemsLength]="item? 1: 0"
-    [showSpinner]="pageConfig.showSpinner"
-  ></app-page-message>
-  <div style="overflow: auto">
-    <div class="giao-nhan" *ngFor="let b of sheets">
-      <section class="sheet padding-10mm rpt p1">
-        <table>
-          <thead>
-            <tr>
-              <td>
-                <div class="page-header-space"></div>
-              </td>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <div class="top-zone">
-                  <table class="rpt-header" cellpadding="0" cellspacing="0">
-                    <tbody>
-                      <tr>
-                        <td rowspan="5" class="logo">
-                          <img
-                            [src]="!b.LogoURL? 'assets/RPT-Logo-ART.png': b.LogoURL"
-                            (error)="$event.src='assets/RPT-Logo-ART.png'"
-                          />
-                        </td>
-                        <td colspan="2" class="bol title">{{'BOM table' | translate}}</td>
-                        <td class="bol num" colspan="2"></td>
-                        <td rowspan="5" class="topQR">
-                          <!-- <div *ngIf="b.Code">BOM:{{b.Id}}</div> -->
-                          <a [href]="'#/'+'bill-of-materials/'+b.Id" (click)="nav('bill-of-materials/'+b.Id,'forward')">
-                            <img class="qrc" [src]="b.QRC" />
-                          </a>
-                        </td>
-                      </tr>
+	<app-page-message
+		[message]="!pageConfig.canPrint? '{{`erp.app.pages.product.bill-of-material-note.cannot-print` | translate}}' : '' "
+		[itemsLength]="item? 1: 0"
+		[showSpinner]="pageConfig.showSpinner"
+	></app-page-message>
+	<div style="overflow: auto">
+		<div class="giao-nhan" *ngFor="let b of sheets">
+			<section class="sheet padding-10mm rpt p1">
+				<table>
+					<thead>
+						<tr>
+							<td>
+								<div class="page-header-space"></div>
+							</td>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>
+								<div class="top-zone">
+									<table class="rpt-header" cellpadding="0" cellspacing="0">
+										<tbody>
+											<tr>
+												<td rowspan="5" class="logo">
+													<img [src]="!b.LogoURL? 'assets/RPT-Logo-ART.png': b.LogoURL" (error)="$event.src='assets/RPT-Logo-ART.png'" />
+												</td>
+												<td colspan="2" class="bol title">{{'BOM table' | translate}}</td>
+												<td class="bol num" colspan="2"></td>
+												<td rowspan="5" class="topQR">
+													<!-- <div *ngIf="b.Code">BOM:{{b.Id}}</div> -->
+													<a [href]="'#/'+'bill-of-materials/'+b.Id" (click)="nav('bill-of-materials/'+b.Id,'forward')">
+														<img class="qrc" [src]="b.QRC" />
+													</a>
+												</td>
+											</tr>
 
-                      <tr>
-                        <td colspan="4">
-                          {{'for' | translate}}
-                          <b> {{b.Quantity}}</b>
-                          {{'Finished goods' | translate}}
-                        </td>
-                      </tr>
+											<tr>
+												<td colspan="4">
+													{{'for' | translate}}
+													<b> {{b.Quantity}}</b>
+													{{'Finished goods' | translate}}
+												</td>
+											</tr>
 
-                      <tr>
-                        <td class="head-c1" colspan="2">
-                          <b>{{b._Item.Code}}</b> -
-                          <span>{{b._Item.Name}}</span>
-                        </td>
-                        <td class="bol num" colspan="2"></td>
-                      </tr>
+											<tr>
+												<td class="head-c1" colspan="2">
+													<b>{{b._Item.Code}}</b> -
+													<span>{{b._Item.Name}}</span>
+												</td>
+												<td class="bol num" colspan="2"></td>
+											</tr>
 
-                      <tr>
-                        <td colspan="4">
-                          {{'Quantity per one-time production' | translate}}:
-                          <b>{{b.BatchSize}} </b>
-                          {{'Finished goods' | translate}}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td colspan="4">
-                          {{b.Code? b.Code : 'BOM: '+b.Id}} ({{'Printing date' | translate}}: {{b.PrintDate}})
-                        </td>
-                      </tr>
-                      <tr>
-                        <td></td>
-                        <td class="bol"></td>
-                        <td class="bol num" colspan="2"></td>
-                      </tr>
-                      <tr>
-                        <td colspan="4" class="">
-                          <span>
-                            <!-- <b> Tổng chi phí</b> {{b.CompanyName}} -->
-                          </span>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+											<tr>
+												<td colspan="4">
+													{{'Quantity per one-time production' | translate}}:
+													<b>{{b.BatchSize}} </b>
+													{{'Finished goods' | translate}}
+												</td>
+											</tr>
+											<tr>
+												<td colspan="4">{{b.Code? b.Code : 'BOM: '+b.Id}} ({{'Printing date' | translate}}: {{b.PrintDate}})</td>
+											</tr>
+											<tr>
+												<td></td>
+												<td class="bol"></td>
+												<td class="bol num" colspan="2"></td>
+											</tr>
+											<tr>
+												<td colspan="4" class="">
+													<span>
+														<!-- <b> Tổng chi phí</b> {{b.CompanyName}} -->
+													</span>
+												</td>
+											</tr>
+										</tbody>
+									</table>
 
-                  <div class="ds-san-pham">
-                    <table cellpadding="0" cellspacing="0">
-                      <tbody>
-                        <tr class="head">
-                          <!-- <td class="cen">STT</td> -->
-                          <td>
-                            <div class="ten-sp ck">{{'Raw materials' | translate}}</div>
-                          </td>
-                          <td class="cen">{{'Unit' | translate}}</td>
-                          <td class="cen">{{'Quantity' | translate}}</td>
-                          <!-- <td class="num">{{'Unit price' | translate}}</td>
+									<div class="ds-san-pham">
+										<table cellpadding="0" cellspacing="0">
+											<tbody>
+												<tr class="head">
+													<!-- <td class="cen">STT</td> -->
+													<td>
+														<div class="ten-sp ck">{{'Raw materials' | translate}}</div>
+													</td>
+													<td class="cen">{{'Unit' | translate}}</td>
+													<td class="cen">{{'Quantity' | translate}}</td>
+													<!-- <td class="num">{{'Unit price' | translate}}</td>
 													<td class="num">Giá ĐM</td> -->
-                          <td class="num" *ngIf="pageConfig.canViewPrice">{{'Selling price' | translate}}</td>
-                          <td class="num" *ngIf="pageConfig.canViewStdCost">{{'Production cost' | translate}}</td>
-                        </tr>
+													<td class="num" *ngIf="pageConfig.canViewPrice">{{'Selling price' | translate}}</td>
+													<td class="num" *ngIf="pageConfig.canViewStdCost">{{'Production cost' | translate}}</td>
+												</tr>
 
-                        <ng-container *ngFor="let i of b.Lines; let idx = index; ">
-                          <tr [ngClass]="{subhead: i.Type == 'CTStage'}">
-                            <!-- <td class="cen" [attr.rowspan]="i._SplitUoMs.length" *ngIf="gdx == 0">{{idx+1}}</td> -->
-                            <td>
-                              <div class="ten-sp ck">
-                                <span *ngIf="i.Type != 'CTStage'"> - </span>
-                                <span *ngIf="i._Item">
-                                  <b>{{i._Item.Code}}</b>
-                                  -
-                                  <span>{{i._Item.Name}}</span>
-                                </span>
+												<ng-container *ngFor="let i of b.Lines; let idx = index; ">
+													<tr [ngClass]="{subhead: i.Type == 'CTStage'}">
+														<!-- <td class="cen" [attr.rowspan]="i._SplitUoMs.length" *ngIf="gdx == 0">{{idx+1}}</td> -->
+														<td>
+															<div class="ten-sp ck">
+																<span *ngIf="i.Type != 'CTStage'"> - </span>
+																<span *ngIf="i._Item">
+																	<b>{{i._Item.Code}}</b>
+																	-
+																	<span>{{i._Item.Name}}</span>
+																</span>
 
-                                <b *ngIf="i.Type == 'CTStage'">
-                                  <span *ngIf="i.Name"> {{i.Name}} </span>
-                                  <span *ngIf="!i.Name"> {{'Period' | translate}} </span>
-                                </b>
-                                <i *ngIf="i.Type == 'CTText'">
-                                  <span *ngIf="i.Name"> {{i.Name}} </span>
-                                  <span *ngIf="!i.Name"> {{'Insruction' | translate}} </span>
-                                </i>
-                              </div>
-                            </td>
-                            <td class="cen">{{i.UoMName}}</td>
-                            <td class="num bol">
-                              <span *ngIf="i.Type == 'CTItem'">
-                                {{i.Quantity}}
-                                <b *ngIf="i.AdditionalQuantity">+{{i.AdditionalQuantity}}</b>
-                              </span>
-                            </td>
-                            <!-- <td class="num">
+																<b *ngIf="i.Type == 'CTStage'">
+																	<span *ngIf="i.Name"> {{i.Name}} </span>
+																	<span *ngIf="!i.Name"> {{'Period' | translate}} </span>
+																</b>
+																<i *ngIf="i.Type == 'CTText'">
+																	<span *ngIf="i.Name"> {{i.Name}} </span>
+																	<span *ngIf="!i.Name"> {{'Insruction' | translate}} </span>
+																</i>
+															</div>
+														</td>
+														<td class="cen">{{i.UoMName}}</td>
+														<td class="num bol">
+															<span *ngIf="i.Type == 'CTItem'">
+																{{i.Quantity}}
+																<b *ngIf="i.AdditionalQuantity">+{{i.AdditionalQuantity}}</b>
+															</span>
+														</td>
+														<!-- <td class="num">
 														
 													</td>
 													<td class="num">
 														
 													</td> -->
-                            <td class="num" *ngIf="pageConfig.canViewPrice">{{i.TotalPriceText}}</td>
-                            <td class="num" *ngIf="pageConfig.canViewStdCost">{{i.TotalStdCostText}}</td>
-                          </tr>
-                        </ng-container>
-                        <tr class="head" *ngIf="pageConfig.canViewPrice || pageConfig.canViewStdCost">
-                          <td class="num" colspan="3">{{'Total' | translate}}:</td>
-                          <td class="num" *ngIf="pageConfig.canViewPrice">{{b.TotalPriceText}}</td>
-                          <td class="num" *ngIf="pageConfig.canViewStdCost">{{b.TotalStdCostText}}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
+														<td class="num" *ngIf="pageConfig.canViewPrice">{{i.TotalPriceText}}</td>
+														<td class="num" *ngIf="pageConfig.canViewStdCost">{{i.TotalStdCostText}}</td>
+													</tr>
+												</ng-container>
+												<tr class="head" *ngIf="pageConfig.canViewPrice || pageConfig.canViewStdCost">
+													<td class="num" colspan="3">{{'Total' | translate}}:</td>
+													<td class="num" *ngIf="pageConfig.canViewPrice">{{b.TotalPriceText}}</td>
+													<td class="num" *ngIf="pageConfig.canViewStdCost">{{b.TotalStdCostText}}</td>
+												</tr>
+											</tbody>
+										</table>
+									</div>
 
-                  <!-- <table class="thanh-tien" cellpadding="0" cellspacing="0">
+									<!-- <table class="thanh-tien" cellpadding="0" cellspacing="0">
 										<tbody>
 											<tr>
 												<td class="c1">Tổng tiền:</td>
@@ -188,7 +180,7 @@
 										</tbody>
 									</table> -->
 
-                  <!-- <table class="chu-ky" cellpadding="0" cellspacing="0">
+									<!-- <table class="chu-ky" cellpadding="0" cellspacing="0">
 										<tbody>
 											<tr>
 												<td style="width: 50%;"></td>
@@ -206,8 +198,8 @@
 											</tr>
 										</tbody>
 									</table> -->
-                </div>
-                <!-- <table class="noti" cellpadding="0" cellspacing="0">
+								</div>
+								<!-- <table class="noti" cellpadding="0" cellspacing="0">
 									<tbody>
 										<tr>
 											<td class="cen">
@@ -217,19 +209,19 @@
 										</tr>
 									</tbody>
 								</table> -->
-              </td>
-            </tr>
-          </tbody>
+							</td>
+						</tr>
+					</tbody>
 
-          <tfoot>
-            <tr>
-              <td>
-                <div class="page-footer-space"></div>
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-      </section>
-    </div>
-  </div>
+					<tfoot>
+						<tr>
+							<td>
+								<div class="page-footer-space"></div>
+							</td>
+						</tr>
+					</tfoot>
+				</table>
+			</section>
+		</div>
+	</div>
 </ion-content>

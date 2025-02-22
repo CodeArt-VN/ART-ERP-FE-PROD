@@ -1,5 +1,20 @@
 <ion-header>
-	<app-list-toolbar pageTitle="{{'erp.app.pages.wms.forecast.page-title' | translate}}" [pageConfig]="pageConfig" [selectedItems]="selectedItems" [query]="query" (approveOrders)="approve()" (disapproveOrders)="disapprove()" (add)="add()" (refresh)="refresh()" (export)="export()" (import)="import($event)" (help)="help()" (unselect)="unselect()" (archiveItems)="archiveItems()" (deleteItems)="deleteItems()" ></app-list-toolbar>
+	<app-list-toolbar
+		pageTitle="{{'erp.app.pages.wms.forecast.page-title' | translate}}"
+		[pageConfig]="pageConfig"
+		[selectedItems]="selectedItems"
+		[query]="query"
+		(approveOrders)="approve()"
+		(disapproveOrders)="disapprove()"
+		(add)="add()"
+		(refresh)="refresh()"
+		(export)="export()"
+		(import)="import($event)"
+		(help)="help()"
+		(unselect)="unselect()"
+		(archiveItems)="archiveItems()"
+		(deleteItems)="deleteItems()"
+	></app-list-toolbar>
 	<section class="table">
 		<header class="bold">
 			<div class="col-checkbox cell"></div>
@@ -13,13 +28,13 @@
 				<ion-icon class="min-btn" *ngIf="sort.Name" [name]="sort.Name == 'Name'?'arrow-down': 'arrow-up'"></ion-icon>
 				<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.Name" name="search" color="primary"></ion-icon>
 			</div>
-		
+
 			<div class="col-name cell" (click)="sortToggle('WarehouseName')">
 				{{'Branch' | translate}}
 				<ion-icon class="min-btn" *ngIf="sort.WarehouseName" [name]="sort.WarehouseName == 'WarehouseName'?'arrow-down': 'arrow-up'"></ion-icon>
 				<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.WarehouseName" name="search" color="primary"></ion-icon>
 			</div>
-		
+
 			<div class="col-date cell" (click)="sortToggle('StartDate')">
 				{{'Start date' | translate}}
 				<ion-icon class="min-btn" *ngIf="sort.WarehouseCode" [name]="sort.StartDate == 'StartDate'?'arrow-down': 'arrow-up'"></ion-icon>
@@ -38,69 +53,36 @@
 		</header>
 		<form (submit)="refresh()" action="#">
 			<header class="filter" *ngIf="pageConfig.isShowSearch">
-			  <div class="col-checkbox cell"></div>
-			  <div class="col-id cell">
-				<input
-				  [ngModelOptions]="{standalone: true}"
-				  [(ngModel)]="query.Id"
-				  class="c-input"
-				  [ngClass]="{active: query.Id}"
-				  type="text"
-				/>
-				<ion-icon
-				  class="min-btn"
-				  (click)="query.Id=''; refresh()"
-				  *ngIf="query.Id"
-				  name="close-circle-outline"
-				></ion-icon>
-			  </div>
-			  <div class="col-name cell"><input
-				(change)="refresh()"
-				[ngModelOptions]="{standalone: true}"
-				[(ngModel)]="query.Name"
-				class="c-input"
-				[ngClass]="{active: query.Name}"
-				type="text"
-			  /></div>
-			
-			  <div class="col-name cell"></div>
-			
-			  <div class="col-date cell">
-				<input
-				  (change)="refresh()"
-				  [ngModelOptions]="{standalone: true}"
-				  [(ngModel)]="query.StartDate"
-				  class="c-input"
-				  [ngClass]="{active: query.StartDate}"
-				  type="date"
-				/>
-				<ion-icon
-				  class="min-btn"
-				  (click)="query.StartDate=''; refresh()"
-				  *ngIf="query.StartDate"
-				  name="close-circle-outline"
-				></ion-icon>
-			  </div>
-			  <div class="col-date cell">
-				<input
-				  (change)="refresh()"
-				  [ngModelOptions]="{standalone: true}"
-				  [(ngModel)]="query.EndDate"
-				  class="c-input"
-				  [ngClass]="{active: query.EndDate}"
-				  type="date"
-				/>
-				<ion-icon
-				  class="min-btn"
-				  (click)="query.EndDate=''; refresh()"
-				  *ngIf="query.EndDate"
-				  name="close-circle-outline"
-				></ion-icon>
-			  </div>
+				<div class="col-checkbox cell"></div>
+				<div class="col-id cell">
+					<input [ngModelOptions]="{standalone: true}" [(ngModel)]="query.Id" class="c-input" [ngClass]="{active: query.Id}" type="text" />
+					<ion-icon class="min-btn" (click)="query.Id=''; refresh()" *ngIf="query.Id" name="close-circle-outline"></ion-icon>
+				</div>
+				<div class="col-name cell">
+					<input (change)="refresh()" [ngModelOptions]="{standalone: true}" [(ngModel)]="query.Name" class="c-input" [ngClass]="{active: query.Name}" type="text" />
+				</div>
 
-			  <button mat-raised-button type="submit" style="display: none">Search</button>
+				<div class="col-name cell"></div>
+
+				<div class="col-date cell">
+					<input
+						(change)="refresh()"
+						[ngModelOptions]="{standalone: true}"
+						[(ngModel)]="query.StartDate"
+						class="c-input"
+						[ngClass]="{active: query.StartDate}"
+						type="date"
+					/>
+					<ion-icon class="min-btn" (click)="query.StartDate=''; refresh()" *ngIf="query.StartDate" name="close-circle-outline"></ion-icon>
+				</div>
+				<div class="col-date cell">
+					<input (change)="refresh()" [ngModelOptions]="{standalone: true}" [(ngModel)]="query.EndDate" class="c-input" [ngClass]="{active: query.EndDate}" type="date" />
+					<ion-icon class="min-btn" (click)="query.EndDate=''; refresh()" *ngIf="query.EndDate" name="close-circle-outline"></ion-icon>
+				</div>
+
+				<button mat-raised-button type="submit" style="display: none">Search</button>
 			</header>
-		  </form>
+		</form>
 	</section>
 </ion-header>
 
@@ -108,31 +90,18 @@
 	<app-page-message [itemsLength]="items.length" [showSpinner]="pageConfig.showSpinner"></app-page-message>
 	<div *ngIf="items.length && pageConfig.showSpinner==false">
 		<section class="table">
-					<div *ngFor="let i of items; let j = index;"  class="row" [ngClass]="{odd: j % 2 != 0}" [ngClass]="{selected: i.checked}">
-						<div class="col-checkbox cell">
-							<input (click)="changeSelection(i, $event)" class="c-checkbox" [(ngModel)]="i.checked" type="checkbox">
-						</div>
-						<div (click)="nav('forecast/'+i.Id,'forward')" class="col-id cell">
-							{{i.Id}}
-						</div>
-						<div  class="col-name cell">
-							{{i.Name}}   						
-						</div>
-						<div  class="col-name cell">
-							{{i.BranchName}}   						
-						</div>
-					
-						<div class="col-date cell">
-							{{i.StartDate | date: 'dd/MM/yyyy'}}
-						</div>
-						<div class="col-date cell">
-							{{i.EndDate | date: 'dd/MM/yyyy'}}
-						</div>
-						<div class="col-code cell">
-							{{i.Period}}
-						</div>
-					</div>
-				
+			<div *ngFor="let i of items; let j = index;" class="row" [ngClass]="{odd: j % 2 != 0}" [ngClass]="{selected: i.checked}">
+				<div class="col-checkbox cell">
+					<input (click)="changeSelection(i, $event)" class="c-checkbox" [(ngModel)]="i.checked" type="checkbox" />
+				</div>
+				<div (click)="nav('forecast/'+i.Id,'forward')" class="col-id cell">{{i.Id}}</div>
+				<div class="col-name cell">{{i.Name}}</div>
+				<div class="col-name cell">{{i.BranchName}}</div>
+
+				<div class="col-date cell">{{i.StartDate | date: 'dd/MM/yyyy'}}</div>
+				<div class="col-date cell">{{i.EndDate | date: 'dd/MM/yyyy'}}</div>
+				<div class="col-code cell">{{i.Period}}</div>
+			</div>
 		</section>
 	</div>
 	<ion-infinite-scroll color="primary" threshold="20%" (ionInfinite)="loadData($event)" [disabled]="!pageConfig.infiniteScroll || pageConfig.isEndOfData">

@@ -1,65 +1,60 @@
 <section class="table" [ngStyle]="{ 'min-width': 'calc(245px + ' + columns.length + '*150px)' }">
-  <header class="bold">
-    <div class="col-name cell">
-      {{ 'Unit' | translate }}
-    </div>
-    <div class="col-date" *ngFor="let dt of columns">
-      <div class="date">
-        <ion-text color="primary">{{ dt.Weekday }}</ion-text
-        >-{{ dt.DateText }}
-      </div>
-      <div class="cols">
-        <div class="col-number cell">
-          {{ 'Morning' | translate }}
-        </div>
-        <div class="col-number cell">
-          {{ 'Afternoon' | translate }}
-        </div>
-        <div class="col-number cell">
-          {{ 'Evening' | translate }}
-        </div>
-      </div>
-    </div>
-  </header>
-  <form (submit)="refresh()" action="#">
-    <header class="filter" *ngIf="pageConfig.isShowSearch">
-      <div class="col-checkbox cell"></div>
-      <!-- <div class="col-name cell">
+	<header class="bold">
+		<div class="col-name cell">
+			{{ 'Unit' | translate }}
+		</div>
+		<div class="col-date" *ngFor="let dt of columns">
+			<div class="date">
+				<ion-text color="primary">{{ dt.Weekday }}</ion-text
+				>-{{ dt.DateText }}
+			</div>
+			<div class="cols">
+				<div class="col-number cell">
+					{{ 'Morning' | translate }}
+				</div>
+				<div class="col-number cell">
+					{{ 'Afternoon' | translate }}
+				</div>
+				<div class="col-number cell">
+					{{ 'Evening' | translate }}
+				</div>
+			</div>
+		</div>
+	</header>
+	<form (submit)="refresh()" action="#">
+		<header class="filter" *ngIf="pageConfig.isShowSearch">
+			<div class="col-checkbox cell"></div>
+			<!-- <div class="col-name cell">
       <input [ngModelOptions]="{standalone: true}" [(ngModel)]="query.Keyword" class="c-input" [ngClass]="{active: query.Keyword}" type="text">
       <ion-icon class="min-btn" (click)="query.Keyword=''; refresh()" *ngIf="query.Keyword" name="close-circle-outline"></ion-icon>
     </div>
     <div class="col-id cell"></div>
     <div class="col-number cell" *ngFor="let c of columns"></div> -->
-      <button mat-raised-button type="submit" style="display: none">Search</button>
-    </header>
-  </form>
+			<button mat-raised-button type="submit" style="display: none">Search</button>
+		</header>
+	</form>
 
-  <app-page-message [itemsLength]="items.length" [showSpinner]="pageConfig.showSpinner"></app-page-message>
+	<app-page-message [itemsLength]="items.length" [showSpinner]="pageConfig.showSpinner"></app-page-message>
 
-  <div
-    *ngFor="let i of items; let j = index"
-    class="row"
-    [ngClass]="{ odd: j % 2 != 0 }"
-    [ngClass]="{ selected: i.checked }"
-  >
-    <div class="col-name cell">
-      <span
-        ><b>{{ i.Name }}</b></span
-      >
-    </div>
+	<div *ngFor="let i of items; let j = index" class="row" [ngClass]="{ odd: j % 2 != 0 }" [ngClass]="{ selected: i.checked }">
+		<div class="col-name cell">
+			<span
+				><b>{{ i.Name }}</b></span
+			>
+		</div>
 
-    <ng-container *ngFor="let c of i.Cols">
-      <div class="col-number cell">
-        <b *ngIf="c">{{ c.Breakfast }}</b>
-      </div>
-      <div class="col-number cell">
-        <span *ngIf="c">{{ c.Lunch }}</span>
-      </div>
-      <div class="col-number cell">
-        <span *ngIf="c">{{ c.Dinner }}</span>
-      </div>
-    </ng-container>
-  </div>
+		<ng-container *ngFor="let c of i.Cols">
+			<div class="col-number cell">
+				<b *ngIf="c">{{ c.Breakfast }}</b>
+			</div>
+			<div class="col-number cell">
+				<span *ngIf="c">{{ c.Lunch }}</span>
+			</div>
+			<div class="col-number cell">
+				<span *ngIf="c">{{ c.Dinner }}</span>
+			</div>
+		</ng-container>
+	</div>
 </section>
 
 <!-- <ion-infinite-scroll color="primary" threshold="20%" (ionInfinite)="loadData($event)" [disabled]="!pageConfig.infiniteScroll || pageConfig.isEndOfData">
