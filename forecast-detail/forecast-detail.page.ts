@@ -377,7 +377,7 @@ export class ForecastDetailPage extends PageBase {
 							});
 					})
 					.catch((err) => {
-						this.env.showMessage('DELETE_RESULT_FAIL', 'danger');;
+						this.env.showMessage('DELETE_RESULT_FAIL', 'danger');
 						console.log(err);
 					});
 			}
@@ -513,7 +513,7 @@ export class ForecastDetailPage extends PageBase {
 						this.env.showMessage('erp.app.app-component.page-bage.delete-complete', 'success');
 					})
 					.catch((err) => {
-						this.env.showMessage('DELETE_RESULT_FAIL', 'danger');;
+						this.env.showMessage('DELETE_RESULT_FAIL', 'danger');
 						console.log(err);
 					});
 			});
@@ -565,7 +565,7 @@ export class ForecastDetailPage extends PageBase {
 						this.checkedRows = new FormArray([]);
 					})
 					.catch((err) => {
-						this.env.showMessage('DELETE_RESULT_FAIL', 'danger');;
+						this.env.showMessage('DELETE_RESULT_FAIL', 'danger');
 						console.log(err);
 					});
 			});
