@@ -840,60 +840,8 @@ export class ForecastDetailPage extends PageBase {
 			max: 500,
 		  }]).then((data) => {
 			if(data && data[0]>0){
-				let subQuery = {
-					Schema: {
-						Id: 2,
-						Type: 'DBView',
-						Code: 'SALE_OrderDetail',
-						Name: 'Báo cáo đơn hàng chi tiết',
-					},
-					TimeFrame: {
-						Dimension: 'OrderDate',
-						From: {
-							Type: 'Absolute',
-							IsPastDate: true,
-						},
-						To: {
-							Type: 'Absolute',
-							IsPastDate: true,
-						},
-					},
-					Interval: {
-						// Property: 'OrderDate',
-						// Type: 'Day',
-						// Title: null,
-					},
-					CompareBy: [
-						{
-							Property: 'IDItem',
-							Title: '',
-						},
-						{
-							Property: 'ItemName',
-							Title: '',
-						},
-						{
-							Property: 'IDUoM',
-							Title: '',
-						},
-						{
-							Property: 'UoMName',
-							Title: '',
-						},
-					],
-					MeasureBy: [
-						// {
-						// 	Property: 'ShippedQuantity',
-						// 	Method: 'sum',
-						// 	Title: '',
-						// },
-					],
-					Transform: {
-						Filter: JSON.parse(this.formGroup.get('Filter').value),
-					},
-				};
-	
-				this.env.showLoading('Please wait for a few moments', this.commonService.connect('POST', 'SALE/Forecast/GeneratorForecastItem/' + this.item.Id+'/'+data[0], subQuery).toPromise())
+			
+				this.env.showLoading('Please wait for a few moments', this.commonService.connect('POST', 'SALE/Forecast/GeneratorForecastItem/' + this.item.Id+'/'+data[0],null).toPromise())
 				.then((result: any) => {
 					if (result) {
 						this.item = result;
@@ -914,53 +862,9 @@ export class ForecastDetailPage extends PageBase {
 	}
 	generatorForecastPeriod() {
 		this.env.showPrompt('Khi dự đoán tự động sẽ xoá hết dữ liệu dự báo hiện tại, bạn có tiếp tục?', null, 'Xóa').then((_) => {
-			let subQuery = {
-				Schema: {
-					Id: 2,
-					Type: 'DBView',
-					Code: 'SALE_OrderDetail',
-					Name: 'Báo cáo đơn hàng chi tiết',
-				},
-				TimeFrame: {
-					Dimension: 'OrderDate',
-					From: {
-						Type: 'Absolute',
-						IsPastDate: true,
-					},
-					To: {
-						Type: 'Absolute',
-						IsPastDate: true,
-					},
-				},
-				Interval: {
-					Property: 'OrderDate',
-					Type: 'Day',
-					Title: null,
-				},
-				CompareBy: [
-					{
-						Property: 'IDItem',
-						Title: '',
-					},
-					{
-						Property: 'ItemName',
-						Title: '',
-					},
-				],
-				MeasureBy: [
-					{
-						Property: 'ShippedQuantity',
-						Method: 'sum',
-						Title: '',
-					},
-				],
-				Transform: {
-					Filter: JSON.parse(this.formGroup.get('Filter').value),
-				},
-			};
-
+		
 			this.env
-				.showLoading('Please wait for a few moments', this.commonService.connect('POST', 'SALE/Forecast/GeneratorForecastPeriod/' + this.item.Id, subQuery).toPromise())
+				.showLoading('Please wait for a few moments', this.commonService.connect('POST', 'SALE/Forecast/GeneratorForecastPeriod/' + this.item.Id,null).toPromise())
 				.then((result: any) => {
 					if (result) {
 						this.item = result;

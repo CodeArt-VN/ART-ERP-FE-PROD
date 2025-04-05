@@ -1,8 +1,6 @@
 <ion-header>
 	<app-toolbar [page]="this">
-		<ion-button *ngIf="formGroup.get('LinePeriod')['controls']?.length>0" (click)="generatorForecastTopItem()" class="ion-hide-sm-down" title="{{'Calculate forecast item' | translate}}">
-			<ion-icon name="calendar-outline"></ion-icon>
-		</ion-button>
+	
 		<ion-button  *ngIf="formGroup.get('LinePeriod')['controls']?.length>0"(click)="generatorForecastPeriod()" class="ion-hide-sm-down" title="{{'Calculate forecast data' | translate}}">
 			<ion-icon name="calculator-outline"></ion-icon>
 		</ion-button>
@@ -34,6 +32,7 @@
 							</ion-segment>
 	
 							<ion-buttons slot="end" *ngIf="segmentView=='s2'">
+							
 								<ion-button class="ion-hide-sm-down" *ngIf="pageConfig.canExport && item.Id" (click)="export()" title="{{'Export' | translate}}">
 									<ion-icon slot="icon-only" name="cloud-download-outline"></ion-icon>
 								</ion-button>
@@ -270,8 +269,12 @@
 										<div class="row">
 											<div class="cell">
 												<ion-button fill="clear" size="small" (click)="addRows()">
-													<ion-icon slot="start" name="add-circle-outcell"></ion-icon>
+													<ion-icon slot="start" name="add-circle-outline"></ion-icon>
 													{{'Add product' | translate}}
+												</ion-button>
+												<ion-button fill="clear" size="small"  *ngIf="formGroup.get('LinePeriod')['controls']?.length>0" (click)="generatorForecastTopItem()" class="ion-hide-sm-down" title="{{'Add top item' | translate}}">
+													<ion-icon slot="start" name="add-circle-outline"></ion-icon>
+													{{'Add top item' | translate}}
 												</ion-button>
 											</div>
 										</div>
