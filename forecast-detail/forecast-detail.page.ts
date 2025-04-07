@@ -594,7 +594,6 @@ export class ForecastDetailPage extends PageBase {
 			return;
 		}
 		this.submitAttempt = true;
-		console.log('Initial value:', this.formGroup.controls.StartDate.value);
 		const dateNow = this.formatDate(new Date());
 		if (this.formGroup.controls.StartDate.value < dateNow || this.formGroup.controls.EndDate.value < dateNow) {
 			this.env.showMessage('Please select a future date', 'warning');
@@ -833,56 +832,39 @@ export class ForecastDetailPage extends PageBase {
 		});
 		return config;
 	}
+	generatorForecastTopItem(){
+		this.env.showPrompt('Generator forecast top item(s)',null , 'Input top items','Confirm','Cancel',[{
+			type: 'number',
+			placeholder: 'input top item ...',
+			min: 1,
+			max: 500,
+		  }]).then((data) => {
+			if(data && data[0]>0){
+			
+				this.env.showLoading('Please wait for a few moments', this.commonService.connect('POST', 'SALE/Forecast/GeneratorForecastItem/' + this.item.Id+'/'+data[0],null).toPromise())
+				.then((result: any) => {
+					if (result) {
+						this.item = result;
+						this.loadedData();
+						this.env.showMessage('Saved', 'success');
+					} else {
+						this.env.showMessage('Cannot save, please try again', 'danger');
+					}
+				}).catch(err=>
+				{
+					console.log(err);
+				}
+				);
+			}
+			
+		})
 
+	}
 	generatorForecastPeriod() {
 		this.env.showPrompt('Khi dự đoán tự động sẽ xoá hết dữ liệu dự báo hiện tại, bạn có tiếp tục?', null, 'Xóa').then((_) => {
-			let subQuery = {
-				Schema: {
-					Id: 2,
-					Type: 'DBView',
-					Code: 'SALE_OrderDetail',
-					Name: 'Báo cáo đơn hàng chi tiết',
-				},
-				TimeFrame: {
-					Dimension: 'OrderDate',
-					From: {
-						Type: 'Absolute',
-						IsPastDate: true,
-					},
-					To: {
-						Type: 'Absolute',
-						IsPastDate: true,
-					},
-				},
-				Interval: {
-					Property: 'OrderDate',
-					Type: 'Day',
-					Title: null,
-				},
-				CompareBy: [
-					{
-						Property: 'IDItem',
-						Title: '',
-					},
-					{
-						Property: 'ItemName',
-						Title: '',
-					},
-				],
-				MeasureBy: [
-					{
-						Property: 'ShippedQuantity',
-						Method: 'sum',
-						Title: '',
-					},
-				],
-				Transform: {
-					Filter: JSON.parse(this.formGroup.get('Filter').value),
-				},
-			};
-
+		
 			this.env
-				.showLoading('Please wait for a few moments', this.commonService.connect('POST', 'SALE/Forecast/GeneratorForecastPeriod/' + this.item.Id, subQuery).toPromise())
+				.showLoading('Please wait for a few moments', this.commonService.connect('POST', 'SALE/Forecast/GeneratorForecastPeriod/' + this.item.Id,null).toPromise())
 				.then((result: any) => {
 					if (result) {
 						this.item = result;
