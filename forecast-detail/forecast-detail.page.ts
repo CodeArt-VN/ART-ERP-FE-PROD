@@ -19,6 +19,7 @@ import { CommonService } from 'src/app/services/core/common.service';
 import { lib } from 'src/app/services/static/global-functions';
 import { concat, of, Subject, Subscription } from 'rxjs';
 import { catchError, distinctUntilChanged, pairwise, scan, switchMap, tap } from 'rxjs/operators';
+import { er } from '@fullcalendar/core/internal-common';
 
 @Component({
 	selector: 'app-forecast-detail',
@@ -36,6 +37,7 @@ export class ForecastDetailPage extends PageBase {
 	periodSubscription: Subscription;
 	config;
 	multiplyOld = 0;
+	isAdvance = false;
 
 	constructor(
 		public pageProvider: SALE_ForecastProvider, //PROD_ForecastProvider,
@@ -65,10 +67,13 @@ export class ForecastDetailPage extends PageBase {
 				value: this.env.selectedBranch,
 				disabled: false,
 			}),
-			StartDate: ['', Validators.required],
-			EndDate: ['', Validators.required],
+			StartDate: [''],
+			EndDate: new FormControl({
+				value: '',
+				disabled: true,
+			}),
 			Name: ['', Validators.required],
-			Period: ['Daily', Validators.required],
+			Type: ['Daily', Validators.required],
 			Rows: this.formBuilder.array([]),
 			Cells: this.formBuilder.array([]),
 			Remark: [''],
@@ -80,6 +85,8 @@ export class ForecastDetailPage extends PageBase {
 			ModifiedBy: new FormControl({ value: '', disabled: true }),
 			ModifiedDate: new FormControl({ value: '', disabled: true }),
 			LinePeriod: this.formBuilder.array([]),
+			NumberOfPrePeriod: ['', Validators.required],
+			NumberOfNextPeriod: ['', Validators.required],
 			Config: [''],
 			Filter: [''],
 			_Filter: [''],
@@ -125,7 +132,7 @@ export class ForecastDetailPage extends PageBase {
 			this.patchPeriodValue();
 			this.formGroup.controls._Filter.setValue(JSON.parse(this.item.Filter));
 		} else {
-			this.formGroup.controls.Period.markAsDirty();
+			this.formGroup.controls.Type.markAsDirty();
 			this.formGroup.controls.IDBranch.markAsDirty();
 			this.formGroup.controls.Multiply.setValue(100);
 			this.formGroup.controls.Multiply.markAsDirty();
@@ -137,14 +144,14 @@ export class ForecastDetailPage extends PageBase {
 	}
 
 	renderView(reRender = false) {
-		if (!this.formGroup.get('StartDate').value || !this.formGroup.get('EndDate').value || !this.formGroup.get('Period').value) {
+		if (!this.formGroup.get('StartDate').value || !this.formGroup.get('EndDate').value || !this.formGroup.get('Type').value) {
 			return;
 		}
 		this.columnView = [];
 		let startDate = new Date(this.formGroup.get('StartDate').value);
 		let endDate = new Date(this.formGroup.get('EndDate').value);
 
-		if (this.formGroup.get('Period').value === 'Daily') {
+		if (this.formGroup.get('Type').value === 'Daily') {
 			let dateBetweens = lib.getStartEndDates(startDate, endDate);
 			dateBetweens.forEach((date) => {
 				date = new Date(date.Date);
@@ -155,12 +162,12 @@ export class ForecastDetailPage extends PageBase {
 					Date: dateFormatted,
 				});
 			});
-		} else if (this.formGroup.get('Period').value === 'Weekly') {
+		} else if (this.formGroup.get('Type').value === 'Weekly') {
 			startDate = lib.getWeekDates(startDate)[1];
-			let endWeeks = lib.getWeekDates(endDate);
-			let endDateWeek = new Date(endWeeks[endWeeks.length - 1]); // t7
-			endDateWeek.setDate(endDateWeek.getDate() + 1); // cn
-			endDate = endDateWeek;
+			// let endWeeks = lib.getWeekDates(endDate);
+			// let endDateWeek = new Date(endWeeks[endWeeks.length - 1]); // t7
+			// endDateWeek.setDate(endDateWeek.getDate() + 1); // cn
+			endDate = endDate; //endDateWeek;
 			let dateBetweens = lib.getStartEndDates(startDate, endDate);
 			dateBetweens.forEach((date) => {
 				date = new Date(date.Date);
@@ -173,7 +180,7 @@ export class ForecastDetailPage extends PageBase {
 					});
 				}
 			});
-		} else if (this.formGroup.get('Period').value === 'Monthly') {
+		} else if (this.formGroup.get('Type').value === 'Monthly') {
 			startDate.setDate(1);
 			endDate = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0);
 			let dateBetweens = lib.getStartEndDates(startDate, endDate);
@@ -595,16 +602,45 @@ export class ForecastDetailPage extends PageBase {
 		}
 		this.submitAttempt = true;
 		const dateNow = this.formatDate(new Date());
-		if (this.formGroup.controls.StartDate.value < dateNow || this.formGroup.controls.EndDate.value < dateNow) {
+		if (this.formGroup.controls.StartDate.value && this.formGroup.controls.StartDate.value <= dateNow) {
 			this.env.showMessage('Please select a future date', 'warning');
-			this.submitAttempt = false;
-			return;
+			this.env
+				.showPrompt('The selected date is earlier than the current date. Do you want the system to select another date?', null, 'Delete')
+				.then((_) => {
+					const currentDate = new Date();
+					let newStartDate;
+
+					if (this.formGroup.controls.Type.value === 'Daily') {
+						newStartDate = new Date(currentDate);
+						newStartDate.setDate(currentDate.getDate() + 1);
+					} else if (this.formGroup.controls.Type.value === 'Weekly') {
+						const dayOfWeek = currentDate.getDay();
+						const daysUntilNextWeek = 7 - dayOfWeek + 1; // Start of next week (Monday)
+						newStartDate = new Date(currentDate);
+						newStartDate.setDate(currentDate.getDate() + daysUntilNextWeek);
+					} else if (this.formGroup.controls.Type.value === 'Monthly') {
+						newStartDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1); // First day of next month
+					}
+
+					this.formGroup.controls.StartDate.setValue(this.formatDate(newStartDate));
+					this.formGroup.controls.StartDate.markAsDirty();
+					this.chagegroupCells();
+				})
+				.catch((err) => {
+					this.submitAttempt = false;
+					return;
+				});
+		} else {
+			this.chagegroupCells();
 		}
-		if (this.formGroup.controls.StartDate.value > this.formGroup.controls.EndDate.value) {
-			this.env.showMessage('The end date cannot be less than the start date', 'warning');
-			this.submitAttempt = false;
-			return;
-		}
+		// if (this.formGroup.controls.StartDate.value > this.formGroup.controls.EndDate.value) {
+		// 	this.env.showMessage('The end date cannot be less than the start date', 'warning');
+		// 	this.submitAttempt = false;
+		// 	return;
+		// }
+	}
+
+	chagegroupCells() {
 		let groupCells = <FormArray>this.formGroup.controls.Cells;
 		if (groupCells.controls.length > 0) {
 			this.env
@@ -613,10 +649,10 @@ export class ForecastDetailPage extends PageBase {
 					this.submitAttempt = false;
 					var data = JSON.parse(this.formGroup.controls.Config.value);
 					data.forEach((element) => {
-						element.Period = this.formGroup.controls.Period.value;
+						element.Period = this.formGroup.controls.Type.value;
 					});
 					this.formGroup.controls.Config.setValue(JSON.stringify(data));
-					this.formGroup.controls.Config.markAsDirty();
+					// this.formGroup.controls.Config.markAsDirty();
 					this.item.Config = this.formGroup.controls.Config.value;
 					this.patchPeriodValue();
 					this.renderView(true);
@@ -763,26 +799,25 @@ export class ForecastDetailPage extends PageBase {
 		this.segmentView = ev.detail.value;
 	}
 
-	addPeriod() {
+	addPeriod(index) {
 		let period = {
-			Id: 1,
-			Period: this.formGroup.get('Period').value,
-			FromDate: null,
-			ToDate: null,
-			Multiply: 1,
+			Index: index,
+			Label: '',
+			Config: [{ Id: 1, Type: this.formGroup.get('Type').value, FromDate: null, ToDate: null, Multiply: 1 }],
 		};
 		this.addLinePeriod(period);
 	}
 
 	deletePeriods() {}
 
-	deletePeriod(index) {
+	deletePeriod(index, lineIdx) {
 		let groups = <FormArray>this.formGroup.controls.LinePeriod;
-		if (!groups.controls[index].valid) {
-			groups.removeAt(index);
+		let lineGroups = <FormArray>groups.controls[index].get('Lines');
+		if (!lineGroups.controls[lineIdx].valid) {
+			lineGroups.removeAt(index);
 		} else {
 			this.env.showPrompt('Bạn có chắc muốn xóa không?', null, 'Xóa 1 dòng').then((_) => {
-				groups.removeAt(index);
+				lineGroups.removeAt(lineIdx);
 				this.saveChangeConfig();
 			});
 		}
@@ -797,20 +832,45 @@ export class ForecastDetailPage extends PageBase {
 				this.addLinePeriod(e);
 			});
 		}
+		console.log('PeriodLine: ', this.formGroup.controls.LinePeriod.getRawValue());
 		this.pageConfig.showSpinner = false;
 	}
 
 	addLinePeriod(line: any, markAsDirty = false) {
 		let groups = <FormArray>this.formGroup.controls.LinePeriod;
-		let group = this.formBuilder.group({
-			FromDate: [line?.FromDate, Validators.required],
-			ToDate: [line?.ToDate, Validators.required],
-			Multiply: [line?.Multiply],
-			Period: new FormControl({ value: line?.Period, disabled: true }),
-			IsChecked: new FormControl({ value: false, disabled: false }),
+		let exitsingGroup = groups.controls.find((d) => d.get('Index').value == line.Index);
+		let group =
+			exitsingGroup != null
+				? exitsingGroup
+				: this.formBuilder.group({
+						Index: [line?.Index],
+						Label: [line?.Label],
+						Lines: this.formBuilder.array([]),
+					});
+		line.Config.forEach((e) => {
+			let lineGroup = this.formBuilder.group({
+				FromDate: [e.FromDate, Validators.required],
+				ToDate: [e.ToDate, Validators.required],
+				Multiply: [e.Multiply],
+				Type: new FormControl({ value: e.Type, disabled: true }),
+				IsChecked: new FormControl({ value: false, disabled: false }),
+			});
+
+			(<FormArray>group.get('Lines')).push(lineGroup);
 		});
+		// FromDate: [line?.FromDate, Validators.required],
+		// ToDate: [line?.ToDate, Validators.required],
+		// Multiply: [line?.Multiply],
+		// Type: new FormControl({ value: line?.Type, disabled: true }),
+		// IsChecked: new FormControl({ value: false, disabled: false }),
 		//group.get('IDItem').markAsDirty();
-		groups.push(group);
+		if (exitsingGroup == null) groups.push(group);
+	}
+
+	savedChange(savedItem?: any, form?: FormGroup<any>): void {
+		super.savedChange(savedItem, form);
+		this.item = savedItem;
+		this.loadedData();
 	}
 
 	saveChangeConfig() {
@@ -823,48 +883,65 @@ export class ForecastDetailPage extends PageBase {
 		let groups = <FormArray>this.formGroup.controls.LinePeriod;
 		let config = [];
 		groups.getRawValue().forEach((e) => {
-			config.push({
-				Period: e.Period,
-				FromDate: e.FromDate,
-				ToDate: e.ToDate,
-				Multiply: e.Multiply,
+			let obj = {
+				Index: e.Index,
+				Label: e.Label,
+				Config: [],
+			};
+			e.Lines.forEach((i) => {
+				obj.Config.push({
+					FromDate: i.FromDate,
+					ToDate: i.ToDate,
+					Multiply: i.Multiply,
+					Type: i.Type,
+				});
 			});
+			config.push(obj);
+			// config.push({
+			// 	Type: e.Type,
+			// 	FromDate: e.FromDate,
+			// 	ToDate: e.ToDate,
+			// 	Multiply: e.Multiply,
+			// });
 		});
 		return config;
 	}
-	generatorForecastTopItem(){
-		this.env.showPrompt('Generator forecast top item(s)',null , 'Input top items','Confirm','Cancel',[{
-			type: 'number',
-			placeholder: 'input top item ...',
-			min: 1,
-			max: 500,
-		  }]).then((data) => {
-			if(data && data[0]>0){
-			
-				this.env.showLoading('Please wait for a few moments', this.commonService.connect('POST', 'SALE/Forecast/GeneratorForecastItem/' + this.item.Id+'/'+data[0],null).toPromise())
-				.then((result: any) => {
-					if (result) {
-						this.item = result;
-						this.loadedData();
-						this.env.showMessage('Saved', 'success');
-					} else {
-						this.env.showMessage('Cannot save, please try again', 'danger');
-					}
-				}).catch(err=>
+	generatorForecastTopItem() {
+		this.env
+			.showPrompt('Generator forecast top item(s)', null, 'Input top items', 'Confirm', 'Cancel', [
 				{
-					console.log(err);
+					type: 'number',
+					placeholder: 'input top item ...',
+					min: 1,
+					max: 500,
+				},
+			])
+			.then((data) => {
+				if (data && data[0] > 0) {
+					this.env
+						.showLoading(
+							'Please wait for a few moments',
+							this.commonService.connect('POST', 'SALE/Forecast/GeneratorForecastItem/' + this.item.Id + '/' + data[0], null).toPromise()
+						)
+						.then((result: any) => {
+							if (result) {
+								this.item = result;
+								this.loadedData();
+								this.env.showMessage('Saved', 'success');
+							} else {
+								this.env.showMessage('Cannot save, please try again', 'danger');
+							}
+						})
+						.catch((err) => {
+							console.log(err);
+						});
 				}
-				);
-			}
-			
-		})
-
+			});
 	}
 	generatorForecastPeriod() {
 		this.env.showPrompt('Khi dự đoán tự động sẽ xoá hết dữ liệu dự báo hiện tại, bạn có tiếp tục?', null, 'Xóa').then((_) => {
-		
 			this.env
-				.showLoading('Please wait for a few moments', this.commonService.connect('POST', 'SALE/Forecast/GeneratorForecastPeriod/' + this.item.Id,null).toPromise())
+				.showLoading('Please wait for a few moments', this.commonService.connect('POST', 'SALE/Forecast/GeneratorForecastPeriod/' + this.item.Id, null).toPromise())
 				.then((result: any) => {
 					if (result) {
 						this.item = result;
