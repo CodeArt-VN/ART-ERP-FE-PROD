@@ -832,7 +832,6 @@ export class ForecastDetailPage extends PageBase {
 				this.addLinePeriod(e);
 			});
 		}
-		console.log('PeriodLine: ', this.formGroup.controls.LinePeriod.getRawValue());
 		this.pageConfig.showSpinner = false;
 	}
 
@@ -847,7 +846,7 @@ export class ForecastDetailPage extends PageBase {
 						Label: [line?.Label],
 						Lines: this.formBuilder.array([]),
 					});
-		line.Config.forEach((e) => {
+		line.Config?.forEach((e) => {
 			let lineGroup = this.formBuilder.group({
 				FromDate: [e.FromDate, Validators.required],
 				ToDate: [e.ToDate, Validators.required],
