@@ -70,8 +70,8 @@ export class BillOfMaterialsDetailPage extends PageBase {
 			Type: ['BTProduction', Validators.required],
 			Quantity: [1, Validators.required],
 			IDWarehouse: [''],
-			IDPriceList: ['', Validators.required],
-			IDStdCostPriceList: ['', Validators.required],
+			IDPriceList: [''],
+			IDStdCostPriceList: [''],
 
 			BatchSize: [1, Validators.required],
 			IsDisabled: [false],
