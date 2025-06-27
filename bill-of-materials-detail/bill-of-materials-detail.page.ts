@@ -1,3 +1,4 @@
+// TODO: add BOM version:Thêm cột version(string), thêm 1 combo box dưới ô số lượng cho chọn version
 import { Component, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { NavController, LoadingController, AlertController, PopoverController } from '@ionic/angular';
 import { PageBase } from 'src/app/page-base';
@@ -157,33 +158,20 @@ export class BillOfMaterialsDetailPage extends PageBase {
 			if (cost) stdCost = cost.Price;
 		}
 
-		let searchInput$ = new Subject<string>();
 		let groups = <FormArray>this.formGroup.controls.Lines;
 		let group = this.formBuilder.group({
-			_ItemSearchLoading: [false],
-			_ItemSearchInput: [searchInput$],
-			_ItemDataSource: [
-				searchInput$.pipe(
-					distinctUntilChanged(),
-					tap(() => group.controls._ItemSearchLoading.setValue(true)),
-					switchMap((term) =>
-						this.itemProvider
-							.search({
-								Take: 20,
-								Skip: 0,
-								Keyword: term,
-								IDPriceList: this.item.IDPriceList,
-								IDStdCostPriceList: this.item.IDStdCostPriceList,
-							})
-							.pipe(
-								catchError(() => of([])),
-								tap(() => group.controls._ItemSearchLoading.setValue(false))
-							)
-					)
-				),
-			],
+			_IDItemDataSource: this.buildSelectDataSource((term) => {
+				return this.pageProvider.commonService.connect('GET', 'PROD/BillOfMaterials/ComponentSearch/', {
+					Take: 20,
+					Skip: 0,
+					Keyword: term,
+					IDPriceList: this.item.IDPriceList,
+					IDStdCostPriceList: this.item.IDStdCostPriceList,
+				});
+			}),
+
 			_UoMs: [line._Item ? line._Item.UoMs : ''],
-			_Item: [line._Item, Validators.required],
+			_Item: [line._Item],
 
 			StdCost: new FormControl({ value: stdCost, disabled: true }),
 
@@ -213,6 +201,8 @@ export class BillOfMaterialsDetailPage extends PageBase {
 			group.controls.AdditionalQuantity.markAsDirty();
 			group.controls.IssueMethod.markAsDirty();
 		}
+		group.controls._IDItemDataSource.value.selected.push(line._Item);
+		group.get('_IDItemDataSource').value?.initSearch();
 		this.changedType(group, true);
 	}
 
@@ -256,32 +246,35 @@ export class BillOfMaterialsDetailPage extends PageBase {
 			});
 	}
 
-	_IDItemDataSource = {
-		searchProvider: this.commonService,
-		loading: false,
-		input$: new Subject<string>(),
-		selected: [],
-		items$: null,
-		initSearch() {
-			this.loading = false;
-			this.items$ = concat(
-				of(this.selected),
-				this.input$.pipe(
-					distinctUntilChanged(),
-					tap(() => (this.loading = true)),
-					switchMap((term) =>
-						this.searchProvider.connect('GET', 'PROD/BillOfMaterials/ItemSearch/', { Take: 20, Skip: 0, Term: term }).pipe(
-							map((result: any) => {
-								return (result = result.filter((d) => d.BOMs?.length == 0));
-							}),
-							catchError(() => of([])),
-							tap(() => (this.loading = false))
-						)
-					)
-				)
-			);
-		},
-	};
+	_IDItemDataSource = this.buildSelectDataSource((term) => {
+		return this.pageProvider.commonService.connect('GET', 'PROD/BillOfMaterials/ItemSearch/',{ Take: 20, Skip: 0, Term: term });
+	});
+	// _IDItemDataSource = {
+	// 	searchProvider: this.commonService,
+	// 	loading: false,
+	// 	input$: new Subject<string>(),
+	// 	selected: [],
+	// 	items$: null,
+	// 	initSearch() {
+	// 		this.loading = false;
+	// 		this.items$ = concat(
+	// 			of(this.selected),
+	// 			this.input$.pipe(
+	// 				distinctUntilChanged(),
+	// 				tap(() => (this.loading = true)),
+	// 				switchMap((term) =>
+	// 					this.searchProvider.connect('GET', 'PROD/BillOfMaterials/ItemSearch/', { Take: 20, Skip: 0, Term: term }).pipe(
+	// 						map((result: any) => {
+	// 							return (result = result.filter((d) => d.BOMs?.length == 0));
+	// 						}),
+	// 						catchError(() => of([])),
+	// 						tap(() => (this.loading = false))
+	// 					)
+	// 				)
+	// 			)
+	// 		);
+	// 	},
+	// };
 
 	changedIDItem(group, e) {
 		if (e) {
@@ -313,8 +306,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
 			}
 
 			group.controls.UoMPrice.markAsDirty();
-
-			//if (submit) this.saveChange();
+			if (submit) this.saveChange();
 		}
 	}
 
@@ -361,12 +353,29 @@ export class BillOfMaterialsDetailPage extends PageBase {
 
 	async saveChange() {
 		this.calcTotalLine();
+		return super.saveChange2();
 
-		if (this.formGroup.controls.Lines.valid) {
-			return super.saveChange2();
-		}
+		// if (this.formGroup.controls.Lines.valid) {
+		// }
 	}
 
+	savedChange(savedItem = null, form = this.formGroup) {
+		super.savedChange(savedItem, form);
+		let groups = <FormArray>this.formGroup.controls.Lines;
+		let idsBeforeSaving = new Set(groups.controls.map((g) => g.get('Id').value));
+		this.item = savedItem;
+		if (this.item.Lines?.length > 0) {
+			let newIds = new Set(this.item.Lines.map((i) => i.Id));
+			const diff = [...newIds].filter((item) => !idsBeforeSaving.has(item));
+			if (diff?.length > 0) {
+				groups.controls
+					.find((d) => !d.get('Id').value)
+					?.get('Id')
+					.setValue(diff[0]);
+			}
+		}
+	
+	}
 	async calcTotalLine(resetPrice = false) {
 		if (this.formGroup.controls.Lines) {
 			this.item.TotalPrice = 0;
@@ -414,6 +423,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
 		if (e) {
 			this.calcTotalLine();
 		}
+		this.saveChange();
 	}
 
 	saveSoLuong() {
@@ -530,17 +540,18 @@ export class BillOfMaterialsDetailPage extends PageBase {
 	}
 
 	IDItemChange(e) {
-		let itemBOM = e.BOMs.find((f) => f.Type == this.formGroup.controls.Type.value && f.IDBOM != this.item.Id);
+		let itemBOM = e.BOMs.find((f) =>f.IDBOM != this.item.Id);
 		if (itemBOM) {
 			this.env
 				.showPrompt('Bạn có muốn xem định mức này không?', null, 'Đã thiết lập BOM cho sản phẩm ' + e.Name)
 				.then((_) => {
-					this.nav('bill-of-materials/' + itemBOM.IDBOM);
+					this.nav('bill-of-materials/' + itemBOM.IDBOM,'forward');
 					this.id = itemBOM.IDBOM;
 					this.loadData();
 				})
 				.catch((_) => {
 					this.formGroup.controls.IDItem.setValue(this.item.IDItem);
+					this.formGroup.controls.IDItem.markAsPristine();
 					this._IDItemDataSource.initSearch();
 				});
 		} else {
