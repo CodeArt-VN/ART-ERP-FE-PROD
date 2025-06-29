@@ -165,43 +165,11 @@
 												</ng-container>
 												<ng-container *ngIf="g.controls.Type.value=='CTItem'">
 													<div class="col-name cell">
-														<ng-select
-															formControlName="_Item"
-															appendTo="#order-detail-page"
-															[readonly]="!pageConfig.canEdit || submitAttempt"
-															class="c-input"
-															(change)="changedIDItem(g, $event)"
-															[labelForId]="'IDItem'+idx"
-															[items]="g.controls._ItemDataSource.value | async"
-															[clearable]="false"
-															[typeahead]="g.controls._ItemSearchInput.value"
-															[loading]="g.controls._ItemSearchLoading.value"
-															[virtualScroll]="true"
-															bindLabel="Name"
-															placeholder="{{'Search for name or product code' | translate}}"
-														>
-															<ng-template ng-label-tmp let-i="item">
-																<div *ngIf="i.Id">
-																	<a [routerLink]="['/item/'+i.Id]" (mousedown)="$event.stopPropagation()"
-																		>#{{i.Id}} <ion-icon name="open-outline"></ion-icon
-																	></a>
-																	<span [title]="i.Name">
-																		<b *ngIf="i.Code" (mousedown)="$event.stopPropagation()">{{i.Code}}</b>
-																		{{i.Name}}</span
-																	>
-																</div>
-															</ng-template>
-															<ng-template ng-option-tmp let-i="item" let-search="searchTerm">
-																<div *ngIf="i">
-																	<div>
-																		<span [ngOptionHighlight]="search">{{i.Name}}</span>
-																	</div>
-																	<small
-																		>#<b><span class="important" [ngOptionHighlight]="search">{{i.Id}} - {{i.Code}}</span></b></small
-																	>
-																</div>
-															</ng-template>
-														</ng-select>
+														<app-input-control
+														[field]="{id :'IDItem', label:'Component', type:'ng-select-item', dataSource:g.controls._IDItemDataSource.value, bindValue:'Id', bindLabel:'Name', form:g, appendTo:'#order-detail-page', placeHolder:'Search for name or product code', virtualScroll:true }"
+														(change)="changedIDItem(g,$event)"
+													></app-input-control>
+												
 													</div>
 													<div class="col-uom cell">
 														<select
@@ -369,7 +337,11 @@
 														<option [disabled]="t.Flag" *ngFor="let t of componentTypeList" [value]="t.Code">{{t.Name}}</option>
 													</select>
 													<br />
-													<ng-select
+													<app-input-control
+														[field]="{id :'IDItem', label:'Component', type:'ng-select-item', dataSource:g.controls._IDItemDataSource, bindValue:'Id', bindLabel:'Name', form:g, appendTo:'#order-detail-page', placeHolder:'Search for name or product code', virtualScroll:true }"
+														(change)="changedIDItem(g,$event)"
+													></app-input-control>
+													<!-- <ng-select
 														formControlName="_Item"
 														appendTo="#order-detail-page"
 														[readonly]="!pageConfig.canEdit || submitAttempt || item.Status=='Palletized'"
@@ -397,7 +369,7 @@
 																>
 															</div>
 														</ng-template>
-													</ng-select>
+													</ng-select> -->
 												</div>
 
 												<div slot="start" class="c-quantity">
@@ -521,7 +493,7 @@
 									</ng-container>
 								</ng-container>
 
-								<div class="btn-add-new" *ngIf="pageConfig.canEdit">
+								<div class="btn-add-new" *ngIf="pageConfig.canEdit && formGroup.controls.Lines.valid">
 									<div class="btnAddNewContainer" *ngIf="pageConfig.canEdit">
 										<ion-icon class="min-btn" title="{{'Add product' | translate}}" name="add-circle-outline"></ion-icon>
 										<b
