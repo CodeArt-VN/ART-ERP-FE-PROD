@@ -12,8 +12,12 @@ export const PRODRoutes: Routes = [
     
     { path: 'order-recommendation', loadChildren: () => import('./order-recommendation/order-recommendation.module').then(m => m.OrderRecommendationPageModule), canActivate: [AuthGuard] },
     
+    { path: 'scenario', loadChildren: () => import('./scenario/scenario.module').then(m => m.ScenarioPageModule), canActivate: [AuthGuard] },
+    // { path: 'scenerio/:id', loadChildren: () => import('./forecast-detail/forecast-detail.module').then(m => m.ForecastDetailPageModule), canActivate: [AuthGuard] },
+   
     { path: 'staff-catering-booking-note', loadChildren: () => import('./staff-catering-booking-note/staff-catering-booking-note.module').then(m => m.StaffCateringBookingNotePageModule), canActivate: [AuthGuard] },
     { path: 'staff-catering-booking-note/:segment', loadChildren: () => import('./staff-catering-booking-note/staff-catering-booking-note.module').then(m => m.StaffCateringBookingNotePageModule), canActivate: [AuthGuard] },
+    
     { path: 'forecast', loadChildren: () => import('./forecast/forecast.module').then(m => m.ForecastPageModule), canActivate: [AuthGuard] },
     { path: 'forecast/:id', loadChildren: () => import('./forecast-detail/forecast-detail.module').then(m => m.ForecastDetailPageModule), canActivate: [AuthGuard] },
    

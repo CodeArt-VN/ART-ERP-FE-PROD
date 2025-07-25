@@ -1,0 +1,73 @@
+<ion-header>
+	<app-toolbar [page]="this"></app-toolbar>
+</ion-header>
+
+<ion-content appScrollbarTheme  class="scrollx">
+	<ion-refresher [disabled]="!pageConfig.refresher" slot="fixed" (ionRefresh)="refresh($event)">
+		<ion-refresher-content></ion-refresher-content>
+	</ion-refresher>
+	<app-page-title class="ion-padding safe-max-width" [pageConfig]="pageConfig"></app-page-title>
+	<div class="safe-max-width">
+		<app-data-table
+			class="box-shadow responsive"
+			[rows]="items"
+			[trackBy]="'Id'"
+			[(selectedRows)]="selectedItems"
+			[showSpinner]="pageConfig.showSpinner"
+			[showFilter]="pageConfig.isShowSearch"
+			[(query)]="query"
+			(dataInfinite)="loadData($event)"
+			(filter)="onDatatableFilter($event)"
+			(sort)="onSort($event)"
+			(selectedRowsChange)="showCommandBySelectedRows($event)"
+		>
+			<datatable-column [checkbox]="true" name=""></datatable-column>
+			<datatable-column class="col-id" name="#" property="Id" [navLink]="pageConfig.pageName"></datatable-column>
+			<datatable-column class="col-name flex-break" name="Title" property="Name" [navLink]="pageConfig.pageName"></datatable-column>
+			<datatable-column class="col-code" name="Period" property="Period"></datatable-column>
+			<datatable-column class="col-date" format="yyyy-MM-dd" name="Start date" property="StartDate" filterControlType="date"></datatable-column>
+			<datatable-column class="col-date" format="yyyy-MM-dd" name="End date" property="EndDate" filterControlType="date"></datatable-column>
+			<datatable-column class="col-code" name="Maximum cumulative leadTime" property="MaximumCumulativeLeadTime"></datatable-column>
+			<datatable-column class="col-code" name="Holidays for production" property="IsHolidaysForProduction"></datatable-column>
+			<datatable-column class="col-code" name="Holidays for purchase" property="IsHolidaysForPurchase"></datatable-column>
+			<datatable-column class="col-code" name="Items group" property="ItemsGroup"></datatable-column>
+			<datatable-column class="col-code" name="Is consider existing inventory" property="IsConsiderExistingInventory"></datatable-column>
+			<datatable-column class="col-code" name="Is consider purchase orders" property="IsConsiderPurchaseOrders"></datatable-column>
+			<datatable-column class="col-code" name="Is consider sales orders" property="IsConsiderSalesOrders"></datatable-column>
+			<datatable-column class="col-code" name="Is consider work orders" property="IsConsiderWorkOrders"></datatable-column>
+			<datatable-column class="col-code" name="Is minimum inventory level" property="IsMinimumInventoryLevel"></datatable-column>
+			<datatable-column class="col-code" name="Id sale forecast" property="IDSaleForecast"></datatable-column>
+			<datatable-column class="col-code" name="Is items without requirement" property="IsItemsWithoutRequirement"></datatable-column>
+			<datatable-column class="col-code" name="Is scenario a simulation" property="IsScenarioASimulation"></datatable-column>
+			<datatable-column class="col-code" name="Last execute date" property="LastExecuteDate"></datatable-column>
+			<datatable-column class="col-code" name="Is reserve invoice" property="IsReserveInvoice"></datatable-column>
+			<datatable-column class="col-code" name="Is inventory transfer request" property="IsInventoryTransferRequest"></datatable-column>
+			<datatable-column class="col-code" name="Inventory level" property="InventoryLevel"></datatable-column>
+			<datatable-column class="col-code" name="Is recommend purchase order" property="IsRecommendPurchaseOrder"></datatable-column>
+			<datatable-column class="col-code" name="Is recommend production order" property="IsRecommendProductionOrder"></datatable-column>
+			<datatable-column class="col-code" name="Is recommend itrq" property="IsRecommendITRQ"></datatable-column>
+			<datatable-column class="col-code" name="Is recommend to default warehouse" property="IsRecommendToDefaultWarehouse"></datatable-column>
+			<datatable-column class="col-code" name="Is only nettable" property="IsOnlyNettable"></datatable-column>
+			<datatable-column class="col-code" name="Is expanded purchase order" property="IsExpandedPurchaseOrder"></datatable-column>
+			<datatable-column class="col-code" name="Is expanded sales order" property="IsExpandedSalesOrder"></datatable-column>
+			<datatable-column class="col-code" name="Recommendation calculated date" property="RecommendationCalculatedDate"></datatable-column>
+			<datatable-column class="col-code" name="Is recurring order transactions" property="IsRecurringOrderTransactions"></datatable-column>
+			<datatable-column class="col-code" name="Is expanded reserve invoice" property="IsExpandedReserveInvoice"></datatable-column>
+			<datatable-column class="col-code" name="Is expanded production order" property="IsExpandedProductionOrder"></datatable-column>
+			<datatable-column class="col-code" name="Is ignore cumulative lead time" property="IsIgnoreCumulativeLeadTime"></datatable-column>
+			<datatable-column class="col-code" name="Is consider purchase request" property="IsConsiderPurchaseRequest"></datatable-column>
+			<datatable-column class="col-code" name="Is consider purchase quotations" property="IsConsiderPurchaseQuotations"></datatable-column>
+			<datatable-column class="col-code" name="Is consider sales quotations" property="IsConsiderSalesQuotations"></datatable-column>
+			<datatable-column class="col-code" name="Is expanded purchase request" property="IsExpandedPurchaseRequest"></datatable-column>
+			<datatable-column class="col-code" name="Is expanded purchase quotations" property="IsExpandedPurchaseQuotations"></datatable-column>
+			<datatable-column class="col-code" name="Is expanded sales quotations" property="IsExpandedSalesQuotations"></datatable-column>
+			<datatable-column class="col-code" name="Is expanded transfer request" property="IsExpandedTransferRequest"></datatable-column>
+			<datatable-column class="col-code" name="Is display selected item only" property="IsDisplaySelectedItemOnly"></datatable-column>
+		</app-data-table>
+	</div>
+
+	<div class="ion-padding"></div>
+	<ion-infinite-scroll color="primary" threshold="30%" (ionInfinite)="loadData($event)" [disabled]="!pageConfig.infiniteScroll || pageConfig.isEndOfData">
+		<ion-infinite-scroll-content loadingSpinner="dots"></ion-infinite-scroll-content>
+	</ion-infinite-scroll>
+</ion-content>
