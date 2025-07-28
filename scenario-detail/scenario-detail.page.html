@@ -1,16 +1,11 @@
 <ion-header>
 	<app-toolbar [page]="this">
-		<ion-button title="{{ 'Create E-Invoice' | translate }}"
-			*ngIf="pageConfig.canCreateEInvoice && this.formGroup.get('Status').value =='ARInvoiceApproved'"
-			(click)="createEInvoice()">
-			<ion-icon color="success" slot="icon-only" name="receipt-outline"></ion-icon>
+		<ion-button title="{{ 'Calculate pegging data' | translate }}"
+			(click)="calcPeggingData()">
+			<ion-icon color="success" slot="icon-only" name="calculator-outline"></ion-icon>
 		</ion-button>
 
-		<ion-button class="ion-hide-md-down" title="{{ 'Approve' | translate }}"
-			*ngIf="pageConfig.canApproveInvoice && this.formGroup.get('Status').value =='ARInvoicePending'"
-			(click)="approveInvoices()">
-			<ion-icon color="success" slot="icon-only" name="thumbs-up-outline"></ion-icon>
-		</ion-button>
+		
 	</app-toolbar>
 </ion-header>
 
@@ -66,7 +61,7 @@
 								<ion-row class="hr-group">
 									<ion-col size="12" size-sm="12" size-md="12" size-xl="3">
 										<ion-list-header class="ion-no-padding">
-											<ion-label color="primary">{{'Scenarion information' |
+											<ion-label color="primary">{{'Scenario information' |
 												translate}}</ion-label>
 										</ion-list-header>
 									</ion-col>

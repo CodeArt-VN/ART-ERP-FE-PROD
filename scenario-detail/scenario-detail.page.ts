@@ -86,8 +86,7 @@ export class ScenarioDetailPage extends PageBase {
 			IsExpandedSalesQuotations: [''],
 			IsExpandedTransferRequest: [''],
 			IsDisplaySelectedItemOnly: [''],
-			Warehouses:['']
-
+			Warehouses: [''],
 		});
 	}
 
@@ -97,11 +96,11 @@ export class ScenarioDetailPage extends PageBase {
 			{ Name: 'Weekly', Code: 'Weekly' },
 			{ Name: 'Monthly', Code: 'Monthly' },
 		];
-		
+
 		this.warehouseDataSource = lib.cloneObject(this.env.branchList);
 		Promise.all([
 			this.itemGroupProvider.read({
-				Take: 5000
+				Take: 5000,
 			}),
 		]).then((values: any) => {
 			if (values[0] && values[0].data) {
@@ -110,7 +109,7 @@ export class ScenarioDetailPage extends PageBase {
 				});
 			}
 			super.preLoadData();
-		})
+		});
 	}
 
 	loadedData(event?: any, ignoredFromGroup?: boolean): void {
@@ -118,7 +117,7 @@ export class ScenarioDetailPage extends PageBase {
 		this.item.EndDate = lib.dateFormat(this.item.EndDate);
 		this.item.RecommendationCalculatedDate = lib.dateFormat(this.item.RecommendationCalculatedDate);
 		this.item.LastExecuteDate = lib.dateFormat(this.item.LastExecuteDate);
-		this.formGroup.controls.Warehouses.setValue(this.item._Warehouse?.map(d => d.IDWarehouse) || []);
+		this.formGroup.controls.Warehouses.setValue(this.item._Warehouse?.map((d) => d.IDWarehouse) || []);
 		super.loadedData(event, ignoredFromGroup);
 	}
 
@@ -126,14 +125,16 @@ export class ScenarioDetailPage extends PageBase {
 	segmentChanged(ev: any) {
 		this.segmentView = ev.detail.value;
 	}
+	calcPeggingData(){
 
+	};
 	async saveChange() {
 		return super.saveChange2();
 	}
 
-	savedChange(savedItem?: any, form?: FormGroup<any>): void {
-		super.savedChange(savedItem, form);
-		this.item = savedItem;
-		this.loadedData();
-	}
+	// savedChange(savedItem?: any, form?: FormGroup<any>): void {
+	// 	super.savedChange(savedItem, form);
+	// 	this.item = savedItem;
+	// 	this.loadedData();
+	// }
 }

@@ -8,6 +8,13 @@
 			*ngIf="pageConfig.canAdd && formGroup.get('Cells')['controls'].length>0 && item.Id"
 			title="{{'Create recommendation' | translate}}"
 		>
+			<ion-icon name="radio-button-on-outline"></ion-icon>
+		</ion-button>
+			<ion-button
+			(click)="createMRPScenario()"
+			*ngIf="pageConfig.canAdd && formGroup.get('Cells')['controls'].length>0 && item.Id"
+			title="{{'Create MRP scenario' | translate}}"
+		>
 			<ion-icon slot="icon-only" name="logo-chrome"></ion-icon>
 		</ion-button>
 	</app-toolbar>
