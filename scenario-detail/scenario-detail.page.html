@@ -1,0 +1,291 @@
+<ion-header>
+	<app-toolbar [page]="this">
+		<ion-button title="{{ 'Create E-Invoice' | translate }}"
+			*ngIf="pageConfig.canCreateEInvoice && this.formGroup.get('Status').value =='ARInvoiceApproved'"
+			(click)="createEInvoice()">
+			<ion-icon color="success" slot="icon-only" name="receipt-outline"></ion-icon>
+		</ion-button>
+
+		<ion-button class="ion-hide-md-down" title="{{ 'Approve' | translate }}"
+			*ngIf="pageConfig.canApproveInvoice && this.formGroup.get('Status').value =='ARInvoicePending'"
+			(click)="approveInvoices()">
+			<ion-icon color="success" slot="icon-only" name="thumbs-up-outline"></ion-icon>
+		</ion-button>
+	</app-toolbar>
+</ion-header>
+
+<ion-content appScrollbarTheme class="ion-padding">
+	<div id="scenario-detail-page" style="position: absolute"></div>
+	<div class="main-view" *ngIf="item && pageConfig.showSpinner==false">
+		<ion-grid fixed>
+			<form [formGroup]="formGroup">
+				<ion-row class="hr-group">
+					<ion-col size="12" size-sm="12" size-md="12" size-xl="3">
+						<ion-list-header class="ion-no-padding">
+							<ion-label color="primary">{{'Scenario detail' | translate}}</ion-label>
+						</ion-list-header>
+					</ion-col>
+					<ion-col size="12" size-sm size-xl="4">
+						<app-form-control [field]="{id:'Id', label: 'Id', type : 'text', form : formGroup }"
+							(change)="saveChange()"> </app-form-control>
+						<app-form-control [field]="{id:'Name', label: 'Name', type : 'text', form : formGroup }"
+							(change)="saveChange()"> </app-form-control>
+					</ion-col>
+					<ion-col size="12" size-sm size-xl="4">
+						<app-form-control
+							[field]="{id:'StartDate', label: 'Start date', type : 'date', placeholder: 'yyyy-MM-dd', form : formGroup }"
+							(change)="saveChange()"></app-form-control>
+						<app-form-control
+							[field]="{id:'EndDate', label: 'End date', type : 'date', placeholder: 'yyyy-MM-dd', form : formGroup }"
+							(change)="saveChange()"></app-form-control>
+					</ion-col>
+				</ion-row>
+			</form>
+		</ion-grid>
+
+		<div class="row-full shadow full-screen">
+			<ion-toolbar color="primary">
+				<ion-segment scrollable="true" (ionChange)="segmentChanged($event)" [value]="segmentView">
+					<ion-segment-button value="s1">
+						<ion-label>{{'General information' | translate}}</ion-label>
+					</ion-segment-button>
+					<ion-segment-button value="s2">
+						<ion-label>{{'Items' | translate}}</ion-label>
+					</ion-segment-button>
+					<ion-segment-button value="s3">
+						<ion-label>{{'Recommend' | translate}}</ion-label>
+					</ion-segment-button>
+				</ion-segment>
+			</ion-toolbar>
+			<div>
+				<!-- Thông tin chung -->
+				<div *ngIf="segmentView == 's1'">
+					<div class="ion-padding">
+						<ion-grid fixed>
+							<form [formGroup]="formGroup">
+								<ion-row class="hr-group">
+									<ion-col size="12" size-sm="12" size-md="12" size-xl="3">
+										<ion-list-header class="ion-no-padding">
+											<ion-label color="primary">{{'Scenarion information' |
+												translate}}</ion-label>
+										</ion-list-header>
+									</ion-col>
+									<ion-col size="12" size-sm="6" size-xl="4">
+										<app-form-control
+											[field]="{id:'Period', label: 'Period', type : 'ng-select', form : formGroup,  dataSource: periodDataSource,  bindLabel: 'Name',  bindValue: 'Code' }"
+											(change)="saveChange()"></app-form-control>
+										<app-form-control
+											[field]="{id:'MaximumCumulativeLeadTime', type : 'number', form : formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id:'ItemsGroup', label: 'Items group', type : 'ng-select', form : formGroup,  dataSource: itemGroupDataSource,  bindLabel: 'Name',  bindValue: 'Id' }"
+											(change)="saveChange()"></app-form-control>
+										<app-form-control
+											[field]="{id:'LastExecuteDate', label: 'Last execute date', type : 'date', placeholder: 'yyyy-MM-dd', form : formGroup }"
+											(change)="saveChange()"></app-form-control>
+									</ion-col>
+									<ion-col size="12" size-sm="6" size-xl="4">
+										<app-form-control
+											[field]="{id:'InventoryLevel', label: 'Inventory level',type : 'text', form : formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id:'RecommendationCalculatedDate', label: 'Recommendation calculated date', type : 'date', placeholder: 'yyyy-MM-dd', form : formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control [field]="{id: 'Warehouses', label: 'Warehouse', type: 'ng-select-branch', form: formGroup,  dataSource: warehouseDataSource,  bindLabel: 'Name',  bindValue: 'Id',
+                                    		branchConfig:{showingType:'Warehouse'},multiple: true,
+                                    		treeConfig:{searchFnDefault:true}, appendTo:'#scenario-detail-page'}"
+											(controlChange)="saveChange();">
+										</app-form-control>
+										
+									</ion-col>
+									<ion-col size="12" size-sm="6" size-xl="4" offset-xl="3">
+										<app-form-control
+											[field]="{id: 'IsHolidaysForProduction', label: 'IsHolidaysForProduction', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsHolidaysForPurchase', label: 'IsHolidaysForPurchase', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsConsiderExistingInventory', label: 'IsConsiderExistingInventory', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsConsiderPurchaseOrders', label: 'IsConsiderPurchaseOrders', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsConsiderSalesOrders', label: 'IsConsiderSalesOrders', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsConsiderWorkOrders', label: 'IsConsiderWorkOrders', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsMinimumInventoryLevel', label: 'IsMinimumInventoryLevel', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsItemsWithoutRequirement', label: 'IsItemsWithoutRequirement', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsScenarioASimulation', label: 'IsScenarioASimulation', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsReserveInvoice', label: 'IsReserveInvoice', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsInventoryTransferRequest', label: 'IsInventoryTransferRequest', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsRecommendPurchaseOrder', label: 'IsRecommendPurchaseOrder', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsRecommendProductionOrder', label: 'IsRecommendProductionOrder', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsRecommendITRQ', label: 'IsRecommendITRQ', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsRecommendToDefaultWarehouse', label: 'IsRecommendToDefaultWarehouse', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+									</ion-col>
+									<ion-col size="12" size-sm="6" size-xl="4">
+										<app-form-control
+											[field]="{id: 'IsOnlyNettable', label: 'IsOnlyNettable', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsExpandedSalesOrder', label: 'IsExpandedSalesOrder', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsRecommendProductionOrder', label: 'IsRecommendProductionOrder', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsRecurringOrderTransactions', label: 'IsRecurringOrderTransactions', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsExpandedReserveInvoice', label: 'IsExpandedReserveInvoice', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsExpandedProductionOrder', label: 'IsExpandedProductionOrder', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsIgnoreCumulativeLeadTime', label: 'IsIgnoreCumulativeLeadTime', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsConsiderPurchaseRequest', label: 'IsConsiderPurchaseRequest', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsConsiderPurchaseQuotations', label: 'IsConsiderPurchaseQuotations', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsConsiderSalesQuotations', label: 'IsConsiderSalesQuotations', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsExpandedPurchaseRequest', label: 'IsExpandedPurchaseRequest', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsExpandedPurchaseQuotations', label: 'IsExpandedPurchaseQuotations', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsExpandedSalesQuotations', label: 'IsExpandedSalesQuotations', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsExpandedTransferRequest', label: 'IsExpandedTransferRequest', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+										<app-form-control
+											[field]="{id: 'IsDisplaySelectedItemOnly', label: 'IsDisplaySelectedItemOnly', type: 'checkbox', form: formGroup }"
+											(change)="saveChange()">
+										</app-form-control>
+									</ion-col>
+								</ion-row>
+
+								<!-- Other information -->
+								<ion-row class="hr-group" *ngIf="item.Id">
+									<ion-col size="12" size-sm="12" size-md="12" size-xl="3">
+										<ion-list-header class="ion-no-padding">
+											<ion-label color="primary">{{'Other information' | translate}}</ion-label>
+										</ion-list-header>
+									</ion-col>
+									<ion-col size="12" size-sm size-xl="4">
+										<app-form-control
+											[field]="{id:'CreatedBy', type : 'text', label: 'Created by', form : formGroup }"></app-form-control>
+										<app-form-control
+											[field]="{id:'CreatedDate', type : 'span-datetime', label: 'Created date', form : formGroup }"></app-form-control>
+										<app-form-control
+											[field]="{id:'ModifiedBy', type : 'text', label: 'Last modified by', form : formGroup }"></app-form-control>
+										<app-form-control
+											[field]="{id:'ModifiedDate', type : 'span-datetime', label: 'Last modified date', form : formGroup }"></app-form-control>
+									</ion-col>
+									<ion-col size="12" size-sm size-xl="4">
+										<app-form-control
+											[field]="{id:'IDBranch', type : 'branch-breadcrumbs', label: 'Branch', form : formGroup, dataSource:env.branchList }"></app-form-control>
+										<app-form-control
+											[field]="{id:'Remark', type : 'textarea', label: 'Remark', form : formGroup }"
+											(change)="saveChange()"></app-form-control>
+									</ion-col>
+								</ion-row>
+							</form>
+						</ion-grid>
+					</div>
+				</div>
+				<!-- Items -->
+				<div *ngIf="segmentView == 's2'">
+					<div class="ion-padding">
+						
+					</div>
+				</div>
+				<!-- Recommend -->
+				<div *ngIf="segmentView == 's3'">
+					<div class="ion-padding">
+						<ion-grid fixed>
+							<form [formGroup]="formGroup">
+								<ion-row class="hr-group" *ngIf="item.Id">
+									<ion-col size="12" size-sm="12" size-md="12" size-xl="3">
+										<ion-list-header class="ion-no-padding">
+											<ion-label color="primary">{{'Recommend' | translate}}</ion-label>
+										</ion-list-header>
+									</ion-col>
+									<ion-col size="12" size-sm="6" size-xl="4">
+										
+									</ion-col>
+									<ion-col size="12" size-sm="6" size-xl="4">
+										
+									</ion-col>
+								</ion-row>
+							</form>
+						</ion-grid>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<app-page-message [itemsLength]="item? 1: 0" [showSpinner]="pageConfig.showSpinner"></app-page-message>
+</ion-content>
