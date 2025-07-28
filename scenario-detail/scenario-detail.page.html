@@ -1,11 +1,10 @@
 <ion-header>
 	<app-toolbar [page]="this">
-		<ion-button title="{{ 'Calculate pegging data' | translate }}"
-			(click)="calcPeggingData()">
+		<ion-button title="{{ 'Calculate pegging data' | translate }}" (click)="calcPeggingData()">
 			<ion-icon color="success" slot="icon-only" name="calculator-outline"></ion-icon>
 		</ion-button>
 
-		
+
 	</app-toolbar>
 </ion-header>
 
@@ -94,7 +93,7 @@
                                     		treeConfig:{searchFnDefault:true}, appendTo:'#scenario-detail-page'}"
 											(controlChange)="saveChange();">
 										</app-form-control>
-										
+
 									</ion-col>
 									<ion-col size="12" size-sm="6" size-xl="4" offset-xl="3">
 										<app-form-control
@@ -254,7 +253,34 @@
 				<!-- Items -->
 				<div *ngIf="segmentView == 's2'">
 					<div class="ion-padding">
-						
+						<app-data-table style="width: fit-content; min-width: calc(100% - 32px) !important"
+							class="box-shadow responsive" [rows]="itemsState" [trackBy]="'Id'" [isTreeList]="true"
+							[(selectedRows)]="selectedItems" [showSpinner]="pageConfig.showSpinner"
+							[showFilter]="pageConfig.isShowSearch" [(query)]="query" (dataInfinite)="loadData($event)"
+							(filter)="onDatatableFilter($event)" (sort)="onSort($event)" [isQueryLocalOnly]="true">
+
+							<datatable-column class="col-name" name="Name" property="Name">
+								<ng-template datatable-header-template>
+									<ion-icon class="min-btn"
+										[name]="!isAllRowOpened? 'add-circle-outline':'remove-circle-outline'"
+										(click)="toggleRowAll()"></ion-icon>
+									<span (click)="toggleRowAll()">{{'Name' | translate}}</span>
+								</ng-template>
+								<ng-template let-i="row" datatable-cell-template>
+									<ng-container *ngFor="let w of i.levels; let k = index;"><span class="spacing"
+											*ngIf="k>0"></span></ng-container>
+									<ion-icon (click)="toggleRow(fullTree, i, true);" class="min-btn clickable"
+										[name]="!i.showdetail? 'chevron-forward-outline':'chevron-down-outline'"
+										*ngIf="i.HasChild"></ion-icon>
+									<ion-icon class="min-btn clickable" [name]="''" *ngIf="!i.HasChild"></ion-icon>
+									<ion-text (click)="toggleRow(fullTree, i, true);" class="clickable"
+										[ngClass]="i.HasChild? ('bold ') : ('')" [color]="i.Color">{{i.Name |
+										translate}}</ion-text>
+								</ng-template>
+							</datatable-column>
+
+
+						</app-data-table>
 					</div>
 				</div>
 				<!-- Recommend -->
@@ -269,10 +295,10 @@
 										</ion-list-header>
 									</ion-col>
 									<ion-col size="12" size-sm="6" size-xl="4">
-										
+
 									</ion-col>
 									<ion-col size="12" size-sm="6" size-xl="4">
-										
+
 									</ion-col>
 								</ion-row>
 							</form>

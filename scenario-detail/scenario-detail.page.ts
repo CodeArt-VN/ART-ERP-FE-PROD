@@ -18,6 +18,10 @@ export class ScenarioDetailPage extends PageBase {
 	periodDataSource = [];
 	itemGroupDataSource = [];
 	warehouseDataSource = [];
+	itemsState: any = [];
+	itemsView = [];
+	fullTree = [];
+	isAllRowOpened = false;
 
 	constructor(
 		public pageProvider: PROD_MRPScenarioProvider,
@@ -87,6 +91,8 @@ export class ScenarioDetailPage extends PageBase {
 			IsExpandedTransferRequest: [''],
 			IsDisplaySelectedItemOnly: [''],
 			Warehouses: [''],
+			Items: [''],
+			Peggings: [''],
 		});
 	}
 
@@ -118,6 +124,26 @@ export class ScenarioDetailPage extends PageBase {
 		this.item.RecommendationCalculatedDate = lib.dateFormat(this.item.RecommendationCalculatedDate);
 		this.item.LastExecuteDate = lib.dateFormat(this.item.LastExecuteDate);
 		this.formGroup.controls.Warehouses.setValue(this.item._Warehouse?.map((d) => d.IDWarehouse) || []);
+		let peggingTree = this.item._Pegging.map((p) => {
+			let idParent = 0;
+			if (p.IDParentItem == null) {
+				idParent = this.item._Items.find((x) => x.IDItem == p.IDItem)?.Id;
+			} else {
+				idParent = this.item._Pegging.find((d) => d.IDItem == p.IDParentItem && d.Period == p.Period)?.Id;
+			}
+			return {
+				...p,
+				IDParent: idParent,
+			};
+		});
+
+		this.fullTree = [...this.item._Items, ...peggingTree];
+
+		this.buildFlatTree(this.fullTree, this.itemsState, this.isAllRowOpened).then((resp: any) => {
+			this.itemsState = resp;
+			this.itemsView = this.itemsState.filter((d) => d.show);
+		});
+
 		super.loadedData(event, ignoredFromGroup);
 	}
 
@@ -125,16 +151,22 @@ export class ScenarioDetailPage extends PageBase {
 	segmentChanged(ev: any) {
 		this.segmentView = ev.detail.value;
 	}
-	calcPeggingData(){
-
-	};
+	calcPeggingData() {}
 	async saveChange() {
 		return super.saveChange2();
 	}
 
-	// savedChange(savedItem?: any, form?: FormGroup<any>): void {
-	// 	super.savedChange(savedItem, form);
-	// 	this.item = savedItem;
-	// 	this.loadedData();
-	// }
+	toggleRowAll() {
+		this.isAllRowOpened = !this.isAllRowOpened;
+		this.itemsState.forEach((i) => {
+			i.showdetail = !this.isAllRowOpened;
+			this.toggleRow(this.itemsState, i, true);
+		});
+		this.itemsView = this.itemsState.filter((d) => d.show);
+	}
+
+	toggleRow(ls, ite, toogle = false) {
+		super.toggleRow(ls, ite, toogle);
+		this.itemsView = this.itemsState.filter((d) => d.show);
+	}
 }
