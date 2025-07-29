@@ -125,25 +125,27 @@ export class ScenarioDetailPage extends PageBase {
 		this.item.RecommendationCalculatedDate = lib.dateFormat(this.item.RecommendationCalculatedDate);
 		this.item.LastExecuteDate = lib.dateFormat(this.item.LastExecuteDate);
 		this.formGroup.controls.Warehouses.setValue(this.item._Warehouse?.map((d) => d.IDWarehouse) || []);
-		let peggingTree = this.item._Pegging.map((p) => {
-			let idParent = 0;
-			if (p.IDParentItem == null) {
-				idParent = this.item._Items.find((x) => x.IDItem == p.IDItem)?.Id;
-			} else {
-				idParent = this.item._Pegging.find((d) => d.IDItem == p.IDParentItem && d.Period == p.Period)?.Id;
-			}
-			return {
-				...p,
-				IDParent: idParent,
-			};
-		});
+		if (this.item.Id) {
+			let peggingTree = this.item._Pegging.map((p) => {
+				let idParent = 0;
+				if (p.IDParentItem == null) {
+					idParent = this.item._Items.find((x) => x.IDItem == p.IDItem)?.Id;
+				} else {
+					idParent = this.item._Pegging.find((d) => d.IDItem == p.IDParentItem && d.Period == p.Period)?.Id;
+				}
+				return {
+					...p,
+					IDParent: idParent,
+				};
+			});
 
-		this.fullTree = [...this.item._Items, ...peggingTree];
+			this.fullTree = [...this.item._Items, ...peggingTree];
 
-		this.buildFlatTree(this.fullTree, this.itemsState, this.isAllRowOpened).then((resp: any) => {
-			this.itemsState = resp;
-			this.itemsView = this.itemsState.filter((d) => d.show);
-		});
+			this.buildFlatTree(this.fullTree, this.itemsState, this.isAllRowOpened).then((resp: any) => {
+				this.itemsState = resp;
+				this.itemsView = this.itemsState.filter((d) => d.show);
+			});
+		}
 
 		super.loadedData(event, ignoredFromGroup);
 	}
@@ -158,51 +160,66 @@ export class ScenarioDetailPage extends PageBase {
 			return;
 		}
 		this.submitAttempt = true;
-		
+
 		const startDate = this.formGroup.controls.StartDate.value;
 		const period = this.formGroup.controls.Period.value;
-		
+
 		if (!startDate || !period) {
+			this.submitAttempt = false;
 			return;
 		}
+
 		let startDateObj = new Date(startDate);
 		let endDateObj = new Date(startDateObj);
 		const dateNow = this.formatDate(new Date());
-		if (startDate <= dateNow) {
+
+		switch (period) {
+			case 'Daily':
+				endDateObj.setDate(startDateObj.getDate() + 1);
+				break;
+			case 'Weekly':
+				endDateObj.setDate(startDateObj.getDate() + 7);
+				break;
+			case 'Monthly':
+				endDateObj.setMonth(startDateObj.getMonth() + 1);
+				break;
+			default:
+				this.submitAttempt = false;
+				return;
+		}
+
+		if (!this.item.Id || this.item.Id == 0) {
+			this.formGroup.controls.EndDate.setValue(this.formatDate(endDateObj));
+			this.formGroup.controls.EndDate.markAsDirty();
+			this.submitAttempt = false;
+			return;
+		}
+
+		if (this.item.Id && startDate <= dateNow) {
 			this.env
-				.showPrompt('Changing the cycle will delete all the scenario data, you continue?', null, 'Delete')
+				.showPrompt('Changing the cycle will delete all the scenario data, do you want to continue?', null, 'Delete')
 				.then((_) => {
-					this.submitAttempt = false;
-					switch (period) {
-						case 'Daily':
-							endDateObj.setDate(startDateObj.getDate() + 1);
-							break;
-						case 'Weekly':
-							endDateObj.setDate(startDateObj.getDate() + 7);
-							break;
-						case 'Monthly':
-							endDateObj.setMonth(startDateObj.getMonth() + 1);
-							break;
-						default:
-							return;
-					}
 					this.formGroup.controls.EndDate.setValue(this.formatDate(endDateObj));
 					this.formGroup.controls.EndDate.markAsDirty();
-					
+
 					if (this.fullTree && this.fullTree.length > 0) {
 						this.formGroup.controls.DeletedFields.setValue(true);
 						this.formGroup.controls.DeletedFields.markAsDirty();
 					}
+
+					this.submitAttempt = false;
 					this.saveChange();
 				})
-				.catch((err) => {
+				.catch(() => {
 					this.submitAttempt = false;
 					return;
 				});
+		} else {
+			this.formGroup.controls.EndDate.setValue(this.formatDate(endDateObj));
+			this.formGroup.controls.EndDate.markAsDirty();
+			this.submitAttempt = false;
 		}
 	}
-
-
 
 	formatDate(date) {
 		const year = date.getFullYear();
@@ -211,21 +228,17 @@ export class ScenarioDetailPage extends PageBase {
 		return `${year}-${month}-${day}`;
 	}
 	calcPeggingData() {
-		this.env.showLoading('Please wait for a few moments', this.pageProvider.commonService.connect('GET', 'PROD/MRPScenario/CalcMRPPegging/'+this.id,{}).toPromise()).then((item) => {
-
-		}).catch(err=>{
-
-		});
-
+		this.env
+			.showLoading('Please wait for a few moments', this.pageProvider.commonService.connect('GET', 'PROD/MRPScenario/CalcMRPPegging/' + this.id, {}).toPromise())
+			.then((item) => {})
+			.catch((err) => {});
 	}
 
 	calcItemData() {
-		this.env.showLoading('Please wait for a few moments', this.pageProvider.commonService.connect('GET', 'PROD/MRPScenario/CalcMRPItem/'+this.id,{}).toPromise()).then((item) => {
-
-		}).catch(err=>{
-
-		});
-
+		this.env
+			.showLoading('Please wait for a few moments', this.pageProvider.commonService.connect('GET', 'PROD/MRPScenario/CalcMRPItem/' + this.id, {}).toPromise())
+			.then((item) => {})
+			.catch((err) => {});
 	}
 	async saveChange() {
 		return super.saveChange2();
