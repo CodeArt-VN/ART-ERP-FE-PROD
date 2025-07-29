@@ -21,7 +21,7 @@ export class ScenarioDetailPage extends PageBase {
 	itemsState: any = [];
 	itemsView = [];
 	fullTree = [];
-	isAllRowOpened = false;
+	isAllRowOpened = true;
 
 	constructor(
 		public pageProvider: PROD_MRPScenarioProvider,
@@ -93,6 +93,7 @@ export class ScenarioDetailPage extends PageBase {
 			Warehouses: [''],
 			Items: [''],
 			Peggings: [''],
+			DeletedFields: [''],
 		});
 	}
 
@@ -151,9 +152,89 @@ export class ScenarioDetailPage extends PageBase {
 	segmentChanged(ev: any) {
 		this.segmentView = ev.detail.value;
 	}
-	calcPeggingData() {}
+
+	changePeriodAndDate() {
+		if (this.submitAttempt) {
+			return;
+		}
+		this.submitAttempt = true;
+		
+		const startDate = this.formGroup.controls.StartDate.value;
+		const period = this.formGroup.controls.Period.value;
+		
+		if (!startDate || !period) {
+			return;
+		}
+		let startDateObj = new Date(startDate);
+		let endDateObj = new Date(startDateObj);
+		const dateNow = this.formatDate(new Date());
+		if (startDate <= dateNow) {
+			this.env
+				.showPrompt('Changing the cycle will delete all the scenario data, you continue?', null, 'Delete')
+				.then((_) => {
+					this.submitAttempt = false;
+					switch (period) {
+						case 'Daily':
+							endDateObj.setDate(startDateObj.getDate() + 1);
+							break;
+						case 'Weekly':
+							endDateObj.setDate(startDateObj.getDate() + 7);
+							break;
+						case 'Monthly':
+							endDateObj.setMonth(startDateObj.getMonth() + 1);
+							break;
+						default:
+							return;
+					}
+					this.formGroup.controls.EndDate.setValue(this.formatDate(endDateObj));
+					this.formGroup.controls.EndDate.markAsDirty();
+					
+					if (this.fullTree && this.fullTree.length > 0) {
+						this.formGroup.controls.DeletedFields.setValue(true);
+						this.formGroup.controls.DeletedFields.markAsDirty();
+					}
+					this.saveChange();
+				})
+				.catch((err) => {
+					this.submitAttempt = false;
+					return;
+				});
+		}
+	}
+
+
+
+	formatDate(date) {
+		const year = date.getFullYear();
+		const month = String(date.getMonth() + 1).padStart(2, '0'); // Thêm 1 vì tháng bắt đầu từ 0
+		const day = String(date.getDate()).padStart(2, '0');
+		return `${year}-${month}-${day}`;
+	}
+	calcPeggingData() {
+		this.env.showLoading('Please wait for a few moments', this.pageProvider.commonService.connect('GET', 'PROD/MRPScenario/CalcMRPPegging/'+this.id,{}).toPromise()).then((item) => {
+
+		}).catch(err=>{
+
+		});
+
+	}
+
+	calcItemData() {
+		this.env.showLoading('Please wait for a few moments', this.pageProvider.commonService.connect('GET', 'PROD/MRPScenario/CalcMRPItem/'+this.id,{}).toPromise()).then((item) => {
+
+		}).catch(err=>{
+
+		});
+
+	}
 	async saveChange() {
 		return super.saveChange2();
+	}
+
+	savedChange(savedItem?: any, form?: FormGroup<any>): void {
+		super.savedChange(savedItem, form);
+		this.item = savedItem;
+		this.loadedData();
 	}
 
 	toggleRowAll() {

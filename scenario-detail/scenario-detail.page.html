@@ -3,7 +3,9 @@
 		<ion-button title="{{ 'Calculate pegging data' | translate }}" (click)="calcPeggingData()">
 			<ion-icon color="success" slot="icon-only" name="calculator-outline"></ion-icon>
 		</ion-button>
-
+		<ion-button title="{{ 'Calculate item data' | translate }}" (click)="calcItemData()">
+			<ion-icon color="primary" slot="icon-only" name="calculator-outline"></ion-icon>
+		</ion-button>
 
 	</app-toolbar>
 </ion-header>
@@ -28,10 +30,10 @@
 					<ion-col size="12" size-sm size-xl="4">
 						<app-form-control
 							[field]="{id:'StartDate', label: 'Start date', type : 'date', placeholder: 'yyyy-MM-dd', form : formGroup }"
-							(change)="saveChange()"></app-form-control>
+							(change)="changePeriodAndDate()"></app-form-control>
 						<app-form-control
 							[field]="{id:'EndDate', label: 'End date', type : 'date', placeholder: 'yyyy-MM-dd', form : formGroup }"
-							(change)="saveChange()"></app-form-control>
+							(change)="changePeriodAndDate()"></app-form-control>
 					</ion-col>
 				</ion-row>
 			</form>
@@ -67,7 +69,7 @@
 									<ion-col size="12" size-sm="6" size-xl="4">
 										<app-form-control
 											[field]="{id:'Period', label: 'Period', type : 'ng-select', form : formGroup,  dataSource: periodDataSource,  bindLabel: 'Name',  bindValue: 'Code' }"
-											(change)="saveChange()"></app-form-control>
+											(change)="changePeriodAndDate()"></app-form-control>
 										<app-form-control
 											[field]="{id:'MaximumCumulativeLeadTime', type : 'number', form : formGroup }"
 											(change)="saveChange()">
@@ -278,7 +280,10 @@
 										translate}}</ion-text>
 								</ng-template>
 							</datatable-column>
-
+							<datatable-column class="col-code" name="Period" property="Period"> </datatable-column>
+							<datatable-column class="col-number" name="Quantity" property="Quantity"> </datatable-column>
+							<datatable-column class="col-code" name="Type" property="Type"> </datatable-column>
+							<datatable-column class="col-date" filterControlType="date" format="dd/MM/yyyy" name="DueDate" property="DueDate"> </datatable-column>
 
 						</app-data-table>
 					</div>
