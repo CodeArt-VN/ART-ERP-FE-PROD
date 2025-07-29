@@ -1,0 +1,11 @@
+::ng-deep {
+    app-data-table .col-uom {
+        max-width: 90px;
+        min-width: 90px;
+        justify-content: center;
+
+        .c-input {
+            text-align: center;
+        }
+    }
+}

@@ -128,6 +128,7 @@ export class ScenarioDetailPage extends PageBase {
 		if (this.item.Id) {
 			let peggingTree = this.item._Pegging.map((p) => {
 				let idParent = 0;
+				p.Period = p.Period.split(' ')[0];
 				if (p.IDParentItem == null) {
 					idParent = this.item._Items.find((x) => x.IDItem == p.IDItem)?.Id;
 				} else {
