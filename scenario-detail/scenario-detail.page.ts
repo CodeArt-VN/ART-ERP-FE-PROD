@@ -193,6 +193,7 @@ export class ScenarioDetailPage extends PageBase {
 			this.formGroup.controls.EndDate.setValue(this.formatDate(endDateObj));
 			this.formGroup.controls.EndDate.markAsDirty();
 			this.submitAttempt = false;
+			this.saveChange();
 			return;
 		}
 
@@ -215,10 +216,6 @@ export class ScenarioDetailPage extends PageBase {
 					this.submitAttempt = false;
 					return;
 				});
-		} else {
-			this.formGroup.controls.EndDate.setValue(this.formatDate(endDateObj));
-			this.formGroup.controls.EndDate.markAsDirty();
-			this.submitAttempt = false;
 		}
 	}
 
