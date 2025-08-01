@@ -1,0 +1,53 @@
+<ion-header>
+	<ion-toolbar class="no-padding">
+		<ion-buttons slot="start" class="ion-hide-sm-down_">
+			<ion-button color="dark" class="ion-hide-sm-down"> {{'Scenario' | translate}} </ion-button>
+		</ion-buttons>
+
+		<ion-buttons slot="primary">
+			<ion-button *ngIf="formGroup.controls.Id.value" (click)="delete()">
+				<ion-icon color="danger" slot="icon-only" name="trash-outline"></ion-icon>
+			</ion-button>
+			<ion-button title="{{'Close' | translate}}" color="secondary" (click)="closeModal()">
+				<ion-icon slot="icon-only" name="close"></ion-icon>
+			</ion-button>
+		</ion-buttons>
+	</ion-toolbar>
+</ion-header>
+<ion-content appScrollbarTheme class="header-table">
+	<div class="main-view">
+		<ion-grid fixed>
+				<app-data-table style="width: fit-content; min-width: calc(100% - 32px) !important"
+							class="box-shadow responsive" [rows]="itemsState" [trackBy]="'Id'" [isTreeList]="true"
+							[(selectedRows)]="selectedItems" [showSpinner]="pageConfig.showSpinner"
+							[showFilter]="pageConfig.isShowSearch" [(query)]="query" (dataInfinite)="loadData($event)"
+							(filter)="onDatatableFilter($event)" (sort)="onSort($event)" [isQueryLocalOnly]="true">
+
+					<datatable-column class="col-name" name="Name" property="Name">
+						<ng-template datatable-header-template>
+							<ion-icon class="min-btn"
+								[name]="!isAllRowOpened? 'add-circle-outline':'remove-circle-outline'"
+								(click)="toggleRowAll()"></ion-icon>
+							<span (click)="toggleRowAll()">{{'Name' | translate}}</span>
+						</ng-template>
+						<ng-template let-i="row" datatable-cell-template>
+							<ng-container *ngFor="let w of i.levels; let k = index;"><span class="spacing"
+									*ngIf="k>0"></span></ng-container>
+							<ion-icon (click)="toggleRow(fullTree, i, true);" class="min-btn clickable"
+								[name]="!i.showdetail? 'chevron-forward-outline':'chevron-down-outline'"
+								*ngIf="i.HasChild"></ion-icon>
+							<ion-icon class="min-btn clickable" [name]="''" *ngIf="!i.HasChild"></ion-icon>
+							<ion-text (click)="toggleRow(fullTree, i, true);" class="clickable"
+								[ngClass]="i.HasChild? ('bold ') : ('')" [color]="i.Color">{{i.Name |
+								translate}}</ion-text>
+						</ng-template>
+					</datatable-column>
+					<datatable-column class="col-code" name="Period" property="Period"></datatable-column>
+					<datatable-column class="col-number" name="Quantity" property="Quantity"> </datatable-column>
+					<datatable-column class="col-uom" name="Uom name" property="UoMName"> </datatable-column>
+					<datatable-column class="col-code" name="Type"  property="Type"> </datatable-column>
+					<datatable-column class="col-date" filterControlType="date" format="dd/MM/yyyy" name="DueDate" property="DueDate"> </datatable-column>
+				</app-data-table>
+		</ion-grid>
+	</div>
+</ion-content>

@@ -1,0 +1,51 @@
+<ion-header>
+	<ion-toolbar class="no-padding">
+		<ion-buttons slot="start" class="ion-hide-sm-down_">
+			<ion-button color="dark" class="ion-hide-sm-down"> {{'Scenario' | translate}} </ion-button>
+		</ion-buttons>
+
+		<ion-buttons slot="primary">
+
+			<ion-button title="{{'Close' | translate}}" color="secondary" (click)="closeModal()">
+				<ion-icon slot="icon-only" name="close"></ion-icon>
+			</ion-button>
+		</ion-buttons>
+	</ion-toolbar>
+</ion-header>
+<ion-content appScrollbarTheme class="header-table">
+	<section class="table">
+		<div class="row" [ngClass]="{selected: i.checked}" *ngFor="let i of items">
+			<div class="col-checkbox cell">
+				<input (click)="changeSelection(i, $event)" class="c-checkbox" [(ngModel)]="i.checked" type="checkbox" />
+			</div>
+			<div class="col-id cell">{{i.Id}}</div>
+			<div class="col-code cell" (click)="query.OrderDate=i.Query; pageConfig.isShowSearch=true; refresh()">
+				{{i.OrderDateText}}
+				<small *ngIf="i.OrderTimeText ">{{i.OrderTimeText}}</small>
+			</div>
+			<div class="col-name cell">
+				<span [ngOptionHighlight]="query.CustomerName">{{i.CustomerName}}</span>
+				<small>#{{i.IDContact}}</small>
+				<small class="right">
+					<ion-text color="dark">
+						<span>{{i._Customer?.Address?.AddressLine1}}</span>
+					</ion-text>
+				</small>
+			</div>
+
+			<div class="col-code cell money">
+				<input
+					[(ngModel)]="i.DebtAmount"
+					[min]="0"
+					[max]="i.DebtAmountBefore"
+					(change)="changeDebtAmountSelection(i, $event)"
+					class="c-input"
+					type="number"
+					[disabled]="!i.checked"
+				/>
+			</div>
+			<div class="col-code cell money">{{i.Debt}}</div>
+			<div class="col-code cell">{{i.Code}}</div>
+		</div>
+	</section>
+</ion-content>

@@ -1,15 +1,70 @@
 <ion-header>
 	<app-toolbar [page]="this">
-		<ion-button title="{{ 'Calculate pegging data' | translate }}" (click)="calcPeggingData()">
-			<ion-icon color="success" slot="icon-only" name="calculator-outline"></ion-icon>
-		</ion-button>
-		<ion-button title="{{ 'Calculate item data' | translate }}" (click)="calcItemData()">
+		
+		<ion-button title="{{ 'Run MRP' | translate }}" (click)="runMRP()">
 			<ion-icon color="primary" slot="icon-only" name="calculator-outline"></ion-icon>
 		</ion-button>
 
 	</app-toolbar>
 </ion-header>
 
+<ion-popover class="w300" #addDocumentPopover [isOpen]="isOpenAddDocumentPopover" (didDismiss)="isOpenAddDocumentPopover = false">
+	<ng-template>
+		<ion-content scroll-y="false">
+			<ion-list lines="none">
+				<ion-item>
+					<div class="c-group">
+						<div class="c-control document">
+							<ng-select
+								appendTo="#ng-select-holder"
+								[(ngModel)]="documentTypeSelected"
+								class="c-input"
+								[items]="documentTypeList"
+								[clearable]="false"
+								[virtualScroll]="true"
+								bindLabel="Name"
+								bindValue="Code"
+								(change)="saveDocument()"
+							>
+								<ng-template ng-label-tmp let-i="item">
+									<div *ngIf="i">
+										<div>
+											<ion-icon [color]="i.Color" [name]="i.Icon" slot="start"></ion-icon> &nbsp;
+											<ion-text>{{ i.Name }}</ion-text>
+										</div>
+									</div>
+								</ng-template>
+								<ng-template ng-option-tmp let-i="item" let-search="searchTerm">
+									<div *ngIf="i">
+										<div>
+											<ion-icon [color]="i.Color" [name]="i.Icon" slot="start"></ion-icon> &nbsp;
+											<ion-text [ngOptionHighlight]="search">{{ i.Name }}</ion-text>
+											&nbsp; &nbsp;
+											<ion-icon name="checkmark-outline" slot="end" color="secondary" *ngIf="documentTypeSelected?.Code == i.Code"></ion-icon>
+										</div>
+									</div>
+								</ng-template>
+							</ng-select>
+						</div>
+					</div>
+				</ion-item>
+
+				<ion-item lines="none">
+					<div class="button-wrapper">
+						<ion-button fill="solid" size="small" shape="round" color="success" (click)="addDocumentPopover.dismiss(); showDocumentModal('Add')">
+							<ion-label>{{'Add' | translate}}</ion-label>
+						</ion-button>
+						<ion-button fill="solid" size="small" shape="round" color="warning" (click)="addDocumentPopover.dismiss(); showDocumentModal('Except')">
+							<ion-label>{{'Except' | translate}}</ion-label>
+						</ion-button>
+					</div>
+				</ion-item>
+
+
+			</ion-list>
+		</ion-content>
+	</ng-template>
+</ion-popover>
 <ion-content appScrollbarTheme class="ion-padding">
 	<div id="scenario-detail-page" style="position: absolute"></div>
 	<div class="main-view" *ngIf="item && pageConfig.showSpinner==false">
@@ -26,14 +81,21 @@
 							(change)="saveChange()"> </app-form-control>
 						<app-form-control [field]="{id:'Name', label: 'Name', type : 'text', form : formGroup }"
 							(change)="saveChange()"> </app-form-control>
+						<app-form-control
+							[field]="{id:'Period', label: 'Period', type : 'ng-select', form : formGroup,  dataSource: periodDataSource,  bindLabel: 'Name',  bindValue: 'Code' }"
+							(change)="changePeriod()"></app-form-control>	
 					</ion-col>
 					<ion-col size="12" size-sm size-xl="4">
 						<app-form-control
 							[field]="{id:'StartDate', label: 'Start date', type : 'date', placeholder: 'yyyy-MM-dd', form : formGroup }"
-							(change)="changePeriodAndDate()"></app-form-control>
+							(change)="changeDate()"></app-form-control>
 						<app-form-control
 							[field]="{id:'EndDate', label: 'End date', type : 'date', placeholder: 'yyyy-MM-dd', form : formGroup }"
-							(change)="changePeriodAndDate()"></app-form-control>
+							(change)="changeDate()"></app-form-control>
+
+						<!-- <ion-button size="small" shape="round" (click)="presentAddDocumentPopover($event)">
+							<ion-label>{{'Document management' | translate}}</ion-label>
+						</ion-button> -->
 					</ion-col>
 				</ion-row>
 			</form>
@@ -49,6 +111,9 @@
 						<ion-label>{{'Items' | translate}}</ion-label>
 					</ion-segment-button>
 					<ion-segment-button value="s3">
+						<ion-label>{{'Result' | translate}}</ion-label>
+					</ion-segment-button>
+					<ion-segment-button value="s4">
 						<ion-label>{{'Recommend' | translate}}</ion-label>
 					</ion-segment-button>
 				</ion-segment>
@@ -67,9 +132,6 @@
 										</ion-list-header>
 									</ion-col>
 									<ion-col size="12" size-sm="6" size-xl="4">
-										<app-form-control
-											[field]="{id:'Period', label: 'Period', type : 'ng-select', form : formGroup,  dataSource: periodDataSource,  bindLabel: 'Name',  bindValue: 'Code' }"
-											(change)="changePeriodAndDate()"></app-form-control>
 										<app-form-control
 											[field]="{id:'MaximumCumulativeLeadTime', type : 'number', form : formGroup }"
 											(change)="saveChange()">
@@ -222,7 +284,46 @@
 										</app-form-control>
 									</ion-col>
 								</ion-row>
+								<ion-row class="hr-group">
+									<ion-col size-xs="12" size-sm="12" size-md="12" size-lg="12" size-xl="3" >
+										<ion-list-header class="ion-no-padding">
+											<ion-label color="primary">{{'Document management' |
+												translate}}</ion-label>
+										</ion-list-header>
+									</ion-col>
+									<ion-col  size-xs="12" size-sm="12" size-md="12" size-lg="12" size-xl="8" class="ion-no-padding">
+										<div class="table-contain">
+											<app-data-table *ngIf="!pageConfig.showSpinner" class="box-shadow responsive" [rows]="item?._PreventDocument" [(query)]="query" [showSpinner]="pageConfig.showSpinner">
+												<datatable-empty-message subMessage="Please click add new to start..."  [showImg]="false" minHeight="125px">
+													<ng-template datatable-empty-message-template>
+															<ion-button (click)="presentAddDocumentPopover($event)" size="small" fill="outline" *ngIf="pageConfig.canEdit">
+																<ion-icon slot="start" name="add-outline"></ion-icon>
+																{{ 'Add document' | translate }}
+															</ion-button>
+													</ng-template>
+												</datatable-empty-message>
+												<datatable-column class="col-id" name="Id" property="Id"></datatable-column>
+												<datatable-column class="col-id" format="dd-MM-yyyy" name="Id reference" property="RefId"></datatable-column>
+												<datatable-column class="col-name"  name="Type" property="Type"></datatable-column>
+												<datatable-column class="col-code" name="Is prevent" property="IsPrevent"></datatable-column>
+												<datatable-column *ngIf="pageConfig.canEdit" class="col-icon" name="" property="Id">
+													<ng-template let-i="row" datatable-cell-template>
+														<ion-button (click)="editRowPreventDocument(i)" size="small" title="{{ 'Edit' | translate }}" fill="clear"> <ion-icon slot="icon-only" name="pencil"></ion-icon> </ion-button>
+													</ng-template>
+												</datatable-column>
+												<datatable-column class="col-icon" name="" property="Id" *ngIf="pageConfig.canEdit">
+													<ng-template let-i="row" datatable-cell-template>
+														<ion-button (click)="deleteRowPreventDocument(i)" size="small" title="{{ 'Remove' | translate }}" fill="clear">
+															<ion-icon slot="icon-only" color='danger' name="trash"></ion-icon>
+														</ion-button>
+													</ng-template>
+												</datatable-column>
+											</app-data-table>
+										</div>
 
+									</ion-col>
+								
+								</ion-row>
 								<!-- Other information -->
 								<ion-row class="hr-group" *ngIf="item.Id">
 									<ion-col size="12" size-sm="12" size-md="12" size-xl="3">
@@ -253,62 +354,237 @@
 					</div>
 				</div>
 				<!-- Items -->
-				<div *ngIf="segmentView == 's2'">
-					<div class="ion-padding">
-						<app-data-table style="width: fit-content; min-width: calc(100% - 32px) !important"
-							class="box-shadow responsive" [rows]="itemsState" [trackBy]="'Id'" [isTreeList]="true"
-							[(selectedRows)]="selectedItems" [showSpinner]="pageConfig.showSpinner"
-							[showFilter]="pageConfig.isShowSearch" [(query)]="query" (dataInfinite)="loadData($event)"
-							(filter)="onDatatableFilter($event)" (sort)="onSort($event)" [isQueryLocalOnly]="true">
+				<div *ngIf="segmentView == 's2'" style="overflow-x: auto;">
+					<div id="scenario-detail" style="position: absolute"></div>
+						<form [formGroup]="formGroup">
+							<ng-container formArrayName="Lines">
+								<app-data-table [rows]="formGroup.get('Lines')['controls']" [showSpinner]="pageConfig.showSpinner">
+									<datatable-empty-message subMessage="Please click add new to start...">
+										<ng-template datatable-empty-message-template>
+											<div>
+												<ion-button *ngIf="formGroup.controls.Id.value != null" size="small" (click)="addItemLine({}, true)">
+													<ion-icon slot="start" name="add-circle-outline"></ion-icon>
+													{{ 'Add product' | translate }}
+												</ion-button>
+											</div>
+										</ng-template>
+									</datatable-empty-message>
+									<datatable-column [checkbox]="true" property="value" *ngIf="pageConfig.canEdit">
+										<ng-template datatable-header-template>
+											<input class="c-checkbox" type="checkbox" (change)="toggleSelectAll()" [checked]="isAllChecked" />
+										</ng-template>
+										<ng-template let-g="row" datatable-cell-template>
+											<app-input-control
+												(change)="changeSelection(g, $event)"
+												[field]="{ id: 'IsChecked', label: 'Checked', type: 'checkbox', form: g }"
+											></app-input-control>
+										</ng-template>
+									</datatable-column>
+									<datatable-column class="col-id" name="No." property="#"></datatable-column>
+									<datatable-column class="col-name" name="Items" property="value">
+										<ng-template let-g="row" datatable-cell-template>
+											<app-input-control
+												[field]="{ id: 'IDItem', label: 'Item', type: 'ng-select-item', form: g,
+											dataSource: g.get('_IDItemDataSource').value,
+											bindValue: 'Id',
+											bindLabel: 'Name',
+											clearable: true,
+											placeholder: 'Type to search...',
+											appendTo: '#scenario-detail', }"
+												(change)="saveChange()"
+											></app-input-control>
+										</ng-template>
+									</datatable-column>
+									<datatable-column class="col-del" name="" property="value" *ngIf="pageConfig.canEdit">
+										<ng-template datatable-header-template>
+											<ion-icon
+												color="danger"
+												class="min-btn clickable"
+												title="{{ 'SELECTED_ITEMS' | translate: { COUNT: selectedLines.controls?.length } }}"
+												name="trash-outline"
+												(click)="removeSelectedItems()"
+											></ion-icon>
+										</ng-template>
+										<ng-template let-g="row" let-idx="idx" datatable-cell-template>
+											<ion-icon color="danger" class="min-btn clickable" name="trash-outline" (click)="removeLine(idx)"></ion-icon>
+										</ng-template>
+									</datatable-column>
+									
+								</app-data-table>
+							</ng-container>
+						</form>
+						<div class="ion-padding" *ngIf="pageConfig.canEdit && !formGroup.invalid">
+							<ion-button fill="clear" size="small" (click)="addItemLine({}, true)">
+								<ion-icon slot="start" name="add-circle-outline"></ion-icon>
+								{{ 'Add product' | translate }}
+							</ion-button>
+						</div>
+				</div>
+				<!-- Result -->
+				<div *ngIf="segmentView == 's3'" style="overflow-x: auto;">
+					<app-data-table
+						class="box-shadow responsive"
+						
+						[rows]="item?._ItemsResult"
+						[(selectedRows)]="selectedItems"
+						[showSpinner]="pageConfig.showSpinner"
+					>
+					<datatable-column class="col-id" name="No." property="#"></datatable-column>
+						<datatable-column class="col-id" name="IDItem" property="IDItem">
+							<ng-template let-i="row" datatable-cell-template>
+								<div class ="text-item" (mousedown)="$event.stopPropagation()">
+									
+									<a
+									[ngClass]="{ 'no-check-dirty': noCheckDirty }"
+									class="clickable"
+									[routerLink]="['/item/' + i.IDItem]"
+									>
+									<span> {{ i.IDItem }} </span>
+									</a>
+								</div>
+							</ng-template>
 
-							<datatable-column class="col-name" name="Name" property="Name">
-								<ng-template datatable-header-template>
-									<ion-icon class="min-btn"
-										[name]="!isAllRowOpened? 'add-circle-outline':'remove-circle-outline'"
-										(click)="toggleRowAll()"></ion-icon>
-									<span (click)="toggleRowAll()">{{'Name' | translate}}</span>
-								</ng-template>
-								<ng-template let-i="row" datatable-cell-template>
-									<ng-container *ngFor="let w of i.levels; let k = index;"><span class="spacing"
-											*ngIf="k>0"></span></ng-container>
-									<ion-icon (click)="toggleRow(fullTree, i, true);" class="min-btn clickable"
-										[name]="!i.showdetail? 'chevron-forward-outline':'chevron-down-outline'"
-										*ngIf="i.HasChild"></ion-icon>
-									<ion-icon class="min-btn clickable" [name]="''" *ngIf="!i.HasChild"></ion-icon>
-									<ion-text (click)="toggleRow(fullTree, i, true);" class="clickable"
-										[ngClass]="i.HasChild? ('bold ') : ('')" [color]="i.Color">{{i.Name |
-										translate}}</ion-text>
-								</ng-template>
-							</datatable-column>
-							<datatable-column class="col-code" name="Period" property="Period"></datatable-column>
-							<datatable-column class="col-number" name="Quantity" property="Quantity"> </datatable-column>
-							<datatable-column class="col-uom" name="Uom name" property="UoMName"> </datatable-column>
-							<datatable-column class="col-code" name="Type"  property="Type"> </datatable-column>
-							<datatable-column class="col-date" filterControlType="date" format="dd/MM/yyyy" name="DueDate" property="DueDate"> </datatable-column>
-
-						</app-data-table>
-					</div>
+						</datatable-column>
+						<datatable-column class="col-name" name="Name" property="Name">
+						</datatable-column>
+						<datatable-column class="col-name" name="Period" property="Period">
+						</datatable-column>
+						<datatable-column class="col-number" name="Initial" property="InitialQuantity">
+						</datatable-column>
+						<datatable-column class="col-number" name="OriginalInitial" property="OriginalInitialQuantity">
+						</datatable-column>
+						<datatable-column class="col-number" name="IncomingStock" property="IncomingStock">
+						</datatable-column>
+						<datatable-column class="col-number" name="OutgoingStock" property="OutgoingStock">
+						</datatable-column>
+						<datatable-column class="col-number" name="Final" property="FinalQuantity">
+						</datatable-column>
+						<datatable-column class="col-number" name="OriginalFinal" property="OriginalFinalQuantity">
+						</datatable-column>
+						<datatable-column class="col-number" name="Requests" property="Requests">
+						</datatable-column>
+					</app-data-table>		
 				</div>
 				<!-- Recommend -->
-				<div *ngIf="segmentView == 's3'">
+				<div *ngIf="segmentView == 's4'">
 					<div class="ion-padding">
-						<ion-grid fixed>
-							<form [formGroup]="formGroup">
-								<ion-row class="hr-group" *ngIf="item.Id">
-									<ion-col size="12" size-sm="12" size-md="12" size-xl="3">
-										<ion-list-header class="ion-no-padding">
-											<ion-label color="primary">{{'Recommend' | translate}}</ion-label>
-										</ion-list-header>
-									</ion-col>
-									<ion-col size="12" size-sm="6" size-xl="4">
+						<section class="table" style="min-width: calc(1024px)">
+							<header class="bold">
+								<!-- <div class="col-checkbox cell"></div> -->
+								<div class="col-id cell">
+									{{'Id' | translate}}
+									<ion-icon class="min-btn" *ngIf="sort.Id" [name]="sort.Id == 'Id'?'arrow-down': 'arrow-up'"></ion-icon>
+									<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.Id" name="search" color="primary"></ion-icon>
+								</div>
 
-									</ion-col>
-									<ion-col size="12" size-sm="6" size-xl="4">
+								<div class="col-mrpname cell">
+									{{'MRPName' | translate}}
+									<ion-icon class="min-btn" *ngIf="sort.IDMRP" [name]="sort.IDMRP == 'IDMRP'?'arrow-down': 'arrow-up'"></ion-icon>
+									<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.IDMRP" name="search" color="primary"></ion-icon>
+								</div>
+								<div class="col-name cell">
+									{{'Item' | translate}}
+									<ion-icon class="min-btn" *ngIf="sort.Name" [name]="sort.Name == 'Name'?'arrow-down': 'arrow-up'"></ion-icon>
+									<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.Name" name="search" color="primary"></ion-icon>
+								</div>
 
-									</ion-col>
-								</ion-row>
+								<div class="col-number cell">
+									{{'Quantity' | translate}}
+									<ion-icon class="min-btn" *ngIf="sort.DinnerPax" [name]="sort.DinnerPax == 'DinnerPax'?'arrow-down': 'arrow-up'"></ion-icon>
+									<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.DinnerPax" name="search" color="primary"></ion-icon>
+								</div>
+
+								<div class="col-date cell">
+									{{'Duration' | translate}}
+									<ion-icon class="min-btn" *ngIf="sort.PartyDate" [name]="sort.PartyDate == 'PartyDate'?'arrow-down': 'arrow-up'"></ion-icon>
+									<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.PartyDate" name="search" color="primary"></ion-icon>
+								</div>
+								<div class="col-checkbox cell">{{'Order' | translate}}</div>
+
+								<div class="col-number cell">
+									{{'Price' | translate}}
+									<ion-icon class="min-btn" *ngIf="sort.DinnerPax" [name]="sort.DinnerPax == 'DinnerPax'?'arrow-down': 'arrow-up'"></ion-icon>
+									<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.DinnerPax" name="search" color="primary"></ion-icon>
+								</div>
+								<div class="col-number cell">
+									{{'Quality' | translate}}
+									<ion-icon class="min-btn" *ngIf="sort.DinnerPax" [name]="sort.DinnerPax == 'DinnerPax'?'arrow-down': 'arrow-up'"></ion-icon>
+									<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.DinnerPax" name="search" color="primary"></ion-icon>
+								</div>
+								<div class="col-number cell">
+									{{'Delivery' | translate}}
+									<ion-icon class="min-btn" *ngIf="sort.DinnerPax" [name]="sort.DinnerPax == 'DinnerPax'?'arrow-down': 'arrow-up'"></ion-icon>
+									<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.DinnerPax" name="search" color="primary"></ion-icon>
+								</div>
+								<div class="col-number cell">
+									{{'Payment' | translate}}
+									<ion-icon class="min-btn" *ngIf="sort.DinnerPax" [name]="sort.DinnerPax == 'DinnerPax'?'arrow-down': 'arrow-up'"></ion-icon>
+									<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.DinnerPax" name="search" color="primary"></ion-icon>
+								</div>
+							</header>
+							<form (submit)="refresh()" action="#">
+								<header class="filter" *ngIf="pageConfig.isShowSearch">
+									<!-- <div class="col-checkbox cell"></div> -->
+									<div class="col-id cell"></div>
+									<div class="col-mrpname cell">
+										<select (change)="refresh()" [ngModelOptions]="{standalone: true}" [(ngModel)]="query.IDMRP" class="c-input c-dropdown" [ngClass]="{active: query.IDMRP}">
+											<option [value]="''">{{'All' | translate}}</option>
+											<option [disabled]="t.Flag || t.IDMRP == null" *ngFor="let t of itemMRPList" [value]="t.IDMRP">{{t.MRPName}}</option>
+										</select>
+										<ion-icon class="min-btn" (click)="query.IDMRP=''; refresh()" *ngIf="query.IDMRP" name="close-circle-outline"></ion-icon>
+									</div>
+									<div class="col-name cell">
+										<input [ngModelOptions]="{standalone: true}" [(ngModel)]="query.Keyword" class="c-input" [ngClass]="{active: query.Keyword}" type="text" />
+										<ion-icon class="min-btn" (click)="query.Keyword=''; refresh()" *ngIf="query.Keyword" name="close-circle-outline"></ion-icon>
+									</div>
+
+									<button mat-raised-button type="submit" style="display: none">Search</button>
+								</header>
 							</form>
-						</ion-grid>
+							<app-page-message [itemsLength]="_ItemsRecommend?.length" [showSpinner]="pageConfig.showSpinner"></app-page-message>
+
+							<div *ngFor="let i of _ItemsRecommend; let j = index;" class="row" [ngClass]="{odd: j % 2 != 0}" [ngClass]="{selected: i.checked}">
+								<div class="col-id cell">
+									<span *ngIf="i.ItemId"> {{i.Id}} </span>
+								</div>
+								<div class="col-mrpname cell">
+									<span *ngIf="i.MRPName"> {{i.MRPName}} </span>
+									<span *ngIf="!i.MRPName"> {{i.MRPName}} </span>
+								</div>
+								<div class="col-name cell">
+									<span *ngIf="i.ItemId"> <b>{{i.ItemCode}}</b> - {{i.ItemName}} </span>
+									<span *ngIf="!i.ItemId" class="vendor-name">
+										<a [href]="'#/'+'business-partner/'+i.VendorId" (click)="nav('business-partner/'+i.VendorId,'forward')" title="{{'Vendor' | translate}}">
+											{{i.VendorId}} <ion-icon name="open-outline"></ion-icon>
+										</a>
+										{{i.VendorName}}
+									</span>
+								</div>
+
+								<div class="col-number cell" *ngIf="i.ItemId">
+									<b *ngIf="i.ItemId">{{i.QuantityOrdered}} <small>{{i.UoM}}</small></b>
+								</div>
+								<div class="col-date cell" *ngIf="i.ItemId">
+									<span *ngIf="i.ItemId">{{i.DueDateText}}</span>
+								</div>
+								<div class="col-checkbox cell">
+									<input *ngIf="!i.ItemId" class="c-checkbox" type="checkbox" [(ngModel)]="i.checked" (change)="changeVendor(i)" />
+								</div>
+
+								<div class="col-number cell">
+									<span *ngIf="!i.ItemId">{{i.PriceText}}</span>
+								</div>
+								<div class="col-number cell">
+									<span *ngIf="!i.ItemId">{{i.Quality}}</span>
+								</div>
+								<div class="col-number cell">
+									<span *ngIf="!i.ItemId">{{i.Delivery}}</span>
+								</div>
+								<div class="col-number cell">
+									<span *ngIf="!i.ItemId">{{i.Payment}}</span>
+								</div>
+							</div>
+						</section>
 					</div>
 				</div>
 			</div>

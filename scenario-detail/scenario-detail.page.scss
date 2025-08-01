@@ -8,4 +8,55 @@
             text-align: center;
         }
     }
+
+    app-data-table .col-anem .text-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+    }
+    .table-contain {
+       overflow: hidden;
+        overflow-x: auto !important;
+        margin: auto;
+    }
+
+
+    .c-control {
+        min-width: 250px;
+        flex: 1;
+        margin-right: 10px;
+    }
+
+    .c-control.document {
+        min-width: 200px;
+    }
+
+    .c-control .c-input.ng-select {
+        min-height: 40px;
+    }
+
+    .button-wrapper {
+        display: flex;
+        width: 100%;
+        gap: 8px;
+    }
+
+    .button-wrapper ion-button {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .col-mrpname {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 150px;
+        max-width: 200px;
+    }
+
+    .vendor-name {
+        font-size: 80%;
+    }
+
 }
