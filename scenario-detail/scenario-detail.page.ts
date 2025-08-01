@@ -11,6 +11,8 @@ import { CommonService } from 'src/app/services/core/common.service';
 import { lib } from 'src/app/services/static/global-functions';
 import { ScenarioModalPage } from '../scenario-modal/scenario-modal.page';
 import { ScenarioDocumentSaleOrderModalPage } from '../scenario-document-sale-order-modal/scenario-document-sale-order-modal.page';
+import { ScenarioDocumentForecastModalPage } from '../scenario-document-forecast-modal/scenario-document-forecast-modal.page';
+import { ScenarioDocumentPurchaseModalPage } from '../scenario-document-purchase-modal/scenario-document-purchase-modal.page';
 
 @Component({
 	selector: 'app-scenario-detail',
@@ -27,10 +29,15 @@ export class ScenarioDetailPage extends PageBase {
 	fullTree = [];
 	isAllRowOpened = true;
 
-	_ItemsRecommend : any = [];
+	_ItemsRecommend: any = [];
 
 	documentTypeList = [];
 	documentTypeSelected = '';
+
+	selectedOrderList;
+	selectedPurchaseList;
+	selectedForecastList;
+
 	constructor(
 		public pageProvider: PROD_MRPScenarioProvider,
 		public itemGroupProvider: WMS_ItemGroupProvider,
@@ -103,9 +110,10 @@ export class ScenarioDetailPage extends PageBase {
 			Warehouses: [''],
 			Lines: this.formBuilder.array([]), // _Items
 			Peggings: [''],
-			IsChangePeriod: [''], // remove all items chang period
+			IsChangeDateAndPeriod: [''], // remove all items chang period
 			DeletedLines: [''], // remove _Items
 			PreventDocument: this.formBuilder.array([]), // _PreventDocument
+			DeletedDocuments: [''], // remove _PreventDocument items
 		});
 	}
 
@@ -118,9 +126,9 @@ export class ScenarioDetailPage extends PageBase {
 		];
 
 		this.documentTypeList = [
-			{ Name: 'Forecast', Code: 'forecast' },
-			{ Name: 'Sale order', Code: 'saleOrder' },
-			{ Name: 'Purchase order', Code: 'purchaseOrder' },
+			{ Name: 'Forecast', Code: 'Forecast' },
+			{ Name: 'Sale order', Code: 'SaleOrder' },
+			{ Name: 'Purchase order', Code: 'PurchaseOrder' },
 		];
 
 		this.warehouseDataSource = lib.cloneObject(this.env.branchList);
@@ -171,7 +179,8 @@ export class ScenarioDetailPage extends PageBase {
 					Period: p.Period.split(' ')[0],
 				}));
 			}
-			this.setLines();
+			this.setLines(); // MRPItems
+			this.setDocumentLines(); // MRPPreventDocument
 		}
 
 		super.loadedData(event, ignoredFromGroup);
@@ -182,7 +191,6 @@ export class ScenarioDetailPage extends PageBase {
 	segmentChanged(ev: any) {
 		this.segmentView = ev.detail.value;
 		if (this.segmentView == 's4') {
-			//if(this.segmentView == 's4' && this.item?._ItemsResult?.length){
 
 			this.env
 				.showLoading(
@@ -194,7 +202,10 @@ export class ScenarioDetailPage extends PageBase {
 				)
 				.then((rs) => {
 					this._ItemsRecommend = rs['data'];
-
+					this._ItemsRecommend.forEach((i) => {
+						i.DueDateText = lib.dateFormat(i.DueDate, 'dd/mm/yy');
+						i.PriceText = lib.currencyFormat(i.Price);
+					});
 					let data = new Map();
 
 					for (let obj of this._ItemsRecommend) {
@@ -227,9 +238,30 @@ export class ScenarioDetailPage extends PageBase {
 			this.formGroup.controls.StartDate.markAsPristine();
 			this.formGroup.controls.EndDate.markAsPristine();
 			this.submitAttempt = false;
-		} else if (!this.item.Id || isChanged) {
+		} else if (!this.item.Id) {
 			this.submitAttempt = false;
 			this.saveChange();
+		} else if (isChanged) {
+			if (this.item?._ItemsResult?.length) {
+				this.env
+					.showPrompt('Changing the cycle will delete all the scenario data, do you want to continue?', null, 'Delete')
+					.then(() => {
+						this.formGroup.controls.IsChangeDateAndPeriod.setValue(true);
+						this.formGroup.controls.IsChangeDateAndPeriod.markAsDirty();
+						this.submitAttempt = false;
+						this.saveChange();
+					})
+					.catch(() => {
+						this.formGroup.controls.StartDate.setValue(this.item.StartDate);
+						this.formGroup.controls.EndDate.setValue(this.item.EndDate);
+						this.formGroup.controls.StartDate.markAsPristine();
+						this.formGroup.controls.EndDate.markAsPristine();
+						this.submitAttempt = false;
+					});
+			} else {
+				this.submitAttempt = false;
+				this.saveChange();
+			}
 		} else {
 			this.submitAttempt = false;
 		}
@@ -242,21 +274,24 @@ export class ScenarioDetailPage extends PageBase {
 		this.submitAttempt = true;
 		const period = this.formGroup.controls.Period.value;
 		if (this.item?.Id && period !== this.item.Period) {
-			this.env
-				.showPrompt('Changing the cycle will delete all the scenario data, do you want to continue?', null, 'Delete')
-				.then(() => {
-					if (this.fullTree && this.fullTree.length > 0) {
-						this.formGroup.controls.IsChangePeriod.setValue(true);
-						this.formGroup.controls.IsChangePeriod.markAsDirty();
-					}
-					this.submitAttempt = false;
-					this.saveChange();
-				})
-				.catch(() => {
-					this.formGroup.controls.Period.setValue(this.item.Period);
-					this.formGroup.controls.Period.markAsPristine();
-					this.submitAttempt = false;
-				});
+			if (this.item?._ItemsResult?.length) {
+				this.env
+					.showPrompt('Changing the cycle will delete all the scenario data, do you want to continue?', null, 'Delete')
+					.then(() => {
+						this.formGroup.controls.IsChangeDateAndPeriod.setValue(true);
+						this.formGroup.controls.IsChangeDateAndPeriod.markAsDirty();
+						this.submitAttempt = false;
+						this.saveChange();
+					})
+					.catch(() => {
+						this.formGroup.controls.Period.setValue(this.item.Period);
+						this.formGroup.controls.Period.markAsPristine();
+						this.submitAttempt = false;
+					});
+			} else {
+				this.submitAttempt = false;
+				this.saveChange();
+			}
 		} else {
 			this.submitAttempt = false;
 			this.saveChange();
@@ -362,6 +397,42 @@ export class ScenarioDetailPage extends PageBase {
 		groups.push(group);
 	}
 
+	setDocumentLines() {
+		this.formGroup.controls.PreventDocument = new FormArray([]);
+		if (this.item?._PreventDocument?.length) {
+			const sortedLines = this.item._PreventDocument?.slice().sort((a, b) => a.Sort - b.Sort);
+			sortedLines.forEach((i) => {
+				const itemWithDefaults = {
+					...i,
+					IsPrevent: i.IsPrevent || false
+				};
+				this.addDocumentItemLine(itemWithDefaults);
+			});
+		}
+
+		let groups = <FormArray>this.formGroup.controls.PreventDocument;
+		groups.value.sort((a, b) => a.Sort - b.Sort);
+		groups.controls.sort((a, b) => a.value['Sort'] - b.value['Sort']);
+		this.formGroup.controls.PreventDocument.patchValue(groups.value);
+	}
+
+	addDocumentItemLine(line, markAsDirty = false) {
+		let groups = <FormArray>this.formGroup.controls.PreventDocument;
+		let group = this.formBuilder.group({
+			Id: [line?.Id],
+			RefId: [line?.RefId],
+			Type: [line?.Type],
+			IsPrevent: [line?.IsPrevent],
+			IsChecked: [false],
+		});
+		groups.push(group);
+		if(markAsDirty) {
+			Object.values(group.controls).forEach(d => d.markAsDirty());
+		}
+	}
+
+
+
 	selectedLines = new FormArray([]);
 	isAllChecked = false;
 	toggleSelectAll() {
@@ -459,62 +530,169 @@ export class ScenarioDetailPage extends PageBase {
 	showDocumentModal(status: string) {
 		let type = this.documentTypeSelected;
 		let idMRP = this.item?.Id;
+		
 		switch (type) {
-			case 'saleOrder':
+			case 'SaleOrder':
+				this.selectedOrderList = [...this.formGroup.get('PreventDocument').value.filter(item => item.Type === 'SaleOrder')];
 				this.showDocumentSaleModal(idMRP, type, status);
 				break;
-			case 'purchaseOrder':
+			case 'PurchaseOrder':
+				this.selectedPurchaseList = [...this.formGroup.get('PreventDocument').value.filter(item => item.Type === 'PurchaseOrder')];
 				this.showDocumentPurchaseModal(idMRP, type, status);
 				break;
-			case 'forecast':
-				this.showDocumentPurchaseModal(idMRP, type, status);
+			case 'Forecast':
+				this.selectedForecastList = [...this.formGroup.get('PreventDocument').value.filter(item => item.Type === 'Forecast')];
+				this.showDocumentForecastModal(idMRP, type, status);
 				break;
 			default:
 				this.env.showMessage('Please select document type', 'warning');
 		}
 	}
-
+	
 	async showDocumentSaleModal(idMRP, type, status) {
+		
 		const modal = await this.modalController.create({
 			component: ScenarioDocumentSaleOrderModalPage,
 			componentProps: {
 				idMRP: idMRP,
 				documentType: type,
 				status: status,
+				selectedOrderList: this.selectedOrderList,
 			},
 			cssClass: 'modal90',
 		});
 
 		await modal.present();
 		const { data } = await modal.onWillDismiss();
+		this.selectedOrderList = [];
+
+		if (data && data.length) {
+			this.processDocumentData(data, type, status);
+		}
 	}
+	
+
+	
 	async showDocumentPurchaseModal(idMRP, type, status) {
 		const modal = await this.modalController.create({
-			component: ScenarioDocumentSaleOrderModalPage,
+			component: ScenarioDocumentPurchaseModalPage,
 			componentProps: {
 				idMRP: idMRP,
 				documentType: type,
 				status: status,
+				selectedPurchaseList: this.selectedPurchaseList,
 			},
 			cssClass: 'modal90',
 		});
-
+		this.selectedPurchaseList = [];
 		await modal.present();
 		const { data } = await modal.onWillDismiss();
+		
+		if (data && data.length) {
+			this.processDocumentData(data, type, status);
+		}
 	}
 	async showDocumentForecastModal(idMRP, type, status) {
 		const modal = await this.modalController.create({
-			component: ScenarioDocumentSaleOrderModalPage,
+			component: ScenarioDocumentForecastModalPage,
 			componentProps: {
 				idMRP: idMRP,
 				documentType: type,
 				status: status,
+				selectedForecastList: this.selectedForecastList,
 			},
 			cssClass: 'modal90',
 		});
-
+		this.selectedForecastList = [];
 		await modal.present();
 		const { data } = await modal.onWillDismiss();
+		
+		if (data && data.length) {
+			this.processDocumentData(data, type, status);
+		}
 	}
+	
+	processDocumentData(data: any[], type: string, status: boolean) {
+		const preventDocArray = this.formGroup.get('PreventDocument') as FormArray;
+
+		let idField: string;
+		switch (type) {
+			case 'SaleOrder':
+				idField = 'IDOrder';
+				break;
+			case 'PurchaseOrder':
+				idField = 'IDPurchase';
+				break;
+			case 'Forecast':
+				idField = 'IDForecast';
+				break;
+		}
+		
+		const dataIds = data.map((e) => e[idField]);
+		const existingItems = this.item._PreventDocument || [];
+		
+		const documentAdded = [];
+		const documentDeleted = [];
+
+		for (const item of data) {
+			const itemId = item[idField];
+			const existingItem = existingItems.find(x => x.RefId === itemId && x.Type === type && x.IsPrevent === status);
+			
+			if (!existingItem) {
+				documentAdded.push({
+					Id: item.Id,
+					RefId: itemId,
+					Type: type,
+					IsPrevent: status,
+				});
+			}
+		}
+
+		for (const exist of existingItems) {
+			if (exist.Type === type && exist.IsPrevent === status) {
+				const isExists = dataIds.includes(exist.RefId);
+				// document does not exist 
+				if (!isExists) {
+					documentDeleted.push(exist);
+				}
+			}
+		}
+
+		for (const newItem of documentAdded) {
+			this.addDocumentItemLine(newItem, true);
+		}
+
+		const documentDeletedIds = documentDeleted.filter(x => x.Id);
+		if (documentDeletedIds.length > 0) {
+			const deletedIds = documentDeletedIds.map(item => item.Id);
+			this.formGroup.get('DeletedDocuments').setValue(deletedIds);
+			this.formGroup.get('DeletedDocuments').markAsDirty();
+		}
+
+		preventDocArray.markAsDirty();
+		this.saveChange();
+	}
+
+	deleteRowPreventDocument(item: any) {
+		const preventDocArray = this.formGroup.get('PreventDocument') as FormArray;
+		const index = preventDocArray.controls.findIndex(d => 
+			d.get('Id').value === item.Id
+		);
+
+		if (index >= 0) {
+			if (item.Id) {
+				this.env
+					.showPrompt('Bạn có chắc muốn xóa document này?', null, 'Xóa document')
+					.then((_) => {
+						this.formGroup.get('DeletedDocuments').setValue([item.Id]);
+						this.formGroup.get('DeletedDocuments').markAsDirty();
+						preventDocArray.removeAt(index);
+						this.saveChange();
+					})
+					.catch((_) => {});
+			}
+		}
+	}
+	
 	saveDocument() {}
 }

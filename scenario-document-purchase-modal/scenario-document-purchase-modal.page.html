@@ -1,7 +1,7 @@
 <ion-header>
 	<ion-toolbar>
 		<ion-buttons slot="start" class="ion-hide-sm-down_">
-			<ion-button color="dark" class="ion-hide-sm-down"> {{'Select order' | translate}} </ion-button>
+			<ion-button color="dark" class="ion-hide-sm-down"> {{'Select purchase order' | translate}} </ion-button>
 		</ion-buttons>
 
 		<ion-buttons slot="primary">
@@ -21,7 +21,7 @@
 			</ion-button>
 		</ion-buttons>
 	</ion-toolbar>
-	<section class="table">
+	<!-- <section class="table">
 		<header class="bold">
 			<div class="col-checkbox cell">
 				<input (change)="toggleSelectAll()" [(ngModel)]="isAllChecked" class="c-checkbox" type="checkbox" />
@@ -47,11 +47,6 @@
 				<small class="right">
 					<ion-text color="dark"> {{'Address' | translate}}</ion-text>
 				</small>
-			</div>
-			<div class="col-code cell money" (click)="sortToggle('Debt')">
-				{{'Debt' | translate}}
-				<ion-icon class="min-btn" *ngIf="sort.Debt" [name]="sort.Debt == 'Debt'?'arrow-down': 'arrow-up'"></ion-icon>
-				<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.ProductWeight" name="search" color="primary"></ion-icon>
 			</div>
 			<div class="col-code cell" (click)="sortToggle('Code')">
 				{{'Vendor code' | translate}}
@@ -92,36 +87,40 @@
 				<button mat-raised-button type="submit" style="display: none">Search</button>
 			</header>
 		</form>
-	</section>
+	</section> -->
 </ion-header>
 <ion-content appScrollbarTheme class="header-table">
-	<section class="table">
-		<div class="row" [ngClass]="{selected: i.checked}" *ngFor="let i of items">
-			<div class="col-checkbox cell">
-				<input (click)="changeSelection(i, $event)" class="c-checkbox" [(ngModel)]="i.checked" type="checkbox" />
-			</div>
-			<div class="col-id cell">
-				<a [routerLink]="['/sale-order/'+i.Id]"> {{i.Id}} </a>
-			</div>
-			<div class="col-code cell" (click)="query.OrderDate=i.Query; pageConfig.isShowSearch=true; refresh()">
-				{{i.OrderDateText}}
-				<small *ngIf="i.OrderTimeText ">{{i.OrderTimeText}}</small>
-			</div>
-			<div class="col-name cell">
-				<span [ngOptionHighlight]="query.CustomerName">{{i.CustomerName}}</span>
-				<small>#{{i.IDContact}}</small>
-				<small class="right">
-					<ion-text color="dark">
-						<span>{{i._Customer?.Address?.AddressLine1}}</span>
-					</ion-text>
-				</small>
-			</div>
-			<div class="col-code cell money">{{i.Debt}}</div>
-			<div class="col-code cell">{{i.Code}}</div>
-		</div>
-	</section>
-	<div class="ion-padding"></div>
-		<ion-infinite-scroll color="primary" threshold="30%" (ionInfinite)="loadData($event)" [disabled]="!pageConfig.infiniteScroll || pageConfig.isEndOfData">
-			<ion-infinite-scroll-content loadingSpinner="dots"></ion-infinite-scroll-content>
+	<div class="safe-max-width">
+		<app-data-table
+			class="box-shadow responsive"
+			[rows]="items"
+			[trackBy]="'Id'"
+			[(selectedRows)]="selectedItems"
+			[showSpinner]="pageConfig.showSpinner"
+			[showFilter]="pageConfig.isShowSearch"
+			[(query)]="query"
+			(dataInfinite)="loadData($event)"
+			(filter)="onDatatableFilter($event)"
+			(sort)="onSort($event)"
+			(selectedRowsChange)="showCommandBySelectedRows($event)"
+		>
+			<datatable-column [checkbox]="true" name=""></datatable-column>
+			<datatable-column class="col-id" name="#" property="Id" [navLink]="'purchase-order'">
+			</datatable-column>
+			<datatable-column class="col-date" format="yyyy-MM-dd" name="Order date" property="OrderDate" filterControlType="time-frame"></datatable-column>
+			<datatable-column class="col-date" format="yyyy-MM-dd" name="Expected receipt date" property="ExpectedReceiptDate" filterControlType="date"></datatable-column>
+			<datatable-column class="col-name flex-break" name="Vendor" property="VendorName"></datatable-column>
+			<datatable-column class="col-name flex-break" name="Goods owner" property="StorerName"></datatable-column>
+			<datatable-column class="col-number bold" format="1.0-0" name="Total" property="TotalAfterTax"></datatable-column>
+			<datatable-column class="col-status" name="Status" property="Status" filterControlType="ng-select-status" [filterDataSource]="statusList">
+				<ng-template let-i="row" datatable-cell-template>
+					<ion-badge [color]="i.StatusColor" [title]="i.StatusText"> {{i.StatusText | translate}} </ion-badge>
+				</ng-template>
+			</datatable-column>
+		</app-data-table>
+	</div>
+
+	<ion-infinite-scroll color="primary" threshold="20%" (ionInfinite)="loadData($event)" [disabled]="!pageConfig.infiniteScroll || pageConfig.isEndOfData">
+		<ion-infinite-scroll-content loadingSpinner="dots"></ion-infinite-scroll-content>
 	</ion-infinite-scroll>
 </ion-content>

@@ -51,10 +51,10 @@
 
 				<ion-item lines="none">
 					<div class="button-wrapper">
-						<ion-button fill="solid" size="small" shape="round" color="success" (click)="addDocumentPopover.dismiss(); showDocumentModal('Add')">
+						<ion-button fill="solid" size="small" shape="round" color="success" (click)="addDocumentPopover.dismiss(); showDocumentModal(true)">
 							<ion-label>{{'Add' | translate}}</ion-label>
 						</ion-button>
-						<ion-button fill="solid" size="small" shape="round" color="warning" (click)="addDocumentPopover.dismiss(); showDocumentModal('Except')">
+						<ion-button fill="solid" size="small" shape="round" color="warning" (click)="addDocumentPopover.dismiss(); showDocumentModal(false)">
 							<ion-label>{{'Except' | translate}}</ion-label>
 						</ion-button>
 					</div>
@@ -92,10 +92,6 @@
 						<app-form-control
 							[field]="{id:'EndDate', label: 'End date', type : 'date', placeholder: 'yyyy-MM-dd', form : formGroup }"
 							(change)="changeDate()"></app-form-control>
-
-						<!-- <ion-button size="small" shape="round" (click)="presentAddDocumentPopover($event)">
-							<ion-label>{{'Document management' | translate}}</ion-label>
-						</ion-button> -->
 					</ion-col>
 				</ion-row>
 			</form>
@@ -302,13 +298,17 @@
 															</ion-button>
 													</ng-template>
 												</datatable-empty-message>
-												<datatable-column class="col-id" name="Id" property="Id"></datatable-column>
-												<datatable-column class="col-id" format="dd-MM-yyyy" name="Id reference" property="RefId"></datatable-column>
-												<datatable-column class="col-name"  name="Type" property="Type"></datatable-column>
-												<datatable-column class="col-code" name="Is prevent" property="IsPrevent"></datatable-column>
-												<datatable-column *ngIf="pageConfig.canEdit" class="col-icon" name="" property="Id">
+												<datatable-column class="col-id" name="RefId" property="RefId">
 													<ng-template let-i="row" datatable-cell-template>
-														<ion-button (click)="editRowPreventDocument(i)" size="small" title="{{ 'Edit' | translate }}" fill="clear"> <ion-icon slot="icon-only" name="pencil"></ion-icon> </ion-button>
+														<a *ngIf="i.Type == 'SaleOrder'" [routerLink]="['/sale-order/'+i.RefId]"> {{i.RefId}} </a>
+														<a *ngIf="i.Type == 'PurchaseOrder'" [routerLink]="['/purchase-order/'+i.RefId]"> {{i.RefId}} </a>
+														<a *ngIf="i.Type == 'Forecast'" [routerLink]="['/forecast/'+i.RefId]"> {{i.RefId}} </a>
+													</ng-template>
+												</datatable-column>
+												<datatable-column class="col-name"  name="Type" property="Type"></datatable-column>
+												<datatable-column class="col-custom" name="Is prevent" property="IsPrevent">
+													<ng-template let-i="row" datatable-cell-template>
+														<ion-icon class="min-btn" [name]="i.IsPrevent?'checkmark-outline': 'ban-outline'" [color]="i.IsPrevent?'primary':'red'"></ion-icon>
 													</ng-template>
 												</datatable-column>
 												<datatable-column class="col-icon" name="" property="Id" *ngIf="pageConfig.canEdit">
@@ -319,6 +319,12 @@
 													</ng-template>
 												</datatable-column>
 											</app-data-table>
+											<div class="ion-padding" *ngIf="pageConfig.canEdit">
+												<ion-button fill="clear" size="small" (click)="presentAddDocumentPopover($event)">
+													<ion-icon slot="start" name="add-circle-outline"></ion-icon>
+													{{ 'Add document' | translate }}
+												</ion-button>
+											</div>
 										</div>
 
 									</ion-col>
@@ -397,7 +403,7 @@
 									</datatable-column>
 									<datatable-column class="col-del" name="" property="value" *ngIf="pageConfig.canEdit">
 										<ng-template datatable-header-template>
-											<ion-icon
+											<ion-icon *ngIf="formGroup.get('Lines')['controls'].length > 0"
 												color="danger"
 												class="min-btn clickable"
 												title="{{ 'SELECTED_ITEMS' | translate: { COUNT: selectedLines.controls?.length } }}"
@@ -466,9 +472,9 @@
 					</app-data-table>		
 				</div>
 				<!-- Recommend -->
-				<div *ngIf="segmentView == 's4'">
+				<div *ngIf="segmentView == 's4'" style="overflow-x: auto;">
 					<div class="ion-padding">
-						<section class="table" style="min-width: calc(1024px)">
+						<section class="table">
 							<header class="bold">
 								<!-- <div class="col-checkbox cell"></div> -->
 								<div class="col-id cell">

@@ -15,8 +15,9 @@
         gap: 4px;
         white-space: nowrap;
     }
+
     .table-contain {
-       overflow: hidden;
+        overflow: hidden;
         overflow-x: auto !important;
         margin: auto;
     }
@@ -59,4 +60,13 @@
         font-size: 80%;
     }
 
+
+    app-data-table .col-custom {
+        max-width: 100px;
+        min-width: 80px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        justify-content: center;
+    }
 }

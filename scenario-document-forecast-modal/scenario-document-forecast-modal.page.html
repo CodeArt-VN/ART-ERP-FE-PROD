@@ -1,0 +1,51 @@
+<ion-header>
+	<ion-toolbar>
+		<ion-buttons slot="start" class="ion-hide-sm-down_">
+			<ion-button color="dark" class="ion-hide-sm-down"> {{'Select forecast' | translate}} </ion-button>
+		</ion-buttons>
+
+		<ion-buttons slot="primary">
+			
+			<span class="split ion-hide-sm-down">|</span>
+
+			<ion-button [disabled]="selectedItems.length==0" fill="solid" size="small" color="primary" (click)="SaveSelected()">
+				&nbsp;{{'Add' | translate}} {{selectedItems.length}} {{'document' | translate}}&nbsp;
+			</ion-button>
+
+			<ion-button (click)="refresh()" title="{{'Refresh' | translate}}">
+				<ion-icon slot="icon-only" name="reload-outline"></ion-icon>
+			</ion-button>
+
+			<ion-button title="{{'Close' | translate}}" color="secondary" (click)="closeModal()">
+				<ion-icon slot="icon-only" name="close"></ion-icon>
+			</ion-button>
+		</ion-buttons>
+	</ion-toolbar>
+		
+</ion-header>
+<ion-content appScrollbarTheme class="header-table">
+	<app-data-table
+			class="box-shadow responsive"
+			[rows]="items"
+			[trackBy]="'Id'"
+			[(selectedRows)]="selectedItems"
+			[showSpinner]="pageConfig.showSpinner"
+			[showFilter]="pageConfig.isShowSearch"
+			[(query)]="query"
+			(dataInfinite)="loadData($event)"
+			(filter)="onDatatableFilter($event)"
+			(sort)="onSort($event)"
+			(selectedRowsChange)="showCommandBySelectedRows($event)"
+		>
+			<datatable-column [checkbox]="true" name=""></datatable-column>
+			<datatable-column class="col-id" name="#" property="Id" [navLink]="'forecast'"></datatable-column>
+			<datatable-column class="col-name flex-break" name="Title" property="Name" [navLink]="'forecast'"></datatable-column>
+			<datatable-column class="col-code" name="Type" property="Type"></datatable-column>
+			<datatable-column class="col-date" format="yyyy-MM-dd" name="Start date" property="StartDate" filterControlType="date"></datatable-column>
+			<datatable-column class="col-date" format="yyyy-MM-dd" name="End date" property="EndDate" filterControlType="date"></datatable-column>
+		</app-data-table>
+		<div class="ion-padding"></div>
+		<ion-infinite-scroll color="primary" threshold="30%" (ionInfinite)="loadData($event)" [disabled]="!pageConfig.infiniteScroll || pageConfig.isEndOfData">
+			<ion-infinite-scroll-content loadingSpinner="dots"></ion-infinite-scroll-content>
+		</ion-infinite-scroll>
+</ion-content>

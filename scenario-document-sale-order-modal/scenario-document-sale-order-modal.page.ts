@@ -22,7 +22,7 @@ export class ScenarioDocumentSaleOrderModalPage extends PageBase {
 	documentType;
 	idMRP;
 	status;
-	SelectedOrderList;
+	selectedOrderList;
 
 	constructor(
 		public pageProvider: SALE_OrderProvider,
@@ -44,9 +44,9 @@ export class ScenarioDocumentSaleOrderModalPage extends PageBase {
 	}
 
 	preLoadData(event) {
-		//this.query.IDContact = this.IDContact;
-		this.query.Debt_gt = 0;
-		this.sortToggle('OrderDate', true);
+		this.query.OrderDateFrom = new Date().toISOString().split('T')[0];
+		this.query.OrderDateTo = '2099-12-31';
+		//this.sortToggle('OrderDate', true);
 		super.preLoadData(event);
 	}
 
@@ -59,27 +59,44 @@ export class ScenarioDocumentSaleOrderModalPage extends PageBase {
 			i.OrderTimeText = i.OrderDate ? lib.dateFormat(i.OrderDate, 'hh:MM') : '';
 			i.OrderDateText = i.OrderDate ? lib.dateFormat(i.OrderDate, 'dd/mm/yy') : '';
 			i.Query = i.OrderDate ? lib.dateFormat(i.OrderDate, 'yyyy-mm-dd') : '';
-			i.DebtAmountBefore = i.Debt;
-			i.DebtAmount = '';
-			i.Debt = lib.currencyFormat(i.Debt);
 		});
 		
 		super.loadedData(event);
-		if (this.SelectedOrderList.length) {
-			this.SelectedOrderList.forEach((s) => {
-				let so = this.items.find((i) => i.Id == (s.IDSaleOrder || s.IDOrder));
-				if (so) {
+		
+		if (this.selectedOrderList?.length) {
+			this.selectedOrderList.forEach((s) => {
+				let so = this.items.find((i) => i.Id == s.RefId);
+				if (so && s.IsPrevent === this.status) {
 					so.checked = true;
-					so.DebtAmount = s.Amount ? s.Amount : s.DebtAmount;
-					so.IDIncomingPaymentDetail = s.Id;
-					so.isEdit = false;
 					this.selectedItems.push(so);
 				}
 			});
 		}
+		
+		this.items = this.items.filter(item => {
+			const selectedItem = this.selectedOrderList.find(s => s.RefId === item.Id);
+			return !selectedItem || selectedItem.IsPrevent === this.status;
+		});
+	}
+	isAllChecked = false;
+	toggleSelectAll() {
+
+		this.items.forEach((i) => {
+			i.checked = this.isAllChecked;
+			
+		});
+
+		this.selectedItems = this.isAllChecked ? [...this.items] : [];
+		super.changeSelection({});
 	}
 
-	async saveChange() {
-		this.saveChange2();
+	SaveSelected() {
+		this.selectedItems.forEach((i) => {
+			i.IDOrder = i.Id;
+			i.Id = 0;
+		});
+		this.modalController.dismiss(this.selectedItems);
 	}
+
+	
 }
