@@ -452,6 +452,13 @@
 
 						</datatable-column>
 						<datatable-column class="col-name" name="Name" property="Name">
+							<ng-template let-i="row" datatable-cell-template>
+								<div class ="text-item" (mousedown)="$event.stopPropagation()">
+									<ion-text class="clickable" (click)="showPeggingModal(i)">
+										{{ i.Name | translate }}
+									</ion-text>
+								</div>
+							</ng-template>
 						</datatable-column>
 						<datatable-column class="col-name" name="Period" property="Period">
 						</datatable-column>

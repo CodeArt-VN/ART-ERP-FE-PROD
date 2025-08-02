@@ -9,7 +9,7 @@ import { PROD_MRPRecommendationProvider, PROD_MRPScenarioProvider, WMS_ItemGroup
 import { FormBuilder, Validators, FormControl, FormGroup, FormArray } from '@angular/forms';
 import { CommonService } from 'src/app/services/core/common.service';
 import { lib } from 'src/app/services/static/global-functions';
-import { ScenarioModalPage } from '../scenario-modal/scenario-modal.page';
+import { ScenarioPeggingModalPage } from '../scenario-pegging-modal/scenario-pegging-modal.page';
 import { ScenarioDocumentSaleOrderModalPage } from '../scenario-document-sale-order-modal/scenario-document-sale-order-modal.page';
 import { ScenarioDocumentForecastModalPage } from '../scenario-document-forecast-modal/scenario-document-forecast-modal.page';
 import { ScenarioDocumentPurchaseModalPage } from '../scenario-document-purchase-modal/scenario-document-purchase-modal.page';
@@ -316,10 +316,63 @@ export class ScenarioDetailPage extends PageBase {
 			.catch((err) => {});
 	}
 
-	async showPeggingModal() {
+
+	getParent(id: number, Period: string, result: any[] = []): any[] {
+		const current = this.fullTree.find(d => d.Id === id && d.Period === Period);
+		if (!current) return result;
+		result.unshift(current);
+
+		if (current.IDParent) {
+			return this.getParent(current.IDParent, Period, result);
+		}
+		return result;
+	}
+
+	getChildren(id: number, Period: string, result: any[] = []): any[] {
+		const childrenList = this.fullTree.filter(d => d.IDParent === id && d.Period === Period);
+		result.push(...childrenList);
+		for (let child of childrenList) {
+			this.getChildren(child.Id, Period, result);
+		}
+		
+		return result;
+	}
+
+	getParentAndChildren(IDItem: number, Period: string): any[] {
+		let targetItem = this.fullTree.find((d) => d.IDItem == IDItem && d.Period === Period);
+		if (!targetItem) {
+			return [];
+		}
+		
+		let id = targetItem.Id;
+		const hasChildren = this.fullTree.some(d => d.IDParent === id && d.Period === Period);
+		
+		if (hasChildren) {
+			return [targetItem, ...this.getChildren(id, Period)];
+		} else {
+			return this.getParent(id, Period);
+		}
+	}
+
+	
+
+
+	async showPeggingModal(item) {
+		let peggingTree = this.item._Pegging.map((p) => {
+			return {
+				...p,
+				IDParent: this.item._Pegging.find((d) => d.IDItem == p.IDParentItem && d.Period == p.Period)?.Id,
+			};
+		});
+		this.fullTree = [...peggingTree];
+		let period = this.item._Pegging.find((d) => d.IDItem == item.IDItem)?.Period;
+		
+		let dataFulltree = this.getParentAndChildren(item.IDItem, period);
 		const modal = await this.modalController.create({
-			component: ScenarioModalPage,
-			componentProps: {},
+			component: ScenarioPeggingModalPage,
+			componentProps: {
+				fullTree: dataFulltree
+			},
 			cssClass: 'modal90',
 		});
 
@@ -339,20 +392,7 @@ export class ScenarioDetailPage extends PageBase {
 		this.loadedData();
 	}
 
-	toggleRowAll() {
-		this.isAllRowOpened = !this.isAllRowOpened;
-		this.itemsState.forEach((i) => {
-			i.showdetail = !this.isAllRowOpened;
-			this.toggleRow(this.itemsState, i, true);
-		});
-		this.itemsView = this.itemsState.filter((d) => d.show);
-	}
-
-	toggleRow(ls, ite, toogle = false) {
-		super.toggleRow(ls, ite, toogle);
-		this.itemsView = this.itemsState.filter((d) => d.show);
-	}
-
+	
 	setLines() {
 		this.formGroup.controls.Lines = new FormArray([]);
 		if (this.item?._Items?.length) {
@@ -400,7 +440,7 @@ export class ScenarioDetailPage extends PageBase {
 	setDocumentLines() {
 		this.formGroup.controls.PreventDocument = new FormArray([]);
 		if (this.item?._PreventDocument?.length) {
-			const sortedLines = this.item._PreventDocument?.slice().sort((a, b) => a.Sort - b.Sort);
+		const sortedLines = this.item._PreventDocument?.slice().sort((a, b) => a.Sort - b.Sort);
 			sortedLines.forEach((i) => {
 				const itemWithDefaults = {
 					...i,

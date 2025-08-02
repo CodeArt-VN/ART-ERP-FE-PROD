@@ -5,7 +5,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { ShareModule } from 'src/app/share.module';
 import { ScenarioDetailPage } from './scenario-detail.page';
-import { ScenarioModalPage } from '../scenario-modal/scenario-modal.page';
+import { ScenarioPeggingModalPage } from '../scenario-pegging-modal/scenario-pegging-modal.page';
 import { ScenarioDocumentSaleOrderModalPage } from '../scenario-document-sale-order-modal/scenario-document-sale-order-modal.page';
 import { ScenarioDocumentPurchaseModalPage } from '../scenario-document-purchase-modal/scenario-document-purchase-modal.page';
 import { ScenarioDocumentForecastModalPage } from '../scenario-document-forecast-modal/scenario-document-forecast-modal.page';
@@ -22,6 +22,6 @@ const routes: Routes = [
 
 @NgModule({
 	imports: [ShareModule, RouterModule.forChild(routes), CdkDragPlaceholder],
-	declarations: [ScenarioDetailPage, ScenarioDocumentSaleOrderModalPage, ScenarioDocumentPurchaseModalPage, ScenarioDocumentForecastModalPage, ScenarioModalPage],
+	declarations: [ScenarioDetailPage, ScenarioDocumentSaleOrderModalPage, ScenarioDocumentPurchaseModalPage, ScenarioDocumentForecastModalPage, ScenarioPeggingModalPage],
 })
 export class ScenarioDetailPageModule {}
