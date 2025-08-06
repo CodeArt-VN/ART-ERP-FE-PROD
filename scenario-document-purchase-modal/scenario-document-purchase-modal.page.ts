@@ -46,10 +46,6 @@ export class ScenarioDocumentPurchaseModalPage extends PageBase {
 	}
 
 	preLoadData(event) {
-		// this.query.OrderDateFrom = new Date().toISOString().split('T')[0];
-		// this.query.OrderDateTo = '2099-12-31';
-		// //this.sortToggle('OrderDate', true);
-		// super.preLoadData(event);
 		this.query.Type_ne = 'PurchaseRequest';
 		if (!this.sort.Id) {
 			this.sort.Id = 'Id';

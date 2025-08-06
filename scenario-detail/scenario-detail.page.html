@@ -280,7 +280,7 @@
 										</app-form-control>
 									</ion-col>
 								</ion-row>
-								<ion-row class="hr-group">
+								<ion-row class="hr-group"  *ngIf="item?.Id">
 									<ion-col size-xs="12" size-sm="12" size-md="12" size-lg="12" size-xl="3" >
 										<ion-list-header class="ion-no-padding">
 											<ion-label color="primary">{{'Document management' |
@@ -288,7 +288,7 @@
 										</ion-list-header>
 									</ion-col>
 									<ion-col  size-xs="12" size-sm="12" size-md="12" size-lg="12" size-xl="8" class="ion-no-padding">
-										<div class="table-contain" *ngIf="item?.Id">
+										<div class="table-contain">
 											<app-data-table *ngIf="!pageConfig.showSpinner" class="box-shadow responsive" [rows]="item?._PreventDocument" [(query)]="query" [showSpinner]="pageConfig.showSpinner">
 												<datatable-empty-message subMessage="Please click add new to start..."  [showImg]="false" minHeight="125px">
 													<ng-template datatable-empty-message-template>

@@ -69,9 +69,9 @@ export class ScenarioDetailPage extends PageBase {
 			CreatedDate: new FormControl({ value: '', disabled: true }),
 			ModifiedBy: new FormControl({ value: '', disabled: true }),
 			ModifiedDate: new FormControl({ value: '', disabled: true }),
-			StartDate: [''],
-			EndDate: [''],
-			Period: [''],
+			StartDate: ['', Validators.required],
+			EndDate: ['', Validators.required],
+			Period: ['', Validators.required],
 			MaximumCumulativeLeadTime: [''],
 			ItemsGroup: [''],
 			LastExecuteDate: [''],
@@ -191,7 +191,6 @@ export class ScenarioDetailPage extends PageBase {
 	segmentChanged(ev: any) {
 		this.segmentView = ev.detail.value;
 		if (this.segmentView == 's4') {
-
 			this.env
 				.showLoading(
 					'Please wait for a few moments',
@@ -306,19 +305,49 @@ export class ScenarioDetailPage extends PageBase {
 	}
 
 	runMRP() {
-		//to do check ItemResult co thì hỏi muốn chạy lại
+		const itemLength = this.item._Items.length;
+		const itemResultLength = this.item._ItemsResult.length;
 
-		this.env
-			.showLoading('Please wait for a few moments', this.pageProvider.commonService.connect('GET', 'PROD/MRPScenario/RunMRP/' + this.id, {}).toPromise())
-			.then((item) => {
-				this.refresh();
-			})
-			.catch((err) => {});
+		if (itemLength == 0 && itemResultLength == 0) {
+			this.env.showMessage('There is no item to run the process.', 'warning');
+			return;
+		}
+
+		const run = () => {
+			this.env
+				.showLoading(
+					'Please wait for a few moments',
+					this.pageProvider.commonService
+						.connect('GET', 'PROD/MRPScenario/RunMRP/' + this.id, {})
+						.toPromise()
+				)
+				.then((item) => {
+					this.submitAttempt = false;
+					this.refresh();
+				})
+				.catch((err) => {
+					this.submitAttempt = false;
+					this.env.showMessage(err.message, 'danger');
+				});
+		};
+
+		if (itemLength > 0 && itemResultLength == 0) {
+			// ko thong báo nếu itemResultLength chưa có
+			run();
+		} else if (itemLength > 0 && itemResultLength > 0) {
+			// thong báo nếu itemResult có, nếu muốn chạy lại
+			this.env
+				.showPrompt('Would you like to rerun the item process?', null, 'Rerun item')
+				.then(() => run())
+				.catch((err) => {
+					this.submitAttempt = false;
+				});
+		}
 	}
 
 
 	getParent(id: number, Period: string, result: any[] = []): any[] {
-		const current = this.fullTree.find(d => d.Id === id && d.Period === Period);
+		const current = this.fullTree.find((d) => d.Id === id && d.Period === Period);
 		if (!current) return result;
 		result.unshift(current);
 
@@ -329,12 +358,12 @@ export class ScenarioDetailPage extends PageBase {
 	}
 
 	getChildren(id: number, Period: string, result: any[] = []): any[] {
-		const childrenList = this.fullTree.filter(d => d.IDParent === id && d.Period === Period);
+		const childrenList = this.fullTree.filter((d) => d.IDParent === id && d.Period === Period);
 		result.push(...childrenList);
 		for (let child of childrenList) {
 			this.getChildren(child.Id, Period, result);
 		}
-		
+
 		return result;
 	}
 
@@ -343,19 +372,16 @@ export class ScenarioDetailPage extends PageBase {
 		if (!targetItem) {
 			return [];
 		}
-		
+
 		let id = targetItem.Id;
-		const hasChildren = this.fullTree.some(d => d.IDParent === id && d.Period === Period);
-		
+		const hasChildren = this.fullTree.some((d) => d.IDParent === id && d.Period === Period);
+
 		if (hasChildren) {
 			return [targetItem, ...this.getChildren(id, Period)];
 		} else {
 			return this.getParent(id, Period);
 		}
 	}
-
-	
-
 
 	async showPeggingModal(item) {
 		let peggingTree = this.item._Pegging.map((p) => {
@@ -366,12 +392,12 @@ export class ScenarioDetailPage extends PageBase {
 		});
 		this.fullTree = [...peggingTree];
 		let period = this.item._Pegging.find((d) => d.IDItem == item.IDItem)?.Period;
-		
+
 		let dataFulltree = this.getParentAndChildren(item.IDItem, period);
 		const modal = await this.modalController.create({
 			component: ScenarioPeggingModalPage,
 			componentProps: {
-				fullTree: dataFulltree
+				fullTree: dataFulltree,
 			},
 			cssClass: 'modal90',
 		});
@@ -392,7 +418,6 @@ export class ScenarioDetailPage extends PageBase {
 		this.loadedData();
 	}
 
-	
 	setLines() {
 		this.formGroup.controls.Lines = new FormArray([]);
 		if (this.item?._Items?.length) {
@@ -440,11 +465,11 @@ export class ScenarioDetailPage extends PageBase {
 	setDocumentLines() {
 		this.formGroup.controls.PreventDocument = new FormArray([]);
 		if (this.item?._PreventDocument?.length) {
-		const sortedLines = this.item._PreventDocument?.slice().sort((a, b) => a.Sort - b.Sort);
+			const sortedLines = this.item._PreventDocument?.slice().sort((a, b) => a.Sort - b.Sort);
 			sortedLines.forEach((i) => {
 				const itemWithDefaults = {
 					...i,
-					IsPrevent: i.IsPrevent || false
+					IsPrevent: i.IsPrevent || false,
 				};
 				this.addDocumentItemLine(itemWithDefaults);
 			});
@@ -466,12 +491,10 @@ export class ScenarioDetailPage extends PageBase {
 			IsChecked: [false],
 		});
 		groups.push(group);
-		if(markAsDirty) {
-			Object.values(group.controls).forEach(d => d.markAsDirty());
+		if (markAsDirty) {
+			Object.values(group.controls).forEach((d) => d.markAsDirty());
 		}
 	}
-
-
 
 	selectedLines = new FormArray([]);
 	isAllChecked = false;
@@ -570,27 +593,26 @@ export class ScenarioDetailPage extends PageBase {
 	showDocumentModal(status: string) {
 		let type = this.documentTypeSelected;
 		let idMRP = this.item?.Id;
-		
+
 		switch (type) {
 			case 'SaleOrder':
-				this.selectedOrderList = [...this.formGroup.get('PreventDocument').value.filter(item => item.Type === 'SaleOrder')];
+				this.selectedOrderList = [...this.formGroup.get('PreventDocument').value.filter((item) => item.Type === 'SaleOrder')];
 				this.showDocumentSaleModal(idMRP, type, status);
 				break;
 			case 'PurchaseOrder':
-				this.selectedPurchaseList = [...this.formGroup.get('PreventDocument').value.filter(item => item.Type === 'PurchaseOrder')];
+				this.selectedPurchaseList = [...this.formGroup.get('PreventDocument').value.filter((item) => item.Type === 'PurchaseOrder')];
 				this.showDocumentPurchaseModal(idMRP, type, status);
 				break;
 			case 'Forecast':
-				this.selectedForecastList = [...this.formGroup.get('PreventDocument').value.filter(item => item.Type === 'Forecast')];
+				this.selectedForecastList = [...this.formGroup.get('PreventDocument').value.filter((item) => item.Type === 'Forecast')];
 				this.showDocumentForecastModal(idMRP, type, status);
 				break;
 			default:
 				this.env.showMessage('Please select document type', 'warning');
 		}
 	}
-	
+
 	async showDocumentSaleModal(idMRP, type, status) {
-		
 		const modal = await this.modalController.create({
 			component: ScenarioDocumentSaleOrderModalPage,
 			componentProps: {
@@ -610,9 +632,7 @@ export class ScenarioDetailPage extends PageBase {
 			this.processDocumentData(data, type, status);
 		}
 	}
-	
 
-	
 	async showDocumentPurchaseModal(idMRP, type, status) {
 		const modal = await this.modalController.create({
 			component: ScenarioDocumentPurchaseModalPage,
@@ -627,7 +647,7 @@ export class ScenarioDetailPage extends PageBase {
 		this.selectedPurchaseList = [];
 		await modal.present();
 		const { data } = await modal.onWillDismiss();
-		
+
 		if (data && data.length) {
 			this.processDocumentData(data, type, status);
 		}
@@ -646,12 +666,12 @@ export class ScenarioDetailPage extends PageBase {
 		this.selectedForecastList = [];
 		await modal.present();
 		const { data } = await modal.onWillDismiss();
-		
+
 		if (data && data.length) {
 			this.processDocumentData(data, type, status);
 		}
 	}
-	
+
 	processDocumentData(data: any[], type: string, status: boolean) {
 		const preventDocArray = this.formGroup.get('PreventDocument') as FormArray;
 
@@ -667,17 +687,17 @@ export class ScenarioDetailPage extends PageBase {
 				idField = 'IDForecast';
 				break;
 		}
-		
+
 		const dataIds = data.map((e) => e[idField]);
 		const existingItems = this.item._PreventDocument || [];
-		
+
 		const documentAdded = [];
 		const documentDeleted = [];
 
 		for (const item of data) {
 			const itemId = item[idField];
-			const existingItem = existingItems.find(x => x.RefId === itemId && x.Type === type && x.IsPrevent === status);
-			
+			const existingItem = existingItems.find((x) => x.RefId === itemId && x.Type === type && x.IsPrevent === status);
+
 			if (!existingItem) {
 				documentAdded.push({
 					Id: item.Id,
@@ -691,7 +711,7 @@ export class ScenarioDetailPage extends PageBase {
 		for (const exist of existingItems) {
 			if (exist.Type === type && exist.IsPrevent === status) {
 				const isExists = dataIds.includes(exist.RefId);
-				// document does not exist 
+				// document does not exist
 				if (!isExists) {
 					documentDeleted.push(exist);
 				}
@@ -702,9 +722,9 @@ export class ScenarioDetailPage extends PageBase {
 			this.addDocumentItemLine(newItem, true);
 		}
 
-		const documentDeletedIds = documentDeleted.filter(x => x.Id);
+		const documentDeletedIds = documentDeleted.filter((x) => x.Id);
 		if (documentDeletedIds.length > 0) {
-			const deletedIds = documentDeletedIds.map(item => item.Id);
+			const deletedIds = documentDeletedIds.map((item) => item.Id);
 			this.formGroup.get('DeletedDocuments').setValue(deletedIds);
 			this.formGroup.get('DeletedDocuments').markAsDirty();
 		}
@@ -715,9 +735,7 @@ export class ScenarioDetailPage extends PageBase {
 
 	deleteRowPreventDocument(item: any) {
 		const preventDocArray = this.formGroup.get('PreventDocument') as FormArray;
-		const index = preventDocArray.controls.findIndex(d => 
-			d.get('Id').value === item.Id
-		);
+		const index = preventDocArray.controls.findIndex((d) => d.get('Id').value === item.Id);
 
 		if (index >= 0) {
 			if (item.Id) {
@@ -733,6 +751,6 @@ export class ScenarioDetailPage extends PageBase {
 			}
 		}
 	}
-	
+
 	saveDocument() {}
 }

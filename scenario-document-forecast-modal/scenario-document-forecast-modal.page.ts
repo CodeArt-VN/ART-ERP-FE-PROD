@@ -50,13 +50,6 @@ export class ScenarioDocumentForecastModalPage extends PageBase {
 
 	loadedData(event) {
 		this.selectedItems = [];
-		// this.items.forEach((i) => {
-		// 	i.CustomerName = i._Customer.Name;
-		// 	i.CustomerAddress = i._Customer.Address;
-		// 	i.OrderTimeText = i.OrderDate ? lib.dateFormat(i.OrderDate, 'hh:MM') : '';
-		// 	i.OrderDateText = i.OrderDate ? lib.dateFormat(i.OrderDate, 'dd/mm/yy') : '';
-		// 	i.Query = i.OrderDate ? lib.dateFormat(i.OrderDate, 'yyyy-mm-dd') : '';
-		// });
 		
 		super.loadedData(event);
 		
