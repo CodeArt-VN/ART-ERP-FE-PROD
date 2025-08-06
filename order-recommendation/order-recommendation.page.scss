@@ -19,15 +19,26 @@
 		}
 	}
 }
-::ng-deep{
-.col-mrpname {
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	min-width: 300px;
-	max-width: 3--px;
-}
 
+::ng-deep {
+	.col-mrpname {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		min-width: 300px;
+		max-width: 300px;
+	}
+	.col-check {
+		max-width: 100px;
+		min-width: 100px;
+		justify-content: center;
+		text-align: center;
+
+		ion-checkbox {
+			height: 17px;
+			width: 17px;
+		}
+	}
 }
 
 .vendor-name {

@@ -19,7 +19,7 @@
 </ion-header>
 
 <ion-content appScrollbarTheme class="header-table scrollx" forceOverscroll="false">
-	<div style="max-width: 1440px; margin: auto; width: 100%">
+	<div class="table" style="max-width: 1440px; margin: auto; width: 100%">
 		<app-data-table
 			style="width: fit-content; min-width: calc(100% - 32px) !important"
 			class="box-shadow responsive"
@@ -79,9 +79,9 @@
 				<ng-template let-i="row" datatable-cell-template> <span>{{i.QuantityOrdered}}</span><small label> {{i.UoMName}}</small> </ng-template>
 			</datatable-column>
 			<datatable-column class="col-date" format="yyyy-MM-dd hh:mm" name="DueDate" property="DueDate"></datatable-column>
-			<datatable-column class="col-checkbox" name="Prefer vendor" property="Id">
+			<datatable-column class="col-check" name="Prefer vendor" property="Id">
 				<ng-template let-i="row" datatable-cell-template>
-					<input [disabled]="submitAttempt" *ngIf="i?.IDVendor" class="c-checkbox" type="checkbox" [(ngModel)]="i.checked" (change)="changeVendor(i)" />
+						<input [disabled]="submitAttempt" *ngIf="i?.IDVendor" class="c-checkbox" type="checkbox" [(ngModel)]="i.checked" (change)="changeVendor(i)" />
 				</ng-template>
 			</datatable-column>
 			<datatable-column class="col-number" name="Price" property="Price" format="1.0-0" > </datatable-column>
