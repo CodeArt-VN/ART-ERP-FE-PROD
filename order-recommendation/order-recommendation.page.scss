@@ -4,11 +4,13 @@
 
 .table {
 	background: transparent;
+
 	.row.header {
 		height: calc(10 / 16 * 4.5rem);
 		padding-top: calc(10 / 16 * 1rem);
 		background: transparent;
 	}
+
 	.row {
 		background: var(--table-row-background);
 
@@ -17,13 +19,15 @@
 		}
 	}
 }
-
+::ng-deep{
 .col-mrpname {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	min-width: 150px;
-	max-width: 200px;
+	min-width: 300px;
+	max-width: 3--px;
+}
+
 }
 
 .vendor-name {

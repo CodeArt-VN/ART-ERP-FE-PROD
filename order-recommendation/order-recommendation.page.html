@@ -59,7 +59,7 @@
 					<ion-text (click)="toggleRow(items, i, true);" class="clickable" [ngClass]="i.HasChild? ('bold ') : ('')" [color]="i.Color">{{i.Name | translate}}</ion-text>
 				</ng-template>
 			</datatable-column>
-			<datatable-column class="col-name" name="Item" property="ItemName">
+			<datatable-column class="col-mrpname" name="Item" property="ItemName">
 				<ng-template let-i="row" datatable-cell-template>
 					<span *ngIf="i.IDVendor" class="vendor-name">
 						<a [href]="'#/'+'business-partner/'+i.IDVendor" (click)="nav('business-partner/'+i.IDVendor,'forward')" title="{{'Vendor' | translate}}">
@@ -71,8 +71,8 @@
 							{{i.IDItem}} <ion-icon name="open-outline"></ion-icon>
 						</a>&nbsp;
 					</span>
-					<span>{{i.ItemName}}</span>
-					<small> {{i.Code}}</small>
+					<ion-text>{{i.ItemName}}<small label *ngIf="i.Code"> {{i.Code}}</small></ion-text>
+					
 				</ng-template>
 			</datatable-column>
 			<datatable-column class="col-number" name="Quantity" property="QuantityOrdered">
@@ -84,7 +84,7 @@
 					<input [disabled]="submitAttempt" *ngIf="i?.IDVendor" class="c-checkbox" type="checkbox" [(ngModel)]="i.checked" (change)="changeVendor(i)" />
 				</ng-template>
 			</datatable-column>
-			<datatable-column class="col-number" name="Price" property="Price"> </datatable-column>
+			<datatable-column class="col-number" name="Price" property="Price" format="1.0-0" > </datatable-column>
 			<datatable-column class="col-number" name="MOQ" property="MOQ"> </datatable-column>
 			<datatable-column class="col-number" name="Order multiple" property="OrderMultiple"> </datatable-column>
 			<datatable-column class="col-number" name="Order interval" property="OrderInteral"> </datatable-column>

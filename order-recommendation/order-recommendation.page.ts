@@ -114,6 +114,7 @@ export class OrderRecommendationPage extends PageBase {
 							let mrpRecommendationPurchasing = {
 								Id: lib.generateUID(),
 								IDVendor: vendor.IDVendor,
+								IDBranch: or.IDBranch,
 								IDParent: or.Id,
 								Code: vendor.Code,
 								Name: '',
@@ -129,7 +130,7 @@ export class OrderRecommendationPage extends PageBase {
 								MOQ: vendor.MOQ,
 								QuantityOrdered: recommendQty > 0 ? recommendQty.toFixed(3) : recommendQuantity.toFixed(3),
 								Price: purchasingPrice,
-								checked:checked
+								checked: checked,
 							};
 							this.items.push(mrpRecommendationPurchasing);
 							// Add vào danh sách
@@ -140,6 +141,7 @@ export class OrderRecommendationPage extends PageBase {
 							Id: lib.generateUID(),
 							IDVendor: vendor.IDVendor,
 							IDParent: or.Id,
+							IDBranch: or.IDBranch,
 							Code: vendor.Code,
 							Name: '',
 							ItemName: vendor.Name,
@@ -154,7 +156,7 @@ export class OrderRecommendationPage extends PageBase {
 							MOQ: vendor.MOQ,
 							QuantityOrdered: recommendQuantity.toFixed(3),
 							Price: basePrice,
-							checked:checked
+							checked: checked,
 						};
 						this.items.push(mrpRecommendationPurchasing);
 					}
@@ -185,27 +187,37 @@ export class OrderRecommendationPage extends PageBase {
 	}
 
 	changeVendor(i) {
-		if(this.submitAttempt) return;
+		if (this.submitAttempt) return;
 		else this.submitAttempt = true;
 		let checked = i.checked;
 		let item = this.items.find((d) => d.Id == i.IDParent);
 		item.IDPreferVendor = checked ? i.IDVendor : null;
-		let submitItem = {
+		// let submitItem = {
+		// 	Id: item.Id,
+		// 	IDPreferVendor: checked ? i.IDVendor : null,
+		// };
+		let submitItem = [];
+		let subs = this.items.filter((d) => d.IDParent == item.Id && i.IDVendor == d.IDVendor);
+		submitItem.push({
 			Id: item.Id,
 			IDPreferVendor: checked ? i.IDVendor : null,
-		};
-		this.pageProvider.save(submitItem).then(() => {
-			let subs = this.items.filter((d) => d.IDParent == item.Id && i.IDVendor == d.IDVendor);
-			subs.forEach((s) => {
-				s.checked = checked;
-			});
-			let others = this.items.filter((d) => d.IDParent == item.Id && i.IDVendor != d.IDVendor);
-			others.forEach((s) => (s.checked = false));
-			this.env.showMessage('NCC {{value}} selected', 'success', i.VendorName);
-			// this.selectedCount = this.items.filter((d) => d.checked).length;
-		}).finally(()=>{
-			this.submitAttempt = false;
 		});
+		subs.forEach((s) => {
+			s.checked = checked;
+		});
+		let others = this.items.filter((d) => d.IDParent == item.Id && i.IDVendor != d.IDVendor);
+		others.forEach((s) => {
+			s.checked = false;
+		});
+
+		this.pageProvider.commonService.connect("POST","PROD/MRPRecommendation/ChangePreferVendors",submitItem).toPromise()
+			.then(() => {
+				this.env.showMessage('NCC {{value}} selected', 'success', i.VendorName);
+				// this.selectedCount = this.items.filter((d) => d.checked).length;
+			})
+			.finally(() => {
+				this.submitAttempt = false;
+			});
 	}
 
 	async createPO() {
@@ -225,7 +237,18 @@ export class OrderRecommendationPage extends PageBase {
 			});
 			await loading.present().then(() => {
 				let postData = {
-					SelectedRecommendations: this.items.filter((d) => d.checked).map((m) => ({ Id: m.Id, IDVendor: m.VendorId })),
+					SelectedRecommendations: this.items
+						.filter((d) => d.checked)
+						.map((m) => ({
+							Id: m.IDParent,
+							IDItem: m.IDItem,
+							IDVendor: m.IDVendor,
+							DueDate: m.DueDate,
+							IDUoM: m.IDUoM,
+							Price: m.Price,
+							Quantity: m.QuantityOrdered,
+							IDBranch: m.IDBranch,
+						})),
 					IDWarehouse: data.IDWarehouse,
 					IDStorer: data.IDStorer,
 				};
@@ -249,35 +272,48 @@ export class OrderRecommendationPage extends PageBase {
 		}
 	}
 
-	async suggestVendors() {
-		let ors = [...new Set(this.items.map((s) => s.Id))];
-		console.log(ors);
-		ors.forEach((i) => {
-			let itemLines = this.items.find((d) => d.Id == i && d.ItemId);
-			let vendorLines = this.items.filter((d) => d.Id == i && !d.ItemId);
+	 suggestVendors() {
+		let preferVendorIds = [];
+		console.log(this.items);
+		this.items
+			.filter((d) => !d.IDParent)
+			.forEach((i) => {
+				let vendorLines = this.items.filter((d) => d.IDParent == i.Id);
+				console.log(vendorLines);
+				if (vendorLines.length == 0) return;
+				else {
+					const totalByVendor = {};
+					vendorLines.forEach((line) => {
+						if (!totalByVendor[line.IDVendor]) {
+							totalByVendor[line.IDVendor] = 0;
+						}
+						totalByVendor[line.IDVendor] += line.Price;
+					});
+					const minVendor = Object.entries(totalByVendor).reduce(
+						(min: { id: number | null; total: number }, [id, total]) => {
+							return Number(total) < min.total ? { id: Number(id), total: Number(total) } : min;
+						},
+						{ id: null, total: Infinity }
+					).id;
 
-			let vendor = null;
+					vendorLines.forEach((line) => {
+						let item = this.items.find((d) => d.Id == line.Id);
+						if (item.IDVendor == minVendor) item.checked = true;
+						else item.checked = false;
+					});
 
-			if (itemLines.PreferVendor && vendorLines.length) {
-				vendor = vendorLines.find((d) => d.VendorId == itemLines.PreferVendor);
-				if (vendor) vendor.checked = true;
-			}
-
-			if (!vendor && vendorLines.length > 1) {
-				vendor = vendorLines.reduce((prev, curr) => {
-					return prev.Price < curr.Price ? prev : curr;
-				});
-			}
-
-			if (!vendor && vendorLines.length) {
-				vendor = vendorLines[0];
-			}
-
-			if (vendor) {
-				vendor.checked = true;
-			}
-		});
-		this.selectedCount = this.items.filter((d) => d.checked).length;
+					preferVendorIds.push({
+						Id: i.Id,
+						IdPreferVendor: minVendor,
+					});
+				}
+			});
+		this.pageProvider.commonService
+			.connect('POST', 'PROD/MRPRecommendation/ChangePreferVendors', preferVendorIds)
+			.toPromise()
+			.then((resp) => {
+				this.env.showMessage('Vendors suggested successfully', 'success');
+			});
 	}
 	async createPurchaseRequest() {
 		this.env
