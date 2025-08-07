@@ -63,28 +63,32 @@
 				<ng-template let-i="row" datatable-cell-template>
 					<span *ngIf="i.IDVendor" class="vendor-name">
 						<a [href]="'#/'+'business-partner/'+i.IDVendor" (click)="nav('business-partner/'+i.IDVendor,'forward')" title="{{'Vendor' | translate}}">
-							{{i.IDVendor}} <ion-icon name="open-outline"></ion-icon>
-						</a>&nbsp;
+							{{i.IDVendor}} <ion-icon name="open-outline"></ion-icon> </a
+						>&nbsp;
 					</span>
 					<span *ngIf="!i.IDVendor" class="vendor-name">
 						<a [href]="'#/'+'item/'+i.IDItem" (click)="nav('item/'+i.IDItem,'forward')" title="{{'Item' | translate}}">
-							{{i.IDItem}} <ion-icon name="open-outline"></ion-icon>
-						</a>&nbsp;
+							{{i.IDItem}} <ion-icon name="open-outline"></ion-icon> </a
+						>&nbsp;
 					</span>
 					<ion-text>{{i.ItemName}}<small label *ngIf="i.Code"> {{i.Code}}</small></ion-text>
-					
 				</ng-template>
 			</datatable-column>
-			<datatable-column class="col-number" name="Quantity" property="QuantityOrdered">
+			<datatable-column class="col-number quantity" name="Quantity" property="QuantityOrdered">
 				<ng-template let-i="row" datatable-cell-template> <span>{{i.QuantityOrdered}}</span><small label> {{i.UoMName}}</small> </ng-template>
 			</datatable-column>
-			<datatable-column class="col-date" format="yyyy-MM-dd hh:mm" name="DueDate" property="DueDate"></datatable-column>
+			<datatable-column class="col-date" format="dd/MM/yy" name="DueDate" property="DueDate"></datatable-column>
 			<datatable-column class="col-check" name="Prefer vendor" property="Id">
 				<ng-template let-i="row" datatable-cell-template>
-						<input [disabled]="submitAttempt" *ngIf="i?.IDVendor" class="c-checkbox" type="checkbox" [(ngModel)]="i.checked" (change)="changeVendor(i)" />
+					<input [disabled]="submitAttempt" *ngIf="i?.IDVendor" class="c-checkbox" type="checkbox" [(ngModel)]="i.checked" (change)="changeVendor(i)" />
 				</ng-template>
 			</datatable-column>
-			<datatable-column class="col-number" name="Price" property="Price" format="1.0-0" > </datatable-column>
+			<datatable-column class="col-number" name="Price" property="Price">
+				<ng-template let-i="row" datatable-cell-template>
+					{{i?.PriceText}}
+				</ng-template>
+				
+			</datatable-column>
 			<datatable-column class="col-number" name="MOQ" property="MOQ"> </datatable-column>
 			<datatable-column class="col-number" name="Order multiple" property="OrderMultiple"> </datatable-column>
 			<datatable-column class="col-number" name="Order interval" property="OrderInteral"> </datatable-column>

@@ -36,7 +36,7 @@ export class OrderRecommendationPage extends PageBase {
 	}
 
 	loadData(event?) {
-		this.pageProvider.read({ Keyword: '', Take: 5000, Skip: 0,SortBy: 'Id_desc'}).then((result: any) => {
+		this.pageProvider.read({ Keyword: '', Take: 5000, Skip: 0,SortBy: 'DueDate_desc'}).then((result: any) => {
 			if (result.data.length == 0) {
 				this.pageConfig.isEndOfData = true;
 			}
@@ -166,7 +166,6 @@ export class OrderRecommendationPage extends PageBase {
 		});
 
 		this.items.forEach((i) => {
-			i.DueDateText = lib.dateFormat(i.DueDate, 'dd/mm/yy');
 			i.PriceText = lib.currencyFormat(i.Price);
 		});
 		lib.buildFlatTree(this.items, [], true).then((res: any) => {
