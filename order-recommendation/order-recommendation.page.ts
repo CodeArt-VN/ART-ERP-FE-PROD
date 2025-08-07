@@ -36,7 +36,7 @@ export class OrderRecommendationPage extends PageBase {
 	}
 
 	loadData(event?) {
-		this.pageProvider.read({ Keyword: '', Take: 5000, Skip: 0 }).then((result: any) => {
+		this.pageProvider.read({ Keyword: '', Take: 5000, Skip: 0,SortBy: 'Id_desc'}).then((result: any) => {
 			if (result.data.length == 0) {
 				this.pageConfig.isEndOfData = true;
 			}
@@ -128,7 +128,7 @@ export class OrderRecommendationPage extends PageBase {
 								OrderMultiple: vendor.OrderMultiple,
 								OrderInterval: vendor.OrderInterval,
 								MOQ: vendor.MOQ,
-								QuantityOrdered: recommendQty > 0 ? recommendQty.toFixed(3) : recommendQuantity.toFixed(3),
+								QuantityOrdered: recommendQty > 0 ? recommendQty : recommendQuantity,
 								Price: purchasingPrice,
 								checked: checked,
 							};
@@ -154,7 +154,7 @@ export class OrderRecommendationPage extends PageBase {
 							OrderMultiple: vendor.OrderMultiple,
 							OrderInterval: vendor.OrderInterval,
 							MOQ: vendor.MOQ,
-							QuantityOrdered: recommendQuantity.toFixed(3),
+							QuantityOrdered: recommendQuantity,
 							Price: basePrice,
 							checked: checked,
 						};
@@ -273,6 +273,8 @@ export class OrderRecommendationPage extends PageBase {
 	}
 
 	 suggestVendors() {
+		if (this.submitAttempt) return;
+		else this.submitAttempt = true;
 		let preferVendorIds = [];
 		console.log(this.items);
 		this.items
@@ -308,12 +310,13 @@ export class OrderRecommendationPage extends PageBase {
 					});
 				}
 			});
-		this.pageProvider.commonService
+			this.env
+			.showLoading('Please wait for a few moments',this.pageProvider.commonService
 			.connect('POST', 'PROD/MRPRecommendation/ChangePreferVendors', preferVendorIds)
-			.toPromise()
+			.toPromise())
 			.then((resp) => {
 				this.env.showMessage('Vendors suggested successfully', 'success');
-			});
+			}).finally(()=>this.submitAttempt = false);
 	}
 	async createPurchaseRequest() {
 		this.env
