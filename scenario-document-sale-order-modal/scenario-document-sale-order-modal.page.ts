@@ -18,7 +18,7 @@ import { PURCHASE_OrderService } from '../../PURCHASE/purchase-order-service';
 	standalone: false,
 })
 export class ScenarioDocumentSaleOrderModalPage extends PageBase {
-
+	statusList = [];
 	documentType;
 	idMRP;
 	status;
@@ -44,10 +44,16 @@ export class ScenarioDocumentSaleOrderModalPage extends PageBase {
 	}
 
 	preLoadData(event) {
-		this.query.OrderDateFrom = new Date().toISOString().split('T')[0];
-		this.query.OrderDateTo = '2099-12-31';
-		//this.sortToggle('OrderDate', true);
-		super.preLoadData(event);
+		this.query.ExpectedDeliveryDateFrom = new Date().toISOString().split('T')[0];
+		this.query.ExpectedDeliveryDateTo = '2099-12-31';
+		Promise.all([
+			this.env.getStatus('SalesOrder')
+		]).then((values: any) => {
+			this.statusList = values[0];
+			
+			super.preLoadData(event);
+		});
+
 	}
 
 
@@ -59,6 +65,7 @@ export class ScenarioDocumentSaleOrderModalPage extends PageBase {
 			i.OrderTimeText = i.OrderDate ? lib.dateFormat(i.OrderDate, 'hh:MM') : '';
 			i.OrderDateText = i.OrderDate ? lib.dateFormat(i.OrderDate, 'dd/mm/yy') : '';
 			i.Query = i.OrderDate ? lib.dateFormat(i.OrderDate, 'yyyy-mm-dd') : '';
+			i._Status = this.statusList.find((d) => d.Code == i.Status);
 		});
 		
 		super.loadedData(event);
@@ -77,7 +84,7 @@ export class ScenarioDocumentSaleOrderModalPage extends PageBase {
 			const selectedItem = this.selectedOrderList.find(s => s.RefId === item.Id);
 			return !selectedItem || selectedItem.IsPrevent === this.status;
 		});
-	}
+	} 
 	isAllChecked = false;
 	toggleSelectAll() {
 

@@ -42,7 +42,6 @@ export class ScenarioDocumentPurchaseModalPage extends PageBase {
 	) {
 		super();
 		this.pageConfig.isDetailPage = false;
-		this.pageConfig.isShowSearch = true;
 	}
 
 	preLoadData(event) {

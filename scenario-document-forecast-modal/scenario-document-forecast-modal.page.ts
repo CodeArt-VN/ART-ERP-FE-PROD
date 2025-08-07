@@ -37,7 +37,6 @@ export class ScenarioDocumentForecastModalPage extends PageBase {
 	) {
 		super();
 		this.pageConfig.isDetailPage = false;
-		this.pageConfig.isShowSearch = true;
 
 	}
 	preLoadData(event) {
