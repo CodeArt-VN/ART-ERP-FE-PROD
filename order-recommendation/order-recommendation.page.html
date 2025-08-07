@@ -19,124 +19,87 @@
 </ion-header>
 
 <ion-content appScrollbarTheme class="header-table scrollx" forceOverscroll="false">
-	<section class="table" style="min-width: calc(1024px)">
-		<header class="bold">
-			<!-- <div class="col-checkbox cell"></div> -->
-			<div class="col-id cell">
-				{{'Id' | translate}}
-				<ion-icon class="min-btn" *ngIf="sort.Id" [name]="sort.Id == 'Id'?'arrow-down': 'arrow-up'"></ion-icon>
-				<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.Id" name="search" color="primary"></ion-icon>
-			</div>
+	<div class="table" style="max-width: 1440px; margin: auto; width: 100%">
+		<app-data-table
+			style="width: fit-content; min-width: calc(100% - 32px) !important"
+			class="box-shadow responsive"
+			[rows]="itemsState"
+			[trackBy]="'Id'"
+			[isTreeList]="true"
+			[(selectedRows)]="selectedItems"
+			[showSpinner]="pageConfig.showSpinner"
+			[showFilter]="pageConfig.isShowSearch"
+			[(query)]="query"
+			(dataInfinite)="loadData($event)"
+			(filter)="onDatatableFilter($event)"
+			(sort)="onSort($event)"
+			[isQueryLocalOnly]="true"
+		>
+			<datatable-column class="col-icon large" name="" property="Id">
+				<ng-template let-i="row" datatable-cell-template>
+					<ion-icon (click)="toggleRow(items, i, true);" class="clickable"></ion-icon>
+					<!-- <ion-icon *ngIf="i._isWebContent" class="clickable" [name]="'document-text-outline'" [color]="i.Color || 'primary'"></ion-icon> -->
+				</ng-template>
+			</datatable-column>
+			<!-- [routerLink]="['/'+pageConfig.pageName+'/'+i.Code]" -->
+			<datatable-column class="col-name" name="Name" property="Name">
+				<ng-template datatable-header-template>
+					<ion-icon class="min-btn" [name]="!isAllRowOpened? 'add-circle-outline':'remove-circle-outline'" (click)="toggleRowAll()"></ion-icon>
+					<span (click)="toggleRowAll()">{{'Name' | translate}}</span>
+				</ng-template>
+				<ng-template let-i="row" datatable-cell-template>
+					<ng-container *ngFor="let w of i.levels; let k = index;"><span class="spacing" *ngIf="k>0"></span></ng-container>
+					<ion-icon
+						(click)="toggleRow(items, i, true);"
+						class="min-btn clickable"
+						[name]="!i.showdetail? 'chevron-forward-outline':'chevron-down-outline'"
+						*ngIf="i.HasChild"
+					></ion-icon>
+					<ion-icon class="min-btn clickable" [name]="''" *ngIf="!i.HasChild"></ion-icon>
+					<ion-text (click)="toggleRow(items, i, true);" class="clickable" [ngClass]="i.HasChild? ('bold ') : ('')" [color]="i.Color">{{i.Name | translate}}</ion-text>
+				</ng-template>
+			</datatable-column>
+			<datatable-column class="col-mrpname" name="Item" property="ItemName">
+				<ng-template let-i="row" datatable-cell-template>
+					<span *ngIf="i.IDVendor" class="vendor-name">
+						<a [href]="'#/'+'business-partner/'+i.IDVendor" (click)="nav('business-partner/'+i.IDVendor,'forward')" title="{{'Vendor' | translate}}">
+							{{i.IDVendor}} <ion-icon name="open-outline"></ion-icon>
+						</a>&nbsp;
+					</span>
+					<span *ngIf="!i.IDVendor" class="vendor-name">
+						<a [href]="'#/'+'item/'+i.IDItem" (click)="nav('item/'+i.IDItem,'forward')" title="{{'Item' | translate}}">
+							{{i.IDItem}} <ion-icon name="open-outline"></ion-icon>
+						</a>&nbsp;
+					</span>
+					<ion-text>{{i.ItemName}}<small label *ngIf="i.Code"> {{i.Code}}</small></ion-text>
+					
+				</ng-template>
+			</datatable-column>
+			<datatable-column class="col-number" name="Quantity" property="QuantityOrdered">
+				<ng-template let-i="row" datatable-cell-template> <span>{{i.QuantityOrdered}}</span><small label> {{i.UoMName}}</small> </ng-template>
+			</datatable-column>
+			<datatable-column class="col-date" format="yyyy-MM-dd hh:mm" name="DueDate" property="DueDate"></datatable-column>
+			<datatable-column class="col-check" name="Prefer vendor" property="Id">
+				<ng-template let-i="row" datatable-cell-template>
+						<input [disabled]="submitAttempt" *ngIf="i?.IDVendor" class="c-checkbox" type="checkbox" [(ngModel)]="i.checked" (change)="changeVendor(i)" />
+				</ng-template>
+			</datatable-column>
+			<datatable-column class="col-number" name="Price" property="Price" format="1.0-0" > </datatable-column>
+			<datatable-column class="col-number" name="MOQ" property="MOQ"> </datatable-column>
+			<datatable-column class="col-number" name="Order multiple" property="OrderMultiple"> </datatable-column>
+			<datatable-column class="col-number" name="Order interval" property="OrderInteral"> </datatable-column>
+			<datatable-column class="col-number" name="Lead time" property="LeadTime"> </datatable-column>
+			<datatable-column class="col-number" name="Tolerance days" property="ToleranceDays"> </datatable-column>
 
-			<div class="col-mrpname cell">
-				{{'MRPName' | translate}}
-				<ion-icon class="min-btn" *ngIf="sort.IDMRP" [name]="sort.IDMRP == 'IDMRP'?'arrow-down': 'arrow-up'"></ion-icon>
-				<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.IDMRP" name="search" color="primary"></ion-icon>
-			</div>
-			<div class="col-name cell">
-				{{'Item' | translate}}
-				<ion-icon class="min-btn" *ngIf="sort.Name" [name]="sort.Name == 'Name'?'arrow-down': 'arrow-up'"></ion-icon>
-				<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.Name" name="search" color="primary"></ion-icon>
-			</div>
-
-			<div class="col-number cell">
-				{{'Quantity' | translate}}
-				<ion-icon class="min-btn" *ngIf="sort.DinnerPax" [name]="sort.DinnerPax == 'DinnerPax'?'arrow-down': 'arrow-up'"></ion-icon>
-				<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.DinnerPax" name="search" color="primary"></ion-icon>
-			</div>
-
-			<div class="col-date cell">
-				{{'Duration' | translate}}
-				<ion-icon class="min-btn" *ngIf="sort.PartyDate" [name]="sort.PartyDate == 'PartyDate'?'arrow-down': 'arrow-up'"></ion-icon>
-				<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.PartyDate" name="search" color="primary"></ion-icon>
-			</div>
-			<div class="col-checkbox cell">{{'Order' | translate}}</div>
-
-			<div class="col-number cell">
-				{{'Price' | translate}}
-				<ion-icon class="min-btn" *ngIf="sort.DinnerPax" [name]="sort.DinnerPax == 'DinnerPax'?'arrow-down': 'arrow-up'"></ion-icon>
-				<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.DinnerPax" name="search" color="primary"></ion-icon>
-			</div>
-			<div class="col-number cell">
-				{{'Quality' | translate}}
-				<ion-icon class="min-btn" *ngIf="sort.DinnerPax" [name]="sort.DinnerPax == 'DinnerPax'?'arrow-down': 'arrow-up'"></ion-icon>
-				<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.DinnerPax" name="search" color="primary"></ion-icon>
-			</div>
-			<div class="col-number cell">
-				{{'Delivery' | translate}}
-				<ion-icon class="min-btn" *ngIf="sort.DinnerPax" [name]="sort.DinnerPax == 'DinnerPax'?'arrow-down': 'arrow-up'"></ion-icon>
-				<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.DinnerPax" name="search" color="primary"></ion-icon>
-			</div>
-			<div class="col-number cell">
-				{{'Payment' | translate}}
-				<ion-icon class="min-btn" *ngIf="sort.DinnerPax" [name]="sort.DinnerPax == 'DinnerPax'?'arrow-down': 'arrow-up'"></ion-icon>
-				<ion-icon class="min-btn" (click)="pageConfig.isShowSearch = !pageConfig.isShowSearch" *ngIf="query.DinnerPax" name="search" color="primary"></ion-icon>
-			</div>
-		</header>
-		<form (submit)="refresh()" action="#">
-			<header class="filter" *ngIf="pageConfig.isShowSearch">
-				<!-- <div class="col-checkbox cell"></div> -->
-				<div class="col-id cell"></div>
-				<div class="col-mrpname cell">
-					<select (change)="refresh()" [ngModelOptions]="{standalone: true}" [(ngModel)]="query.IDMRP" class="c-input c-dropdown" [ngClass]="{active: query.IDMRP}">
-						<option [value]="''">{{'All' | translate}}</option>
-						<option [disabled]="t.Flag || t.IDMRP == null" *ngFor="let t of itemMRPList" [value]="t.IDMRP">{{t.MRPName}}</option>
-					</select>
-					<ion-icon class="min-btn" (click)="query.IDMRP=''; refresh()" *ngIf="query.IDMRP" name="close-circle-outline"></ion-icon>
-				</div>
-				<div class="col-name cell">
-					<input [ngModelOptions]="{standalone: true}" [(ngModel)]="query.Keyword" class="c-input" [ngClass]="{active: query.Keyword}" type="text" />
-					<ion-icon class="min-btn" (click)="query.Keyword=''; refresh()" *ngIf="query.Keyword" name="close-circle-outline"></ion-icon>
-				</div>
-
-				<button mat-raised-button type="submit" style="display: none">Search</button>
-			</header>
-		</form>
-		<app-page-message [itemsLength]="items.length" [showSpinner]="pageConfig.showSpinner"></app-page-message>
-
-		<div *ngFor="let i of items; let j = index;" class="row" [ngClass]="{odd: j % 2 != 0}" [ngClass]="{selected: i.checked}">
-			<div class="col-id cell">
-				<span *ngIf="i.ItemId"> {{i.Id}} </span>
-			</div>
-			<div class="col-mrpname cell">
-				<span *ngIf="i.MRPName"> {{i.MRPName}} </span>
-				<span *ngIf="!i.MRPName"> {{i.MRPName}} </span>
-			</div>
-			<div class="col-name cell">
-				<span *ngIf="i.ItemId"> <b>{{i.ItemCode}}</b> - {{i.ItemName}} </span>
-				<span *ngIf="!i.ItemId" class="vendor-name">
-					<a [href]="'#/'+'business-partner/'+i.VendorId" (click)="nav('business-partner/'+i.VendorId,'forward')" title="{{'Vendor' | translate}}">
-						{{i.VendorId}} <ion-icon name="open-outline"></ion-icon>
-					</a>
-					{{i.VendorName}}
-				</span>
-			</div>
-
-			<div class="col-number cell" *ngIf="i.ItemId">
-				<b *ngIf="i.ItemId">{{i.QuantityOrdered}} <small>{{i.UoM}}</small></b>
-			</div>
-			<div class="col-date cell" *ngIf="i.ItemId">
-				<span *ngIf="i.ItemId">{{i.DueDateText}}</span>
-			</div>
-			<div class="col-checkbox cell">
-				<input *ngIf="!i.ItemId" class="c-checkbox" type="checkbox" [(ngModel)]="i.checked" (change)="changeVendor(i)" />
-			</div>
-
-			<div class="col-number cell">
-				<span *ngIf="!i.ItemId">{{i.PriceText}}</span>
-			</div>
-			<div class="col-number cell">
-				<span *ngIf="!i.ItemId">{{i.Quality}}</span>
-			</div>
-			<div class="col-number cell">
-				<span *ngIf="!i.ItemId">{{i.Delivery}}</span>
-			</div>
-			<div class="col-number cell">
-				<span *ngIf="!i.ItemId">{{i.Payment}}</span>
-			</div>
-		</div>
-	</section>
-
+			<!-- <datatable-column *ngIf="pageConfig.canEdit" class="col-icon" name="" property="Id">
+				<ng-template let-i="row" datatable-cell-template>
+					<ion-button *ngIf="!i._isHasWebContent && !i._isWebContent" (click)="nav('/help/' + i.Code)" size="small" title="{{'Add' | translate}}" fill="clear">
+						<ion-icon slot="icon-only" name="pencil"></ion-icon>
+					</ion-button>
+				</ng-template>
+			</datatable-column> -->
+		</app-data-table>
+	</div>
 	<ion-infinite-scroll color="primary" threshold="20%" (ionInfinite)="loadData($event)" [disabled]="!pageConfig.infiniteScroll || pageConfig.isEndOfData">
 		<ion-infinite-scroll-content loadingSpinner="dots"></ion-infinite-scroll-content>
 	</ion-infinite-scroll>

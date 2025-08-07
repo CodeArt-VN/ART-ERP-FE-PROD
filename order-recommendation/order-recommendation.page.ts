@@ -8,6 +8,7 @@ import { lib } from 'src/app/services/static/global-functions';
 import { CommonService } from 'src/app/services/core/common.service';
 import { ApiSetting } from 'src/app/services/static/api-setting';
 import { OrderRecommendationModalPage } from '../order-recommendation-modal/order-recommendation-modal.page';
+import { s } from '@fullcalendar/core/internal-common';
 
 @Component({
 	selector: 'app-order-recommendation',
@@ -17,7 +18,9 @@ import { OrderRecommendationModalPage } from '../order-recommendation-modal/orde
 })
 export class OrderRecommendationPage extends PageBase {
 	itemMRPList = [];
-
+	vendorList = [];
+	itemList = [];
+	itemsState = [];
 	constructor(
 		public pageProvider: PROD_MRPRecommendationProvider,
 		public modalController: ModalController,
@@ -32,13 +35,14 @@ export class OrderRecommendationPage extends PageBase {
 		super();
 	}
 
-	preLoadData(event) {
+	loadData(event?) {
 		this.pageProvider.read({ Keyword: '', Take: 5000, Skip: 0 }).then((result: any) => {
 			if (result.data.length == 0) {
 				this.pageConfig.isEndOfData = true;
 			}
-			this.items = result.data;
-
+			this.items = result.data?.Recommendations;
+			this.itemList = result.data?.Items;
+			this.vendorList = result.data?.Vendors;
 			let data = new Map();
 
 			for (let obj of this.items) {
@@ -46,20 +50,118 @@ export class OrderRecommendationPage extends PageBase {
 			}
 
 			this.itemMRPList = [...data.values()];
-			super.preLoadData(event);
+			this.loadedData(event);
 		});
 	}
-
 	selectedCount = 0;
 	loadedData(event?: any): void {
 		let ors = [...new Set(this.items.map((s) => s.Id))];
 		ors.forEach((i) => {
-			let or = this.items.find((d) => d.Id == i && d.ItemId);
-			let subs = this.items.filter((d) => d.Id == i && !d.ItemId);
+			let or = this.items.find((d) => d.Id == i);
+			let item = this.itemList.find((d) => d.Id == or.IDItem);
+			or.Code = item.Code;
+			or.UoMName = item.UoMs.find((d) => d.IsBaseUoM)?.Name;
+			or.ItemName = item?.Name;
+			or.OrderMultiple = null;
+			or.LeadTime = null;
+			or.Tolearanday = null;
+			or.OrderInterval = null;
+			or.MOQ = null;
+			let subs = this.vendorList.filter((d) => d.IDItem == or.IDItem);
 
-			if (or.PreferVendor && subs.length) {
-				let v = subs.find((d) => d.VendorId == or.PreferVendor);
-				if (v) v.checked = true;
+			if (item) {
+				let distinctVendors = [...new Set(subs.map((s) => s.IDVendor))];
+				distinctVendors.forEach((v) => {
+					let vendor = subs.find((d) => d.IDVendor == v);
+					let purchasingUoM = item.UoMs.find((d) => item.PurchasingUoM == d.Id && !d.IsBaseUoM);
+					let purchasingPrice = subs.find((d) => d.IDVendor == v && !d.IsBaseUoM)?.Price;
+					let baseUoM = item.UoMs.find((d) => d.IsBaseUoM);
+					let basePrice = subs.find((d) => d.IDVendor == v && d.IsBaseUoM)?.Price;
+					let dueDate: any = new Date(or.DueDate);
+					const leadTime = vendor.LeadTime ?? 0;
+					const toleranceDay = vendor.Tolearanday ?? 0;
+					function formatDateWithoutTimezone(date) {
+						const pad = (n) => n.toString().padStart(2, '0');
+						return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T00:00:00`;
+					}
+					dueDate.setDate(dueDate.getDate() - leadTime - toleranceDay);
+					dueDate = formatDateWithoutTimezone(dueDate);
+					let recommendQuantity = or.QuantityOrdered;
+					let minimumOrderQuantity = vendor?.MOQ ?? 0;
+					let orderMultiple = vendor?.OrderMultiple ?? 0;
+					if (recommendQuantity < minimumOrderQuantity) {
+						recommendQuantity = minimumOrderQuantity;
+					}
+					if (orderMultiple > 0 && recommendQuantity % orderMultiple != 0) {
+						recommendQuantity = Math.ceil(recommendQuantity / orderMultiple) * orderMultiple;
+					}
+					let checked = or.IDPreferVendor == vendor.IDVendor;
+					if (or.PreferVendor && subs.length) {
+						let v = subs.find((d) => d.VendorId == or.PreferVendor);
+						if (v) v.checked = true;
+					}
+					if (purchasingUoM) {
+						let alterQuantity = purchasingUoM.AlternativeQuantity; // decimal
+						let basePerAlter = purchasingUoM.BaseQuantity; // decimal
+
+						let qty = (recommendQuantity * alterQuantity) / basePerAlter;
+						let recommendQty = Math.floor(qty); // giống như ép kiểu (int) trong C#
+
+						if (recommendQty > 0) {
+							// Tính lại recommendQuantity phần lẻ còn lại
+							recommendQuantity = ((qty - recommendQty) * basePerAlter) / alterQuantity;
+
+							let mrpRecommendationPurchasing = {
+								Id: lib.generateUID(),
+								IDVendor: vendor.IDVendor,
+								IDBranch: or.IDBranch,
+								IDParent: or.Id,
+								Code: vendor.Code,
+								Name: '',
+								ItemName: vendor.Name,
+								IDItem: item.Id,
+								IDUoM: purchasingUoM.Id,
+								UoMName: purchasingUoM.Name,
+								Leadtime: leadTime,
+								ToleranDay: toleranceDay,
+								DueDate: dueDate,
+								OrderMultiple: vendor.OrderMultiple,
+								OrderInterval: vendor.OrderInterval,
+								MOQ: vendor.MOQ,
+								QuantityOrdered: recommendQty > 0 ? recommendQty.toFixed(3) : recommendQuantity.toFixed(3),
+								Price: purchasingPrice,
+								checked: checked,
+							};
+							this.items.push(mrpRecommendationPurchasing);
+							// Add vào danh sách
+						}
+					}
+					if (recommendQuantity > 0) {
+						let mrpRecommendationPurchasing = {
+							Id: lib.generateUID(),
+							IDVendor: vendor.IDVendor,
+							IDParent: or.Id,
+							IDBranch: or.IDBranch,
+							Code: vendor.Code,
+							Name: '',
+							ItemName: vendor.Name,
+							IDItem: item.Id,
+							IDUoM: baseUoM.Id,
+							UoMName: baseUoM.Name,
+							Leadtime: leadTime,
+							ToleranDay: toleranceDay,
+							DueDate: dueDate,
+							OrderMultiple: vendor.OrderMultiple,
+							OrderInterval: vendor.OrderInterval,
+							MOQ: vendor.MOQ,
+							QuantityOrdered: recommendQuantity.toFixed(3),
+							Price: basePrice,
+							checked: checked,
+						};
+						this.items.push(mrpRecommendationPurchasing);
+					}
+					// if (or.IDVendor == or.PreferVendor) s.checked = true;
+				});
 			}
 		});
 
@@ -67,8 +169,11 @@ export class OrderRecommendationPage extends PageBase {
 			i.DueDateText = lib.dateFormat(i.DueDate, 'dd/mm/yy');
 			i.PriceText = lib.currencyFormat(i.Price);
 		});
-		this.selectedCount = this.items.filter((d) => d.checked).length;
-		super.loadedData(event);
+		lib.buildFlatTree(this.items, [], true).then((res: any) => {
+			this.itemsState = res;
+			this.selectedCount = this.items.filter((d) => d.checked).length;
+			super.loadedData(event);
+		});
 	}
 
 	refresh(event?) {
@@ -82,20 +187,37 @@ export class OrderRecommendationPage extends PageBase {
 	}
 
 	changeVendor(i) {
+		if (this.submitAttempt) return;
+		else this.submitAttempt = true;
 		let checked = i.checked;
-		this.item = this.items.find((d) => d.Id == i.Id && d.ItemId);
-		this.item.IDPreferVendor = checked ? i.VendorId : null;
-
-		this.pageProvider.save(this.item).then(() => {
-			let subs = this.items.filter((d) => d.Id == i.Id && !d.ItemId);
-			subs.forEach((s) => {
-				s.checked = false;
-			});
-			i.checked = checked;
-
-			this.env.showMessage('NCC {{value}} selected', 'success', i.VendorName);
-			this.selectedCount = this.items.filter((d) => d.checked).length;
+		let item = this.items.find((d) => d.Id == i.IDParent);
+		item.IDPreferVendor = checked ? i.IDVendor : null;
+		// let submitItem = {
+		// 	Id: item.Id,
+		// 	IDPreferVendor: checked ? i.IDVendor : null,
+		// };
+		let submitItem = [];
+		let subs = this.items.filter((d) => d.IDParent == item.Id && i.IDVendor == d.IDVendor);
+		submitItem.push({
+			Id: item.Id,
+			IDPreferVendor: checked ? i.IDVendor : null,
 		});
+		subs.forEach((s) => {
+			s.checked = checked;
+		});
+		let others = this.items.filter((d) => d.IDParent == item.Id && i.IDVendor != d.IDVendor);
+		others.forEach((s) => {
+			s.checked = false;
+		});
+
+		this.pageProvider.commonService.connect("POST","PROD/MRPRecommendation/ChangePreferVendors",submitItem).toPromise()
+			.then(() => {
+				this.env.showMessage('NCC {{value}} selected', 'success', i.VendorName);
+				// this.selectedCount = this.items.filter((d) => d.checked).length;
+			})
+			.finally(() => {
+				this.submitAttempt = false;
+			});
 	}
 
 	async createPO() {
@@ -115,7 +237,18 @@ export class OrderRecommendationPage extends PageBase {
 			});
 			await loading.present().then(() => {
 				let postData = {
-					SelectedRecommendations: this.items.filter((d) => d.checked).map((m) => ({ Id: m.Id, IDVendor: m.VendorId })),
+					SelectedRecommendations: this.items
+						.filter((d) => d.checked)
+						.map((m) => ({
+							Id: m.IDParent,
+							IDItem: m.IDItem,
+							IDVendor: m.IDVendor,
+							DueDate: m.DueDate,
+							IDUoM: m.IDUoM,
+							Price: m.Price,
+							Quantity: m.QuantityOrdered,
+							IDBranch: m.IDBranch,
+						})),
 					IDWarehouse: data.IDWarehouse,
 					IDStorer: data.IDStorer,
 				};
@@ -139,35 +272,48 @@ export class OrderRecommendationPage extends PageBase {
 		}
 	}
 
-	async suggestVendors() {
-		let ors = [...new Set(this.items.map((s) => s.Id))];
-		console.log(ors);
-		ors.forEach((i) => {
-			let itemLines = this.items.find((d) => d.Id == i && d.ItemId);
-			let vendorLines = this.items.filter((d) => d.Id == i && !d.ItemId);
+	 suggestVendors() {
+		let preferVendorIds = [];
+		console.log(this.items);
+		this.items
+			.filter((d) => !d.IDParent)
+			.forEach((i) => {
+				let vendorLines = this.items.filter((d) => d.IDParent == i.Id);
+				console.log(vendorLines);
+				if (vendorLines.length == 0) return;
+				else {
+					const totalByVendor = {};
+					vendorLines.forEach((line) => {
+						if (!totalByVendor[line.IDVendor]) {
+							totalByVendor[line.IDVendor] = 0;
+						}
+						totalByVendor[line.IDVendor] += line.Price;
+					});
+					const minVendor = Object.entries(totalByVendor).reduce(
+						(min: { id: number | null; total: number }, [id, total]) => {
+							return Number(total) < min.total ? { id: Number(id), total: Number(total) } : min;
+						},
+						{ id: null, total: Infinity }
+					).id;
 
-			let vendor = null;
+					vendorLines.forEach((line) => {
+						let item = this.items.find((d) => d.Id == line.Id);
+						if (item.IDVendor == minVendor) item.checked = true;
+						else item.checked = false;
+					});
 
-			if (itemLines.PreferVendor && vendorLines.length) {
-				vendor = vendorLines.find((d) => d.VendorId == itemLines.PreferVendor);
-				if (vendor) vendor.checked = true;
-			}
-
-			if (!vendor && vendorLines.length > 1) {
-				vendor = vendorLines.reduce((prev, curr) => {
-					return prev.Price < curr.Price ? prev : curr;
-				});
-			}
-
-			if (!vendor && vendorLines.length) {
-				vendor = vendorLines[0];
-			}
-
-			if (vendor) {
-				vendor.checked = true;
-			}
-		});
-		this.selectedCount = this.items.filter((d) => d.checked).length;
+					preferVendorIds.push({
+						Id: i.Id,
+						IdPreferVendor: minVendor,
+					});
+				}
+			});
+		this.pageProvider.commonService
+			.connect('POST', 'PROD/MRPRecommendation/ChangePreferVendors', preferVendorIds)
+			.toPromise()
+			.then((resp) => {
+				this.env.showMessage('Vendors suggested successfully', 'success');
+			});
 	}
 	async createPurchaseRequest() {
 		this.env
@@ -188,4 +334,18 @@ export class OrderRecommendationPage extends PageBase {
 	}
 
 	async showSaleOrderPickerModal() {}
+
+	toggleRowAll() {
+		this.isAllRowOpened = !this.isAllRowOpened;
+		this.itemsState.forEach((i) => {
+			i.showdetail = !this.isAllRowOpened;
+			this.toggleRow(this.itemsState, i, true);
+		});
+		// this.itemsView = this.itemsState.filter((d) => d.show);
+	}
+
+	toggleRow(ls, ite, toogle = false) {
+		super.toggleRow(ls, ite, toogle);
+		// this.itemsView = this.itemsState.filter((d) => d.show);
+	}
 }

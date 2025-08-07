@@ -4,11 +4,13 @@
 
 .table {
 	background: transparent;
+
 	.row.header {
 		height: calc(10 / 16 * 4.5rem);
 		padding-top: calc(10 / 16 * 1rem);
 		background: transparent;
 	}
+
 	.row {
 		background: var(--table-row-background);
 
@@ -18,12 +20,25 @@
 	}
 }
 
-.col-mrpname {
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	min-width: 150px;
-	max-width: 200px;
+::ng-deep {
+	.col-mrpname {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		min-width: 300px;
+		max-width: 300px;
+	}
+	.col-check {
+		max-width: 100px;
+		min-width: 100px;
+		justify-content: center;
+		text-align: center;
+
+		ion-checkbox {
+			height: 17px;
+			width: 17px;
+		}
+	}
 }
 
 .vendor-name {
