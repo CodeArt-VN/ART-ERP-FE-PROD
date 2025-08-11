@@ -83,21 +83,47 @@
         }
     }
 
-    .mrp-table {
-        border-collapse: collapse;
-        width: 100%;
+    .col-mrpname {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 400px;
+        max-width: 400px;
     }
 
-    .mrp-table th,
-    .mrp-table td {
-        border: 1px solid #ccc;
-        padding: 4px 8px;
-        text-align: right;
+    .col-number.quantity {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 150px;
+        max-width: 150px;
     }
 
-    .mrp-table td:first-child,
-    .mrp-table th:first-child {
+    .col-date {
+        min-width: 100px;
+        max-width: 100px;
+    }
+
+    .col-check {
+        max-width: 100px;
+        min-width: 100px;
+        justify-content: center;
         text-align: center;
+
+        ion-checkbox {
+            height: 17px;
+            width: 17px;
+        }
+    }
+
+    .col-number.quantity {
+        min-width: 210px;
+        max-width: 210px;
+    }
+
+    .vendor-name,
+    .item-name {
+        font-size: 80%;
     }
 
     .cell.col-custom {
@@ -106,12 +132,7 @@
         max-width: 125px;
     }
 
-
     .negative {
-        color: red;
-        font-weight: bold;
+        color: #c5000f;
     }
-
-    
-
 }

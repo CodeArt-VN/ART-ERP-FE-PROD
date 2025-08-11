@@ -26,10 +26,9 @@ export class ScenarioDetailPage extends PageBase {
 	periodDataSource = [];
 	itemGroupDataSource = [];
 	warehouseDataSource = [];
-	itemsState: any = [];
-	itemsView = [];
 	fullTree = [];
-	isAllRowOpened = true;
+	isAllRowOpenedItemRecommend = true;
+	isAllRowOpenedItemResult = true;
 
 	_Recommendations: any = {};
 
@@ -185,50 +184,54 @@ export class ScenarioDetailPage extends PageBase {
 			// }
 			if (this.item?._ItemsResult?.length) {
 				const sourceData = this.item?._ItemsResult ?? [];
-				this.dates = Array.from(new Set(sourceData.map((p) => p.Period)))
-					.sort((a: string, b: string) => new Date(a).getTime() - new Date(b).getTime());
+				this.dates = Array.from(new Set(sourceData.map((p) => p.Period))).sort((a: string, b: string) => new Date(a).getTime() - new Date(b).getTime());
 
 				const groupedProducts: any[] = [];
 				sourceData.forEach((row) => {
 					let prod = groupedProducts.find((p) => p.IDItem === row.IDItem);
 					if (!prod) {
-						prod = { IDItem: row.IDItem, Code: row.Code , Name: row.Name, rows: {}, UoMName: row.UoMName };
+						prod = { IDItem: row.IDItem, Code: row.Code, Name: row.Name, rows: {} };
 						groupedProducts.push(prod);
 					}
 					prod.rows[row.Period] = {
-						InitialQuantity: row.InitialQuantity ?? 0,
-						Supply: row.IncomingStock ?? 0,
-						Demand: row.OutgoingStock ?? 0,
-						FinalQuantity: row.FinalQuantity ?? 0,
-						Requests: row.Requests ?? 0,
+						InitialQuantity: row.InitialQuantity,
+						Supply: row.IncomingStock,
+						Demand: row.OutgoingStock,
+						FinalQuantity: row.FinalQuantity,
+						Requests: row.Requests,
 					};
 				});
 
 				this.itemsResultPivotRows = [];
 				groupedProducts.forEach((prod) => {
-					const parentRow: any = { isParent: true, Code: prod.Code, Name: prod.Name, UoMName: '' };
-					this.dates.forEach((d) => (parentRow[d] = ''));
+					const parentRow: any = { isParent: true, Code: prod.Code, Name: prod.Name, Id: prod.IDItem };
+					this.dates.forEach((d) => (parentRow[d] = prod.rows[d]?.Requests));
 					this.itemsResultPivotRows.push(parentRow);
 
-					const initialRow: any = { type: 'Initial In', Code: '', Name: '', UoMName: prod.UoMName };
-					this.dates.forEach((d) => (initialRow[d] = prod.rows[d]?.InitialQuantity ?? 0));
+					const initialRow: any = { type: 'Initial In', Code: '', Name: '', IDParent: prod.IDItem };
+					this.dates.forEach((d) => (initialRow[d] = prod.rows[d]?.InitialQuantity));
 					this.itemsResultPivotRows.push(initialRow);
 
-					const supplyRow: any = { type: 'Supply', Code: '', Name: '', UoMName: prod.UoMName };
-					this.dates.forEach((d) => (supplyRow[d] = prod.rows[d]?.Supply ?? 0));
+					const supplyRow: any = { type: 'Supply', Code: '', Name: '', IDParent: prod.IDItem };
+					this.dates.forEach((d) => (supplyRow[d] = prod.rows[d]?.Supply));
 					this.itemsResultPivotRows.push(supplyRow);
 
-					const demandRow: any = { type: 'Demand', Code: '', Name: '', UoMName: prod.UoMName };
-					this.dates.forEach((d) => (demandRow[d] = prod.rows[d]?.Demand ?? 0));
+					const demandRow: any = { type: 'Demand', Code: '', Name: '', IDParent: prod.IDItem };
+					this.dates.forEach((d) => (demandRow[d] = prod.rows[d]?.Demand));
 					this.itemsResultPivotRows.push(demandRow);
 
-					const finalRow: any = { type: 'Final', Code: '', Name: '', UoMName: prod.UoMName };
-					this.dates.forEach((d) => (finalRow[d] = prod.rows[d]?.FinalQuantity ?? 0));
+					const finalRow: any = { type: 'Final', Code: '', Name: '', IDParent: prod.IDItem };
+					this.dates.forEach((d) => (finalRow[d] = prod.rows[d]?.FinalQuantity));
 					this.itemsResultPivotRows.push(finalRow);
-
-					const requestsRow: any = { type: 'Requests', Code: '', Name: '', UoMName: prod.UoMName };
-					this.dates.forEach((d) => (requestsRow[d] = prod.rows[d]?.Requests ?? 0));
-					this.itemsResultPivotRows.push(requestsRow);
+				});
+				lib.buildFlatTree(this.itemsResultPivotRows, [], true).then((res: any) => {
+					res.forEach((p) => {
+						if (p.type) {
+							p.HasChild = false;
+						}
+					});
+					this.itemsResultPivotRows.itemsState = res;
+					this.toggleRowAllItemResult();
 				});
 				this.dateHeaders = this.dates.map((d) => lib.dateFormat(d, 'dd/mm/yyyy'));
 			}
@@ -395,11 +398,19 @@ export class ScenarioDetailPage extends PageBase {
 		});
 	}
 
-	toggleRowAll() {
-		this.isAllRowOpened = !this.isAllRowOpened;
+	toggleRowAllItemRecommend() {
+		this.isAllRowOpenedItemRecommend = !this.isAllRowOpenedItemRecommend;
 		this._Recommendations.itemsState.forEach((i) => {
-			i.showdetail = !this.isAllRowOpened;
+			i.showdetail = !this.isAllRowOpenedItemRecommend;
 			this.toggleRow(this._Recommendations.itemsState, i, true);
+		});
+	}
+
+	toggleRowAllItemResult() {
+		this.isAllRowOpenedItemResult = !this.isAllRowOpenedItemResult;
+		this.itemsResultPivotRows.itemsState.forEach((i) => {
+			i.showdetail = !this.isAllRowOpenedItemResult;
+			this.toggleRow(this.itemsResultPivotRows.itemsState, i, true);
 		});
 	}
 
@@ -668,41 +679,36 @@ export class ScenarioDetailPage extends PageBase {
 		}
 	}
 
-	getParent(id: number, Period: string, result: any[] = []): any[] {
-		const current = this.fullTree.find((d) => d.Id === id && d.Period === Period);
+	getParent(id: number, result: any[] = []): any[] {
+		const current = this.fullTree.find((d) => d.Id === id);
 		if (!current) return result;
 		result.unshift(current);
 
 		if (current.IDParent) {
-			return this.getParent(current.IDParent, Period, result);
+			return this.getParent(current.IDParent, result);
 		}
 		return result;
 	}
 
-	getChildren(id: number, Period: string, result: any[] = []): any[] {
-		const childrenList = this.fullTree.filter((d) => d.IDParent === id && d.Period === Period);
+	getChildren(id: number, result: any[] = []): any[] {
+		const childrenList = this.fullTree.filter((d) => d.IDParent === id);
 		result.push(...childrenList);
 		for (let child of childrenList) {
-			this.getChildren(child.Id, Period, result);
+			this.getChildren(child.Id, result);
 		}
 
 		return result;
 	}
 
-	getParentAndChildren(IDItem: number, Period: string): any[] {
-		let targetItem = this.fullTree.find((d) => d.IDItem == IDItem && d.Period === Period);
-		if (!targetItem) {
-			return [];
-		}
+	getParentAndChildren(IDItem: number): any[] {
+		let allMatches = this.fullTree.filter((d) => d.IDItem === IDItem);
 
-		let id = targetItem.Id;
-		const hasChildren = this.fullTree.some((d) => d.IDParent === id && d.Period === Period);
-
-		if (hasChildren) {
-			return [targetItem, ...this.getChildren(id, Period)];
-		} else {
-			return this.getParent(id, Period);
-		}
+		let result: any[] = [];
+		allMatches.forEach((node) => {
+			result.push(...this.getParent(node.Id));
+			result.push(...this.getChildren(node.Id));
+		});
+		return Array.from(new Set(result));
 	}
 
 	async showPeggingModal(item) {
@@ -714,7 +720,7 @@ export class ScenarioDetailPage extends PageBase {
 		});
 		this.fullTree = [...peggingTree];
 
-		let dataFulltree = this.getParentAndChildren(item.IDItem, item.Period);
+		let dataFulltree = this.getParentAndChildren(item.Id);
 		const modal = await this.modalController.create({
 			component: ScenarioPeggingModalPage,
 			componentProps: {
