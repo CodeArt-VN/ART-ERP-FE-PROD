@@ -12,11 +12,10 @@
 	</ion-toolbar>
 </ion-header>
 <ion-content appScrollbarTheme class="header-table">
-	<app-data-table
-		class="box-shadow responsive" [rows]="itemsState" [trackBy]="'Id'" [isTreeList]="true"
-		[(selectedRows)]="selectedItems" [showSpinner]="pageConfig.showSpinner"
-		[showFilter]="pageConfig.isShowSearch" [(query)]="query" (dataInfinite)="loadData($event)"
-		(filter)="onDatatableFilter($event)" (sort)="onSort($event)" [isQueryLocalOnly]="true">
+	<app-data-table class="box-shadow responsive" [rows]="itemsState" [trackBy]="'Id'" [isTreeList]="true"
+		[(selectedRows)]="selectedItems" [showSpinner]="pageConfig.showSpinner" [showFilter]="pageConfig.isShowSearch"
+		[(query)]="query" (dataInfinite)="loadData($event)" (filter)="onDatatableFilter($event)" (sort)="onSort($event)"
+		[isQueryLocalOnly]="true">
 
 		<datatable-column class="col-name" name="Name" property="Name">
 			<ng-template datatable-header-template>
@@ -31,9 +30,14 @@
 					[name]="!i.showdetail? 'chevron-forward-outline':'chevron-down-outline'"
 					*ngIf="i.HasChild"></ion-icon>
 				<ion-icon class="min-btn clickable" [name]="''" *ngIf="!i.HasChild"></ion-icon>
+				<span *ngIf="i.Code" class="item-name">
+					<a [href]="'#/'+'item/'+i.IDItem" (click)="nav('item/'+i.IDItem,'forward')" title="{{'Item' | translate}}">
+						{{i.IDItem}} <ion-icon name="open-outline"></ion-icon> </a>&nbsp;
+				</span>
 				<ion-text (click)="toggleRow(fullTree, i, true);" class="clickable"
 					[ngClass]="i.HasChild? ('bold ') : ('')" [color]="i.Color">{{i.Name |
-					translate}}</ion-text>
+					translate}} <small label *ngIf="i.Code">
+						{{i.Code}}</small></ion-text>
 			</ng-template>
 		</datatable-column>
 		<datatable-column class="col-code" format="dd/MM/yyyy" name="Period" property="Period"></datatable-column>
