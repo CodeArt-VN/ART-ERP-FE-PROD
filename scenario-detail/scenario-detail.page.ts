@@ -40,6 +40,10 @@ export class ScenarioDetailPage extends PageBase {
 	selectedPurchaseList;
 	selectedForecastList;
 
+	itemsResultPivotRows;
+	dates: any[] = [];
+	dateHeaders: string[] = [];
+
 	constructor(
 		public pageProvider: PROD_MRPScenarioProvider,
 		public itemGroupProvider: WMS_ItemGroupProvider,
@@ -155,15 +159,82 @@ export class ScenarioDetailPage extends PageBase {
 		this.item.LastExecuteDate = lib.dateFormat(this.item.LastExecuteDate);
 		this.formGroup.controls.Warehouses.setValue(this.item._Warehouse?.map((d) => d.IDWarehouse) || []);
 		if (this.item.Id) {
+			// if (this.item?._ItemsResult?.length) {
+
+			// 	this.item._ItemsResult = this.item._ItemsResult.sort((a, b) => new Date(a.Period).getTime() - new Date(b.Period).getTime());
+			// 	const dividerConfig = {
+			// 		field: 'Period',
+			// 		dividerFn: (record, recordIndex, records) => {
+			// 			let a: any = recordIndex == 0 ? new Date('2000-01-01') : new Date(records[recordIndex - 1].Period);
+			// 			let b: any = new Date(record.Period);
+			// 			let mins = Math.floor((b - a) / 1000 / 60);
+
+			// 			if (Math.abs(mins) < 600) {
+			// 				return null;
+			// 			}
+			// 			return lib.dateFormat((record.Period), 'dd/mm/yyyy');
+			// 		},
+			// 	};
+
+			// 	this.item._ItemsResult.forEach((item, index) => {
+			// 		const dividerValue = dividerConfig.dividerFn(item, index, this.item._ItemsResult);
+			// 		if (dividerValue) {
+			// 			item['_divider'] = dividerValue;
+			// 		}
+			// 	});
+			// }
 			if (this.item?._ItemsResult?.length) {
-				this.item._ItemsResult = this.item._ItemsResult.map((p) => ({
-					...p,
-					Period: p.Period.split(' ')[0],
-				}));
+				const sourceData = this.item?._ItemsResult ?? [];
+				this.dates = Array.from(new Set(sourceData.map((p) => p.Period)))
+					.sort((a: string, b: string) => new Date(a).getTime() - new Date(b).getTime());
+
+				const groupedProducts: any[] = [];
+				sourceData.forEach((row) => {
+					let prod = groupedProducts.find((p) => p.IDItem === row.IDItem);
+					if (!prod) {
+						prod = { IDItem: row.IDItem, Code: row.Code , Name: row.Name, rows: {}, UoMName: row.UoMName };
+						groupedProducts.push(prod);
+					}
+					prod.rows[row.Period] = {
+						InitialQuantity: row.InitialQuantity ?? 0,
+						Supply: row.IncomingStock ?? 0,
+						Demand: row.OutgoingStock ?? 0,
+						FinalQuantity: row.FinalQuantity ?? 0,
+						Requests: row.Requests ?? 0,
+					};
+				});
+
+				this.itemsResultPivotRows = [];
+				groupedProducts.forEach((prod) => {
+					const parentRow: any = { isParent: true, Code: prod.Code, Name: prod.Name, UoMName: '' };
+					this.dates.forEach((d) => (parentRow[d] = ''));
+					this.itemsResultPivotRows.push(parentRow);
+
+					const initialRow: any = { type: 'Initial In', Code: '', Name: '', UoMName: prod.UoMName };
+					this.dates.forEach((d) => (initialRow[d] = prod.rows[d]?.InitialQuantity ?? 0));
+					this.itemsResultPivotRows.push(initialRow);
+
+					const supplyRow: any = { type: 'Supply', Code: '', Name: '', UoMName: prod.UoMName };
+					this.dates.forEach((d) => (supplyRow[d] = prod.rows[d]?.Supply ?? 0));
+					this.itemsResultPivotRows.push(supplyRow);
+
+					const demandRow: any = { type: 'Demand', Code: '', Name: '', UoMName: prod.UoMName };
+					this.dates.forEach((d) => (demandRow[d] = prod.rows[d]?.Demand ?? 0));
+					this.itemsResultPivotRows.push(demandRow);
+
+					const finalRow: any = { type: 'Final', Code: '', Name: '', UoMName: prod.UoMName };
+					this.dates.forEach((d) => (finalRow[d] = prod.rows[d]?.FinalQuantity ?? 0));
+					this.itemsResultPivotRows.push(finalRow);
+
+					const requestsRow: any = { type: 'Requests', Code: '', Name: '', UoMName: prod.UoMName };
+					this.dates.forEach((d) => (requestsRow[d] = prod.rows[d]?.Requests ?? 0));
+					this.itemsResultPivotRows.push(requestsRow);
+				});
+				this.dateHeaders = this.dates.map((d) => lib.dateFormat(d, 'dd/mm/yyyy'));
 			}
 			this.setLines(); // MRPItems
 			this.setDocumentLines(); // MRPPreventDocument
-			if(this.segmentView == 's4') this.segmentChanged('s4')
+			if (this.segmentView == 's4') this.segmentChanged('s4');
 		}
 
 		super.loadedData(event, ignoredFromGroup);
@@ -187,7 +258,6 @@ export class ScenarioDetailPage extends PageBase {
 					})
 				)
 				.then((result: any) => {
-					
 					this._Recommendations.items = result.data?.Recommendations;
 					this._Recommendations.itemList = result.data?.Items;
 					this._Recommendations.vendorList = result.data?.Vendors;
@@ -246,12 +316,12 @@ export class ScenarioDetailPage extends PageBase {
 						recommendQuantity = Math.ceil(recommendQuantity / orderMultiple) * orderMultiple;
 					}
 					let isChecked = or.IDPreferVendor == vendor.IDVendor;
-					
+
 					if (or.PreferVendor && subs.length) {
 						let v = subs.find((d) => d.VendorId == or.PreferVendor);
 						if (v) v.Checked = true;
 					}
-					
+
 					if (purchasingUoM) {
 						let alterQuantity = purchasingUoM.AlternativeQuantity; // decimal
 						let basePerAlter = purchasingUoM.BaseQuantity; // decimal
@@ -334,21 +404,21 @@ export class ScenarioDetailPage extends PageBase {
 	}
 
 	async createPurchaseRequest() {
-		// this.env
-		// 	.showPrompt('Do you want to create purchase requests?')
-		// 	.then((_) => {
-		// 		this.pageProvider.commonService
-		// 			.connect('GET', 'PROD/MRPRecommendation/CreatePurchaseRequest', this.query)
-		// 			.toPromise()
-		// 			.then((x) => {
-		// 				this.env.showMessage('Saved', 'success');
-		// 				this.refresh();
-		// 			})
-		// 			.catch(() => {
-		// 				this.env.showMessage('Failed', 'danger');
-		// 			});
-		// 	})
-		// 	.catch((err) => {});
+		this.env
+			.showPrompt('Do you want to create purchase requests?')
+			.then((_) => {
+				this.pageProvider.commonService
+					.connect('GET', 'PROD/MRPRecommendation/CreatePurchaseRequest', this.query)
+					.toPromise()
+					.then((x) => {
+						this.env.showMessage('Saved', 'success');
+						this.refresh();
+					})
+					.catch(() => {
+						this.env.showMessage('Failed', 'danger');
+					});
+			})
+			.catch((err) => {});
 	}
 
 	async createPO() {
@@ -383,22 +453,18 @@ export class ScenarioDetailPage extends PageBase {
 					IDWarehouse: data.IDWarehouse,
 					IDStorer: data.IDStorer,
 				};
-				// this.commonService
-				// 	.connect('POST', ApiSetting.apiDomain('PURCHASE/Order/CreateFromRecommendation/'), postData)
-				// 	.toPromise()
-				// 	.then((resp) => {
-				// 		if (loading) loading.dismiss();
-				// 		this.env.showMessage('PO created!', 'success');
-				// 		this.refresh();
-				// 		this.env.publishEvent({
-				// 			Code: this.pageConfig.pageName,
-				// 		});
-				// 	})
-				// 	.catch((err) => {
-				// 		console.log(err);
-				// 		this.env.showMessage('Cannot create PO, please try again later', 'danger');
-				// 		if (loading) loading.dismiss();
-				// 	});
+				this.commonService
+					.connect('POST', ApiSetting.apiDomain('PURCHASE/Order/CreateFromRecommendation/'), postData)
+					.toPromise()
+					.then((resp) => {
+						if (loading) loading.dismiss();
+						this.env.showMessage('PO created!', 'success');
+						this.refresh();
+					})
+					.catch((err) => {
+						this.env.showMessage('Cannot create PO, please try again later', 'danger');
+						if (loading) loading.dismiss();
+					});
 			});
 		}
 	}
@@ -406,12 +472,10 @@ export class ScenarioDetailPage extends PageBase {
 		if (this.submitAttempt) return;
 		else this.submitAttempt = true;
 		let preferVendorIds = [];
-		console.log(this._Recommendations.items);
 		this._Recommendations.items
 			.filter((d) => !d.IDParent)
 			.forEach((i) => {
 				let vendorLines = this._Recommendations.items.filter((d) => d.IDParent == i.Id);
-				console.log(vendorLines);
 				if (vendorLines.length == 0) return;
 				else {
 					const totalByVendor = {};
@@ -475,6 +539,7 @@ export class ScenarioDetailPage extends PageBase {
 			.connect('POST', 'PROD/MRPRecommendation/ChangePreferVendors', submitItem)
 			.toPromise()
 			.then(() => {
+				this.selectedCount = this._Recommendations.items.filter((d) => d.Checked).length;
 				this.env.showMessage('NCC {{value}} selected', 'success', i.VendorName);
 			})
 			.finally(() => {
@@ -648,9 +713,8 @@ export class ScenarioDetailPage extends PageBase {
 			};
 		});
 		this.fullTree = [...peggingTree];
-		let period = this.item._Pegging.find((d) => d.IDItem == item.IDItem)?.Period;
 
-		let dataFulltree = this.getParentAndChildren(item.IDItem, period);
+		let dataFulltree = this.getParentAndChildren(item.IDItem, item.Period);
 		const modal = await this.modalController.create({
 			component: ScenarioPeggingModalPage,
 			componentProps: {
@@ -1008,6 +1072,4 @@ export class ScenarioDetailPage extends PageBase {
 			}
 		}
 	}
-
-	saveDocument() {}
 }

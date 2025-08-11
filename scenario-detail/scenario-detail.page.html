@@ -18,7 +18,7 @@
 						<div class="c-control document">
 							<ng-select appendTo="#ng-select-holder" [(ngModel)]="documentTypeSelected" class="c-input"
 								[items]="documentTypeList" [clearable]="false" [virtualScroll]="true" bindLabel="Name"
-								bindValue="Code" (change)="saveDocument()">
+								bindValue="Code">
 								<ng-template ng-label-tmp let-i="item">
 									<div *ngIf="i">
 										<div>
@@ -110,9 +110,9 @@
 					</ion-segment-button>
 				</ion-segment>
 				<ion-buttons slot="end" *ngIf="segmentView=='s4' && _Recommendations?.itemsState?.length">
-					<!-- <ion-button (click)="createPurchaseRequest()" title="{{'Create purchase request' | translate}}">
+					<ion-button (click)="createPurchaseRequest()" title="{{'Create purchase request' | translate}}">
 						{{'Create purchase request' | translate}}
-					</ion-button> -->
+					</ion-button>
 					<ion-button *ngIf="pageConfig.canCopyToPO && selectedCount" (click)="createPO()"
 						title="{{'Create PO' | translate}}">
 						<ion-icon slot="icon-only" name="basket-outline"></ion-icon>
@@ -442,7 +442,7 @@
 							</app-data-table>
 						</ng-container>
 					</form>
-					<div class="ion-padding" *ngIf="pageConfig.canEdit && !formGroup.invalid">
+					<div class="ion-padding" *ngIf="pageConfig.canEdit && formGroup.controls.Lines.value.length ">
 						<ion-button fill="clear" size="small" (click)="addItemLine({}, true)">
 							<ion-icon slot="start" name="add-circle-outline"></ion-icon>
 							{{ 'Add product' | translate }}
@@ -451,7 +451,47 @@
 				</div>
 				<!-- Result -->
 				<div *ngIf="segmentView == 's3'" style="overflow-x: auto;">
-					<app-data-table class="box-shadow responsive" [rows]="item?._ItemsResult"
+
+					<app-data-table class="box-shadow responsive" [rows]="itemsResultPivotRows" [(selectedRows)]="selectedItems"
+						[showSpinner]="pageConfig.showSpinner">
+
+						<datatable-column class="col-code" name="Code" property="Code">
+							<ng-template let-i="row" datatable-cell-template>
+								{{ i.isParent ? i.Code: i.type }}
+							</ng-template>
+						</datatable-column>
+
+
+						<datatable-column class="col-name" name="Name" property="Name">
+							<ng-template let-i="row" datatable-cell-template>
+								<ng-container *ngIf="i.isParent">
+									{{ i.Name }}
+								</ng-container>
+							</ng-template>
+						</datatable-column>
+
+						<ng-container *ngFor="let date of dates; let idx = index">
+							<datatable-column class="col-custom" [name]="dateHeaders[idx]" [property]="date">
+								<ng-template let-i="row" datatable-cell-template>
+									<span [ngClass]="{ 'negative': (i[date] || 0) < 0 }">
+										{{ i[date] }}
+									</span>
+								</ng-template>
+							</datatable-column>
+						</ng-container>
+
+						<datatable-column class="col-uom" name="UoM" property="UoMName">
+							<ng-template let-i="row" datatable-cell-template>
+								<ng-container >
+									{{ i.UoMName }}
+								</ng-container>
+							</ng-template>
+						</datatable-column>
+					</app-data-table>
+
+
+
+					<!-- <app-data-table class="box-shadow responsive" [rows]="item?._ItemsResult"
 						[(selectedRows)]="selectedItems" [showSpinner]="pageConfig.showSpinner">
 						<datatable-column class="col-id" name="No." property="#"></datatable-column>
 						<datatable-column class="col-id" name="IDItem" property="IDItem">
@@ -475,7 +515,7 @@
 								</div>
 							</ng-template>
 						</datatable-column>
-						<datatable-column class="col-name" name="Period" property="Period">
+						<datatable-column class="col-name" format="dd/MM/yyyy" name="Period" property="Period">
 						</datatable-column>
 						<datatable-column class="col-number" name="Initial" property="InitialQuantity">
 						</datatable-column>
@@ -491,88 +531,115 @@
 						</datatable-column>
 						<datatable-column class="col-number" name="Requests" property="Requests">
 						</datatable-column>
-					</app-data-table>
+					</app-data-table> -->
 				</div>
 				<!-- Recommend -->
 				<div *ngIf="segmentView == 's4'" style="overflow-x: auto;">
-					<div class="ion-padding" *ngIf="_Recommendations?.itemsState">
-						<app-data-table style="width: fit-content; min-width: calc(100% - 32px) !important"
-						 class="box-shadow responsive"
-							[rows]="_Recommendations.itemsState" [trackBy]="'Id'" [isTreeList]="true"
-							[(selectedRows)]="selectedItems" [showSpinner]="pageConfig.showSpinner"
-							[showFilter]="pageConfig.isShowSearch" [(query)]="query" (dataInfinite)="loadData($event)"
-							(filter)="onDatatableFilter($event)" (sort)="onSort($event)" [isQueryLocalOnly]="true">
-							<datatable-column class="col-icon large" name="" property="Id">
-								<ng-template let-i="row" datatable-cell-template>
-									<ion-icon (click)="toggleRow(_Recommendations?.items, i, true);"
-										class="clickable"></ion-icon>
-								</ng-template>
-							</datatable-column>
-							<datatable-column class="col-name" name="Name" property="Name">
-								<ng-template datatable-header-template>
-									<ion-icon class="min-btn"
-										[name]="!isAllRowOpened? 'add-circle-outline':'remove-circle-outline'"
-										(click)="toggleRowAll()"></ion-icon>
-									<span (click)="toggleRowAll()">{{'Name' | translate}}</span>
-								</ng-template>
-								<ng-template let-i="row" datatable-cell-template>
-									<ng-container *ngFor="let w of i.levels; let k = index;"><span class="spacing"
-											*ngIf="k>0"></span></ng-container>
-									<ion-icon (click)="toggleRow(_Recommendations?.items, i, true);"
-										class="min-btn clickable"
-										[name]="!i.showdetail? 'chevron-forward-outline':'chevron-down-outline'"
-										*ngIf="i.HasChild"></ion-icon>
-									<ion-icon class="min-btn clickable" [name]="''" *ngIf="!i.HasChild"></ion-icon>
-									<ion-text (click)="toggleRow(_Recommendations?.items, i, true);" class="clickable"
-										[ngClass]="i.HasChild? ('bold ') : ('')" [color]="i.Color">{{i.Name |
-										translate}}</ion-text>
-								</ng-template>
-							</datatable-column>
-							<datatable-column class="col-mrpname" name="Item" property="ItemName">
-								<ng-template let-i="row" datatable-cell-template>
-									<span *ngIf="i.IDVendor" class="vendor-name">
-										<a [href]="'#/'+'business-partner/'+i.IDVendor"
-											(click)="nav('business-partner/'+i.IDVendor,'forward')"
-											title="{{'Vendor' | translate}}">
-											{{i.IDVendor}} <ion-icon name="open-outline"></ion-icon> </a>&nbsp;
-									</span>
-									<span *ngIf="!i.IDVendor" class="vendor-name">
-										<a [href]="'#/'+'item/'+i.IDItem" (click)="nav('item/'+i.IDItem,'forward')"
-											title="{{'Item' | translate}}">
-											{{i.IDItem}} <ion-icon name="open-outline"></ion-icon> </a>&nbsp;
-									</span>
-									<ion-text>{{i.ItemName}}<small label *ngIf="i.Code"> {{i.Code}}</small></ion-text>
-								</ng-template>
-							</datatable-column>
-							<datatable-column class="col-number quantity" name="Quantity" property="QuantityOrdered">
-								<ng-template let-i="row" datatable-cell-template>
-									<span>{{i.QuantityOrdered}}</span><small label> {{i.UoMName}}</small> </ng-template>
-							</datatable-column>
-							<datatable-column class="col-date" format="dd/MM/yy" name="DueDate"
-								property="DueDate"></datatable-column>
-							<datatable-column class="col-check" name="Prefer vendor" property="Id">
-								<ng-template let-i="row" datatable-cell-template>
-									<input [disabled]="submitAttempt" *ngIf="i?.IDVendor" class="c-checkbox"
-										type="checkbox" [(ngModel)]="i.Checked" (change)="changeVendor(i)" />
-								</ng-template>
-							</datatable-column>
-							<datatable-column class="col-number" name="Price" property="Price">
-								<ng-template let-i="row" datatable-cell-template>
-									{{i?.PriceText}}
-								</ng-template>
+					<app-data-table style="width: fit-content; min-width: calc(100% - 32px) !important"
+						*ngIf="_Recommendations?.itemsState" class="box-shadow responsive"
+						[rows]="_Recommendations.itemsState" [trackBy]="'Id'" [isTreeList]="true"
+						[(selectedRows)]="selectedItems" [showSpinner]="pageConfig.showSpinner"
+						[showFilter]="pageConfig.isShowSearch" [(query)]="query" (dataInfinite)="loadData($event)"
+						(filter)="onDatatableFilter($event)" (sort)="onSort($event)" [isQueryLocalOnly]="true">
+						<datatable-column class="col-icon large" name="" property="Id">
+							<ng-template let-i="row" datatable-cell-template>
+								<ion-icon (click)="toggleRow(_Recommendations?.items, i, true);"
+									class="clickable"></ion-icon>
+							</ng-template>
+						</datatable-column>
+						<!-- <datatable-column class="col-name" name="Name" property="Name">
+							<ng-template datatable-header-template>
+								<ion-icon class="min-btn"
+									[name]="!isAllRowOpened? 'add-circle-outline':'remove-circle-outline'"
+									(click)="toggleRowAll()"></ion-icon>
+								<span (click)="toggleRowAll()">{{'Name' | translate}}</span>
+							</ng-template>
+							<ng-template let-i="row" datatable-cell-template>
+								<ng-container *ngFor="let w of i.levels; let k = index;"><span class="spacing"
+										*ngIf="k>0"></span></ng-container>
+								<ion-icon (click)="toggleRow(_Recommendations?.items, i, true);"
+									class="min-btn clickable"
+									[name]="!i.showdetail? 'chevron-forward-outline':'chevron-down-outline'"
+									*ngIf="i.HasChild"></ion-icon>
+								<ion-icon class="min-btn clickable" [name]="''" *ngIf="!i.HasChild"></ion-icon>
+								<ion-text (click)="toggleRow(_Recommendations?.items, i, true);" class="clickable"
+									[ngClass]="i.HasChild? ('bold ') : ('')" [color]="i.Color">{{i.Name |
+									translate}}</ion-text>
+							</ng-template>
+						</datatable-column> -->
+						<datatable-column class="col-mrpname" name="Item" property="ItemName">
+							<ng-template datatable-header-template>
+								<ion-icon class="min-btn"
+									[name]="!isAllRowOpened? 'add-circle-outline':'remove-circle-outline'"
+									(click)="toggleRowAll()"></ion-icon>
+								<span (click)="toggleRowAll()">{{'ItemName' | translate}}</span>
+							</ng-template>
+							<ng-template let-i="row" datatable-cell-template>
+								<ng-container *ngFor="let w of i.levels; let k = index;"><span class="spacing"
+										*ngIf="k>0"></span></ng-container>
+								<ion-icon (click)="toggleRow(_Recommendations?.items, i, true);"
+									class="min-btn clickable"
+									[name]="!i.showdetail? 'chevron-forward-outline':'chevron-down-outline'"
+									*ngIf="i.HasChild"></ion-icon>
+								<ion-icon class="min-btn clickable" [name]="''" *ngIf="!i.HasChild"></ion-icon>
+								<span *ngIf="i.IDVendor" class="vendor-name">
+									<a [href]="'#/'+'business-partner/'+i.IDVendor"
+										(click)="nav('business-partner/'+i.IDVendor,'forward')"
+										title="{{'Vendor' | translate}}">
+										{{i.IDVendor}} <ion-icon name="open-outline"></ion-icon> </a>&nbsp;
+								</span>
+								<span *ngIf="!i.IDVendor" class="vendor-name">
+									<a [href]="'#/'+'item/'+i.IDItem" (click)="nav('item/'+i.IDItem,'forward')"
+										title="{{'Item' | translate}}">
+										{{i.IDItem}} <ion-icon name="open-outline"></ion-icon> </a>&nbsp;
+								</span>
+								<ion-text (click)="toggleRow(_Recommendations?.items, i, true);"
+									class="clickable">{{i.ItemName}}<small label *ngIf="i.Code">
+										{{i.Code}}</small></ion-text>
+							</ng-template>
+							<!-- <ng-template let-i="row" datatable-cell-template>
+								<span *ngIf="i.IDVendor" class="vendor-name">
+									<a [href]="'#/'+'business-partner/'+i.IDVendor"
+										(click)="nav('business-partner/'+i.IDVendor,'forward')"
+										title="{{'Vendor' | translate}}">
+										{{i.IDVendor}} <ion-icon name="open-outline"></ion-icon> </a>&nbsp;
+								</span>
+								<span *ngIf="!i.IDVendor" class="vendor-name">
+									<a [href]="'#/'+'item/'+i.IDItem" (click)="nav('item/'+i.IDItem,'forward')"
+										title="{{'Item' | translate}}">
+										{{i.IDItem}} <ion-icon name="open-outline"></ion-icon> </a>&nbsp;
+								</span>
+								<ion-text>{{i.ItemName}}<small label *ngIf="i.Code"> {{i.Code}}</small></ion-text>
+							</ng-template> -->
+						</datatable-column>
+						<datatable-column class="col-number quantity" name="Quantity" property="QuantityOrdered">
+							<ng-template let-i="row" datatable-cell-template>
+								<span>{{i.QuantityOrdered}}</span><small label> {{i.UoMName}}</small> </ng-template>
+						</datatable-column>
+						<datatable-column class="col-date" format="dd/MM/yy" name="DueDate"
+							property="DueDate"></datatable-column>
+						<datatable-column class="col-check" name="Prefer vendor" property="Id">
+							<ng-template let-i="row" datatable-cell-template>
+								<input [disabled]="submitAttempt" *ngIf="i?.IDVendor" class="c-checkbox" type="checkbox"
+									[(ngModel)]="i.Checked" (change)="changeVendor(i)" />
+							</ng-template>
+						</datatable-column>
+						<datatable-column class="col-number" name="Price" property="Price">
+							<ng-template let-i="row" datatable-cell-template>
+								{{i?.PriceText}}
+							</ng-template>
 
-							</datatable-column>
-							<datatable-column class="col-number" name="MOQ" property="MOQ"> </datatable-column>
-							<datatable-column class="col-number" name="Order multiple" property="OrderMultiple">
-							</datatable-column>
-							<datatable-column class="col-number" name="Order interval" property="OrderInteral">
-							</datatable-column>
-							<datatable-column class="col-number" name="Lead time" property="LeadTime">
-							</datatable-column>
-							<datatable-column class="col-number" name="Tolerance days" property="ToleranceDays">
-							</datatable-column>
-						</app-data-table>
-					</div>
+						</datatable-column>
+						<datatable-column class="col-number" name="MOQ" property="MOQ"> </datatable-column>
+						<datatable-column class="col-number" name="Order multiple" property="OrderMultiple">
+						</datatable-column>
+						<datatable-column class="col-number" name="Order interval" property="OrderInteral">
+						</datatable-column>
+						<datatable-column class="col-number" name="Lead time" property="LeadTime">
+						</datatable-column>
+						<datatable-column class="col-number" name="Tolerance days" property="ToleranceDays">
+						</datatable-column>
+					</app-data-table>
 				</div>
 			</div>
 		</div>

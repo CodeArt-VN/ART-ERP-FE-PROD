@@ -34,9 +34,6 @@ export class ScenarioPeggingModalPage extends PageBase {
 	}
 
 	preLoadData(event) {
-		this.fullTree.forEach((p) => {
-			p.Period = p.Period.split(' ')[0];
-		});
 		this.buildFlatTree(this.fullTree, this.itemsState, this.isAllRowOpened).then((resp: any) => {
 			this.itemsState = resp;
 			this.itemsView = this.itemsState.filter((d) => d.show);

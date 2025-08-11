@@ -49,11 +49,12 @@
     }
 
     .col-mrpname {
-        white-space: nowrap;
+        white-space: nowrap !important;
         overflow: hidden;
         text-overflow: ellipsis;
         min-width: 150px;
-        max-width: 200px;
+        max-width: 250px;
+        gap: 3px;
     }
 
     .vendor-name {
@@ -69,4 +70,48 @@
         text-overflow: ellipsis;
         justify-content: center;
     }
+
+    .col-check {
+        max-width: 100px;
+        min-width: 100px;
+        justify-content: center;
+        text-align: center;
+
+        ion-checkbox {
+            height: 17px;
+            width: 17px;
+        }
+    }
+
+    .mrp-table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .mrp-table th,
+    .mrp-table td {
+        border: 1px solid #ccc;
+        padding: 4px 8px;
+        text-align: right;
+    }
+
+    .mrp-table td:first-child,
+    .mrp-table th:first-child {
+        text-align: center;
+    }
+
+    .cell.col-custom {
+        justify-content: flex-end;
+        min-width: 100px;
+        max-width: 125px;
+    }
+
+
+    .negative {
+        color: red;
+        font-weight: bold;
+    }
+
+    
+
 }
