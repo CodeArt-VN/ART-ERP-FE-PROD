@@ -74,8 +74,8 @@
 					<ion-text>{{i.ItemName}}<small label *ngIf="i.Code"> {{i.Code}}</small></ion-text>
 				</ng-template>
 			</datatable-column>
-			<datatable-column class="col-number quantity" name="Quantity" property="QuantityOrdered">
-				<ng-template let-i="row" datatable-cell-template> <span>{{i.QuantityOrdered}}</span><small label> {{i.UoMName}}</small> </ng-template>
+			<datatable-column class="col-number quantity" name="Quantity"  property="QuantityOrdered">
+				<ng-template let-i="row" datatable-cell-template> <span>{{i.QuantityOrdered| number: '1.2-2' }}</span><small label> {{i.UoMName}}</small> </ng-template>
 			</datatable-column>
 			<datatable-column class="col-date" format="dd/MM/yy" name="DueDate" property="DueDate"></datatable-column>
 			<datatable-column class="col-check" name="Prefer vendor" property="Id">
