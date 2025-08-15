@@ -469,11 +469,15 @@
 									[name]="!i.showdetail? 'chevron-forward-outline':'chevron-down-outline'"
 									*ngIf="i.HasChild && i.isParent"></ion-icon>
 								<ion-icon class="min-btn clickable" [name]="''" *ngIf="!i.HasChild"></ion-icon>
+								<!-- <ion-text (click)="toggleRow(itemsResultPivotRows.itemsState, i, true);"
+									class="clickable" [ngClass]="i.isParent ? ('bold ') : ('')"
+									[color]="i.Color">{{i.isParent ? '' : i.type |
+									translate}}</ion-text> -->
 								<ng-container *ngIf="i.isParent">
 									<span *ngIf="i.Code" class="item-name">
 										<a [href]="'#/'+'item/'+i.Id"
 											(click)="nav('item/'+i.Id,'forward')"
-											title="{{'Item' | translate}}">
+											title="{{'Vendor' | translate}}">
 											{{i.Id}} <ion-icon name="open-outline"></ion-icon> </a>&nbsp;
 									</span>
 									<ion-text class="clickable" (click)="showPeggingModal(i)">
@@ -547,7 +551,7 @@
 						</datatable-column>
 						<datatable-column class="col-number quantity" name="Quantity" property="QuantityOrdered">
 							<ng-template let-i="row" datatable-cell-template>
-								<span>{{i.QuantityOrdered}}</span><small label> {{i.UoMName}}</small> </ng-template>
+								<span>{{i.QuantityOrdered | number:'1.2-2'}}</span><small label> {{i.UoMName}}</small> </ng-template>
 						</datatable-column>
 						<datatable-column class="col-date" format="dd/MM/yy" name="DueDate"
 							property="DueDate"></datatable-column>
