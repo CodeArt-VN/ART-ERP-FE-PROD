@@ -216,6 +216,8 @@ export class OrderRecommendationPage extends PageBase {
 			})
 			.finally(() => {
 				this.submitAttempt = false;
+				this.selectedCount = this.items.filter((d) => d.checked).length;
+
 			});
 	}
 
@@ -315,7 +317,10 @@ export class OrderRecommendationPage extends PageBase {
 			.toPromise())
 			.then((resp) => {
 				this.env.showMessage('Vendors suggested successfully', 'success');
-			}).finally(()=>this.submitAttempt = false);
+			}).finally(()=>{
+				this.submitAttempt = false
+				this.selectedCount = this.items.filter((d) => d.checked).length;
+			});
 	}
 	async createPurchaseRequest() {
 		this.env
