@@ -1,0 +1,22 @@
+<ion-header>
+	<app-toolbar [page]="this"></app-toolbar>
+</ion-header>
+
+<ion-content appScrollbarTheme class="ion-padding">
+	<div class="kanban-board">
+		<div class="kanban-column" *ngFor="let status of statusList">
+			<h3>{{status}}</h3>
+			<div cdkDropList [cdkDropListData]="" (cdkDropListDropped)="onDrop($event, status)">
+				<div class="kanban-card" *ngFor="let order of getList(status)" cdkDrag>
+					<b>Order #{{order.IDOrder}}</b>
+					<ul>
+						<li *ngFor="let line of order.Lines">{{line._Item.Name}} ({{line.RequiredQty}} {{line._UoM.Name}})</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<app-page-message [itemsLength]="item? 1: 0" [showSpinner]="pageConfig.showSpinner"></app-page-message>
+</ion-content>
+<!-- orders.filter(o => o.Status === status) -->
