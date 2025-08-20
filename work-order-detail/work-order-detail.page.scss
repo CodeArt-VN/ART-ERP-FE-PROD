@@ -1,6 +1,7 @@
 .full-screen {
 	min-height: calc(100vh - 97px);
 }
+
 .cdk-drag-preview {
 	box-sizing: border-box;
 	border-radius: 4px;
@@ -18,76 +19,6 @@
 	transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }
 
-.link-container {
-	display: flex;
-	gap: 10px;
-}
-
-.link-container a {
-	text-decoration: none;
-}
-
-.grid-container {
-	display: grid;
-	grid-auto-columns: 1fr;
-	grid-template-columns: auto;
-	gap: 10px;
-}
-
-.priority-header,
-.status-header,
-.empty-header {
-	padding: 10px;
-	background-color: #f0f0f0;
-	border-bottom: 1px solid #ccc;
-	font-weight: bold;
-	text-align: center;
-}
-
-.priority-row,
-.status-header-row {
-	display: grid;
-	grid-auto-columns: 1fr;
-	grid-auto-flow: column;
-	gap: 10px;
-}
-
-.task-container {
-	border: 1px solid #ccc;
-	border-radius: 4px;
-	overflow: hidden;
-	background-color: #fff;
-}
-
-.task-list {
-	min-height: 62px;
-	padding: 10px;
-	display: flex;
-	flex-direction: column;
-}
-
-.task-box {
-	background-color: #f9f9f9;
-	border: 1px solid #ccc;
-	padding: 10px;
-	margin-bottom: 5px;
-	cursor: grab;
-	transition: background-color 0.3s ease;
-}
-
-.task-box:hover {
-	background-color: #e9e9e9;
-}
-
-.task-box.cdk-drag-placeholder {
-	opacity: 0;
-}
-
-.task-box.cdk-drag-preview {
-	opacity: 0.5;
-	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-	margin: 0 0 10px;
-}
 
 .w300 {
 	--width: auto !important;
@@ -116,6 +47,7 @@
 .min-btn {
 	cursor: pointer;
 }
+
 .icon-status {
 	margin: 0 3px;
 }
@@ -146,6 +78,7 @@
 	border-radius: 6px;
 	background: #fff;
 }
+
 .wx-card-header {
 	display: flex;
 	justify-content: space-between;
@@ -153,29 +86,76 @@
 	padding: 8px 10px;
 	font-weight: 600;
 }
-.header-actions .btn { background:transparent; border:none; cursor:pointer; padding:4px; }
-.header-actions .btn ion-icon { font-size:16px; }
-.wx-progress { position:relative; height:10px; background:#f2f2f2; margin:6px 10px 10px; border-radius:6px; overflow:hidden; }
-.wx-progress .bar { position:absolute; left:0; top:0; bottom:0; background:#2dd36f; transition:width .2s ease; }
-.wx-progress .label { position:absolute; left:0; right:0; top:-18px; text-align:center; font-size:11px; color:#333; font-weight:600; }
-.wx-progress .percent { position:absolute; right:6px; top:-16px; font-size:10px; color:#666; }
+
+.header-actions .btn {
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	padding: 4px;
+}
+
+.header-actions .btn ion-icon {
+	font-size: 16px;
+}
+
+.wx-progress {
+	position: relative;
+	height: 10px;
+	background: #f2f2f2;
+	margin: 6px 10px 10px;
+	border-radius: 6px;
+	overflow: hidden;
+}
+
+.wx-progress .bar {
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	background: #2dd36f;
+	transition: width .2s ease;
+}
+
+.wx-progress .label {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: -18px;
+	text-align: center;
+	font-size: 11px;
+	color: #333;
+	font-weight: 600;
+}
+
+.wx-progress .percent {
+	position: absolute;
+	right: 6px;
+	top: -16px;
+	font-size: 10px;
+	color: #666;
+}
+
 .wx-meta {
 	padding: 0 12px 6px 12px;
 	color: #777;
 	font-size: 12px;
 }
+
 .wx-body {
 	padding: 6px 12px 12px 12px;
 }
+
 .wx-line {
 	padding: 6px 0;
 	border-top: 1px solid #f0f0f0;
 	font-size: 14px;
 }
+
 .wx-line .qty {
 	font-weight: 600;
 	margin-right: 6px;
 }
+
 .wx-line.done {
 	text-decoration: line-through;
 	color: #999;
@@ -185,13 +165,76 @@
 	display: none !important;
 }
 
-.drag-source-hide { visibility: hidden; }
-.wx-body .line { display:flex; align-items:center; justify-content:space-between; padding:6px 10px; border-top:1px solid #f0f0f0; }
-.wx-body .line .line-left.done { text-decoration: line-through; color:#999; }
-.wx-body .line .line-actions .btn { margin-left:6px; background:transparent; border:none; cursor:pointer; }
-.wx-body .line .line-actions .btn ion-icon { font-size:16px; }
-.wx-body .line .meta { font-size:11px; color:#777; margin-top:2px; }
-.header-left ion-icon { vertical-align: -2px; margin-right:4px; }
-.header-left .sep { margin: 0 6px; color:#999; }
-.header-actions .count { margin-right:8px; color:#333; font-weight:600; }
-.header-actions .timer { margin-right:8px; color:#e67e22; font-weight:600; }
+.drag-source-hide {
+	visibility: hidden;
+}
+
+.wx-body .line {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 6px 10px;
+	border-top: 1px solid #f0f0f0;
+}
+
+.wx-body .line .line-left.done {
+	text-decoration: line-through;
+	color: #999;
+}
+
+.wx-body .line .line-actions .btn {
+	margin-left: 6px;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+}
+
+.wx-body .line .line-actions .btn ion-icon {
+	font-size: 16px;
+}
+
+.wx-body .line .meta {
+	font-size: 11px;
+	color: #777;
+	margin-top: 2px;
+}
+
+.header-left ion-icon {
+	vertical-align: -2px;
+	margin-right: 4px;
+}
+
+.header-left .sep {
+	margin: 0 6px;
+	color: #999;
+}
+
+.header-actions .count {
+	margin-right: 8px;
+	color: #333;
+	font-weight: 600;
+}
+
+.header-actions .timer {
+	margin-right: 8px;
+	color: #e67e22;
+	font-weight: 600;
+}
+
+.header-left {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.header-row {
+	display: flex;
+	align-items: center;
+	font-size: 12px;
+	color: #666;
+	
+	ion-icon {
+		margin-right: 4px;
+		font-size: 14px;
+	}
+}
