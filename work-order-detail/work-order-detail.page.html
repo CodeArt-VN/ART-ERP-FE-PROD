@@ -3,6 +3,143 @@
 </ion-header>
 
 <ion-content appScrollbarTheme class="ion-padding">
-	<div id="kanban_here" style="height: calc(100% - 56px)"></div>
+
 	<app-page-message [itemsLength]="item? 1: 0" [showSpinner]="pageConfig.showSpinner"></app-page-message>
+
+	
+	<div class="kitchen-board" cdkDropListGroup>
+		
+		<!-- Status Columns -->
+		<div class="board-columns">
+			
+			<!-- Status Columns -->
+			<div *ngFor="let status of statusList" 
+				 class="board-column">
+				
+				<div class="column-header">
+					<h3>{{status}}</h3>
+					<!-- <span class="item-count" *ngIf="status !== 'Ready' && status !== 'Serving'">{{getItemsInStatus(status).length}}</span>
+					<span class="item-count" *ngIf="status === 'Ready'">{{getTotalTraysWithOrders('Ready')}}/3</span>
+					<span class="item-count" *ngIf="status === 'Serving'">{{getTotalTraysWithOrders('Serving')}}/3</span> -->
+				</div>
+				
+				<!-- Tray Columns -->
+				<div *ngIf="status === 'Ready' || status === 'Serving'" 
+					 class="column-content"
+					 cdkDropList 
+					 [id]="getTraysListId(status)"
+					 [cdkDropListData]="getTraysByStatus(status)" 
+					 [cdkDropListConnectedTo]="getTrayConnectedLists(status)"
+					 (cdkDropListDropped)="onTrayDrop($event, status)">
+					<!-- Tray Items -->
+					<div *ngFor="let tray of getTraysByStatus(status)" 
+						 class="tray-container"
+						 cdkDrag
+						 [cdkDragData]="tray"
+						 [cdkDragDisabled]="tray.Orders.length === 0">
+						<div class="tray-header-main" [ngClass]="{'has-orders': tray.Orders.length > 0}">
+							<div class="header-top">
+								<span class="tray-name">{{tray.Name}}</span>
+							</div>
+						</div>
+						
+						<!-- Orders in Tray -->
+						<div class="tray-content" 
+							 cdkDropList 
+							 [id]="getTrayId(tray.Id)"
+							 [cdkDropListData]="[]" 
+							 [cdkDropListConnectedTo]="getConnectedLineDropLists()"
+							 (cdkDropListDropped)="onLineDrop($event, 0)">
+							
+							<!-- Order Groups -->
+							<div *ngFor="let order of tray.Orders" class="tray-order">
+								<div class="order-header">
+									<span class="order-number">#{{order.IDOrder}} {{order.TableCode}}</span>
+								</div>
+								<div class="order-lines" 
+									 cdkDropList 
+									 [id]="getTrayOrderId(order.IDOrder)"
+									 [cdkDropListData]="order.Lines" 
+									 [cdkDropListConnectedTo]="getConnectedLineDropLists()"
+									 (cdkDropListDropped)="onLineDrop($event, order.IDOrder)">
+									
+									<div *ngFor="let line of order.Lines; let last = last" 
+										 class="tray-line" 
+										 cdkDrag
+										 [cdkDragData]="line">
+										<span class="qty">{{line._Item?.RequiredQty}}x</span>
+										<span class="item-name">{{line._Item?.Name}}</span>
+									</div>
+								</div>
+							</div>
+							
+							<!-- Empty State -->
+							<div *ngIf="tray.Orders.length === 0" class="empty-tray">
+									<ion-text>Empty Tray</ion-text>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<!-- Order Columns -->
+				<div *ngIf="status !== 'Ready' && status !== 'Serving'" 
+					 class="column-content" 
+					 cdkDropList 
+					 [id]="getStatusListId(status)"
+					 [cdkDropListData]="getItemsInStatus(status)" 
+					 [cdkDropListConnectedTo]="getConnectedDropListsForStatus(status)"
+					 [attr.data-status]="status"
+					 (cdkDropListDropped)="onDrop($event, status)">
+					
+					<div *ngFor="let order of getItemsInStatus(status)" 
+						 class="order-card" 
+						 [ngClass]="status + '-card'"
+						 cdkDrag>
+						
+						<!-- Header -->
+						<div class="card-header">
+							<div class="header-top">
+								<span class="order-number">#{{order.IDOrder}} {{order.TableCode}}</span>
+								<span class="order-time">{{order.PlacedAt | date:'HH:mm'}}</span>
+							</div>
+						</div>
+						
+						<!-- Items -->
+						<div class="card-body" 
+							 cdkDropList 
+							 [id]="getOrderLinesId(status, order.IDOrder)"
+							 [cdkDropListData]="order.Lines" 
+							 [cdkDropListConnectedTo]="getConnectedLineDropLists()"
+							 (cdkDropListDropped)="onLineDrop($event, order.IDOrder)">
+							
+							<div *ngFor="let line of order.Lines; let last = last" 
+								 class="order-line" 
+								 [ngClass]="{'is-done': line.Status === 'Ready'}"
+								 cdkDrag
+								 [cdkDragData]="line">
+								
+								<div class="line-content-row">
+									<div class="line-content">
+										<span class="qty">{{line._Item?.RequiredQty}}x</span>
+										<span class="item-name">{{line._Item?.Name}}</span>
+										<span class="line-note" *ngIf="line.Note">{{line.Note}}</span>
+									</div>
+									
+									<div class="line-actions" *ngIf="(status === 'Waiting' || status === 'Preparing') && line.Status !== 'Ready'">
+										<ion-button size="small" fill="clear" (click)="viewRecipe(order.IDOrder, line.Id)" *ngIf="status === 'Preparing'">
+											<ion-icon name="book-outline"></ion-icon>
+										</ion-button>
+									</div>
+									
+								</div>
+								
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+		</div>
+	</div>
+	
 </ion-content>

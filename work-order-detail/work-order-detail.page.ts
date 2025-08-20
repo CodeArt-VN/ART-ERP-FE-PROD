@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef, Pipe, PipeTransform } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { NavController, LoadingController, AlertController } from '@ionic/angular';
 import { PageBase } from 'src/app/page-base';
 import { ActivatedRoute } from '@angular/router';
@@ -6,8 +6,7 @@ import { EnvService } from 'src/app/services/core/env.service';
 import { BRA_BranchProvider, POS_KitchenProvider, WMS_ZoneProvider } from 'src/app/services/static/services.service';
 import { FormBuilder, Validators, FormControl } from '@angular/forms';
 import { CommonService } from 'src/app/services/core/common.service';
-import { DynamicScriptLoaderService } from 'src/app/services/custom.service';
-declare var kanban: any;
+import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 
 @Component({
 	selector: 'app-work-order-detail',
@@ -16,11 +15,23 @@ declare var kanban: any;
 	standalone: false,
 })
 export class WorkOrderDetailPage extends PageBase {
-	statusList: any[];
-	groupColumn = 'Status';
-	groupRow = '';
-	idStaff: any;
+	statusList: string[] = ['Waiting', 'Preparing', 'Ready', 'Serving', 'Cancelled'];
 
+	trays: any[] = [];
+	idStaff: any;
+	rawItems: any[] = []; // Original data persistence
+	// Ready & Serving trays
+	readyTrays = [
+		{ Id: 1, Name: 'KHAY 001', Orders: [] },
+		{ Id: 2, Name: 'KHAY 002', Orders: [] },
+		{ Id: 3, Name: 'KHAY 003', Orders: [] },
+	];
+
+	servingTrays = [
+		{ Id: 4, Name: 'KHAY 004', Orders: [] },
+		{ Id: 5, Name: 'KHAY 005', Orders: [] },
+		{ Id: 6, Name: 'KHAY 006', Orders: [] },
+	];
 	constructor(
 		public pageProvider: POS_KitchenProvider,
 		public branchProvider: BRA_BranchProvider,
@@ -31,8 +42,7 @@ export class WorkOrderDetailPage extends PageBase {
 		public formBuilder: FormBuilder,
 		public cdr: ChangeDetectorRef,
 		public loadingController: LoadingController,
-		public commonService: CommonService,
-		public dynamicScriptLoaderService: DynamicScriptLoaderService
+		public commonService: CommonService
 	) {
 		super();
 		this.pageConfig.isDetailPage = true;
@@ -54,409 +64,450 @@ export class WorkOrderDetailPage extends PageBase {
 		});
 	}
 
-	submitAttempt = false;
-	board;
+	onDrop(event: CdkDragDrop<any[]>, targetStatus?: string) {
+		if (event.previousContainer === event.container) {
+			// Reorder within same status
+			moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+		} else {
+			// Check if this is a tray being dropped
+			const draggedItem = event.item.data;
+			if (draggedItem && draggedItem.Name && draggedItem.Name.startsWith('KHAY')) {
+				// This is a tray - handle separately
+				this.handleTrayDrop(draggedItem, targetStatus);
+				return;
+			}
 
-	dataSources: any = {};
+			// Transfer between different statuses
+			const item = event.previousContainer.data[event.previousIndex];
 
-	//lib
-	kanbanSource = {
-		source: [
-			{ url: 'assets/kanban/kanbanmin.css', type: 'css' },
-			{ url: 'assets/kanban/kanbanmin.js', type: 'js' },
-		],
-	};
-	ngAfterViewInit() {
-		this.loadKanbanLibrary();
+			// Use passed targetStatus directly - no need for getStatusFromContainerId
+			if (targetStatus) {
+				item.Status = targetStatus;
+
+				// Update all lines in the order to match the new status
+				item.Lines?.forEach((line) => {
+					line.Status = targetStatus;
+					line.LineStatus = targetStatus;
+				});
+
+				transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
+
+				// Show notification
+				this.env.showMessage(`Moved order #${item.IDOrder} to ${targetStatus}`, 'success');
+			}
+		}
 	}
-	loadKanbanLibrary() {
-		Promise.all([this.env.getType('itemPriority'), this.env.getType('itemType')]).then((values: any) => {
-			this.dataSources.Priority = values[0];
-			this.dataSources.Type = values[1];
-			this.dataSources.Status = this.statusList;
 
-			if (typeof kanban !== 'undefined') {
-				setTimeout(() => {
-					this.initKanban();
-				}, 100);
+	// Template helpers
+	getItemsInStatus(status: string): any[] {
+		return (this.items || []).filter((item) => item.Status === status);
+	}
+
+	getConnectedDropListsForStatus(status: string): string[] {
+		const standardLists = this.statusList
+			.filter((s) => s !== 'Ready' && s !== 'Serving') // Exclude tray columns
+			.map((s) => s.toLowerCase() + '-list');
+
+		// Include tray zones for auto-add
+		return [...standardLists, 'ready-trays-list', 'serving-trays-list'];
+	}
+
+
+	getTrayId(trayId: number): string {
+		return `tray-${trayId}`;
+	}
+
+	getTrayOrderId(orderId: number): string {
+		return `tray-order-${orderId}`;
+	}
+
+	getStatusListId(status: string): string {
+		return `${status.toLowerCase()}-list`;
+	}
+
+	getTraysListId(status: string): string {
+		return `${status.toLowerCase()}-trays-list`;
+	}
+
+	getOrderLinesId(status: string, orderId: number): string {
+		return `${status.toLowerCase()}-lines-${orderId}`;
+	}
+
+	// Individual line drag drop methods
+	getConnectedLineDropLists(): string[] {
+		// Generate all possible line drop list IDs from current orders
+		const allDropLists = [];
+
+		// Add order drop lists - dynamic based on statusList
+		this.items?.forEach((order) => {
+			this.statusList.forEach((status) => {
+				allDropLists.push(`${status.toLowerCase()}-lines-${order.IDOrder}`);
+			});
+		});
+
+		// Add tray drop lists
+		this.trays?.forEach((tray) => {
+			allDropLists.push(`tray-${tray.Id}`);
+			// Add tray order drop lists
+			tray.Orders?.forEach((order) => {
+				allDropLists.push(`tray-order-${order.IDOrder}`);
+			});
+		});
+
+		// Add status lists
+		this.statusList.forEach((status) => {
+			allDropLists.push(`${status.toLowerCase()}-list`);
+		});
+
+		return allDropLists;
+	}
+
+	onLineDrop(event: CdkDragDrop<any[]>, targetOrderId: number) {
+		const draggedLine = event.item.data;
+		const containerId = event.container.id;
+
+		if (event.previousContainer === event.container) {
+			// Reorder within same container
+			moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+			return;
+		}
+
+		// Check if dropping into a tray
+		if (containerId.startsWith('tray-')) {
+			const trayId = parseInt(containerId.split('-')[1]);
+			this.moveLineToTray(draggedLine, trayId, event);
+			return; // Don't call loadedData() since moveLineToTray handles it
+		}
+		// Check if dropping into serving from tray
+		else if (containerId.startsWith('serving-')) {
+			this.moveLineToServing(draggedLine);
+			return; // Don't call loadedData() since moveLineToServing handles it
+		}
+		// Normal status change
+		else {
+			const targetStatus = this.getStatusFromLineContainerId(containerId);
+
+			// Update line status
+			draggedLine.Status = targetStatus;
+			draggedLine.LineStatus = targetStatus;
+
+			// Transfer line
+			transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
+		}
+
+		// Clean up empty orders
+		this.cleanupEmptyOrders();
+	}
+
+	moveLineToTray(draggedLine: any, trayId: number, event: CdkDragDrop<any[]>) {
+		const targetTray = this.trays.find((t) => t.Id === trayId);
+		if (!targetTray) return;
+
+		// Update line status to Ready in original raw data
+		const originalLineIndex = this.rawItems.findIndex((item) => item.Id === draggedLine.Id);
+		if (originalLineIndex >= 0) {
+			this.rawItems[originalLineIndex].Status = 'Ready';
+			this.rawItems[originalLineIndex].LineStatus = 'Ready';
+		}
+
+		// Update the dragged line status
+		draggedLine.Status = 'Ready';
+		draggedLine.LineStatus = 'Ready';
+
+		// Find or create order in tray
+		let existingOrder = targetTray.Orders.find((order) => order.IDOrder === draggedLine.IDOrder);
+
+		if (!existingOrder) {
+			// Create new order in tray
+			existingOrder = {
+				IDOrder: draggedLine.IDOrder,
+				TableCode: draggedLine._Kitchen?.Code || '',
+				Lines: [],
+			};
+			targetTray.Orders.push(existingOrder);
+		}
+
+		// Add line to tray order (avoid duplicates)
+		const existingLine = existingOrder.Lines.find((l) => l.Id === draggedLine.Id);
+		if (!existingLine) {
+			existingOrder.Lines.push({ ...draggedLine, Status: 'Ready', LineStatus: 'Ready' });
+		}
+
+		// Remove from source container in UI
+		const sourceData = event.previousContainer.data;
+		const sourceIndex = sourceData.findIndex((line) => line.Id === draggedLine.Id);
+		if (sourceIndex >= 0) {
+			sourceData.splice(sourceIndex, 1);
+		}
+
+		// Reload data to update all displays with new statuses
+		this.items = [...this.rawItems]; // Reset to raw data
+		this.loadedData();
+
+		this.env.showMessage(`Added "${draggedLine._Item?.Name}" to ${targetTray.Name}`, 'success');
+	}
+
+	moveLineToServing(draggedLine: any) {
+		// Update line status to Serving in original raw data
+		const originalLineIndex = this.rawItems.findIndex((item) => item.Id === draggedLine.Id);
+		if (originalLineIndex >= 0) {
+			this.rawItems[originalLineIndex].Status = 'Serving';
+			this.rawItems[originalLineIndex].LineStatus = 'Serving';
+		}
+
+		// Update the dragged line status
+		draggedLine.Status = 'Serving';
+		draggedLine.LineStatus = 'Serving';
+
+		// Remove from all trays
+		this.trays.forEach((tray) => {
+			tray.Orders.forEach((order) => {
+				order.Lines = order.Lines.filter((line) => line.Id !== draggedLine.Id);
+			});
+			// Remove empty orders from tray
+			tray.Orders = tray.Orders.filter((order) => order.Lines.length > 0);
+		});
+
+		// Reload data to update all displays with new statuses
+		this.items = [...this.rawItems]; // Reset to raw data
+		this.loadedData();
+
+		this.env.showMessage(`Moved "${draggedLine._Item?.Name}" to serving`, 'success');
+	}
+
+	getStatusFromLineContainerId(containerId: string): string {
+		// Parse container ID like "waiting-lines-32" to get status
+		const parts = containerId.split('-');
+		const statusPart = parts[0];
+
+		// Dynamic mapping based on statusList
+		for (const status of this.statusList) {
+			if (statusPart === status.toLowerCase()) {
+				return status;
+			}
+		}
+
+		return 'Waiting';
+	}
+
+	cleanupEmptyOrders() {
+		// Remove empty orders
+		this.items = this.items.filter((order) => order.Lines && order.Lines.length > 0);
+	}
+
+	// Tray management
+	getTotalTraysWithOrders(status?: string): number {
+		const trays = this.getTraysByStatus(status);
+		return trays.filter((tray) => tray.Orders.length > 0).length;
+	}
+
+	getTraysByStatus(status: string): any[] {
+		switch (status) {
+			case 'Ready':
+				return this.readyTrays;
+			case 'Serving':
+				return this.servingTrays;
+			default:
+				return this.readyTrays;
+		}
+	}
+
+	getTrayConnectedLists(status: string): string[] {
+		if (status === 'Ready') {
+			return ['serving-trays-list'];
+		} else if (status === 'Serving') {
+			return ['ready-trays-list'];
+		}
+		return [];
+	}
+
+	getTrayOrdersCount(tray: any): number {
+		return tray.Orders.length;
+	}
+
+	getTrayItemsCount(tray: any): number {
+		return tray.Orders.reduce((total, order) => total + order.Lines.length, 0);
+	}
+
+	getTrayDropLists(): string[] {
+		return [...this.readyTrays.map((tray) => `tray-${tray.Id}`), ...this.servingTrays.map((tray) => `tray-${tray.Id}`)];
+	}
+
+	onTrayDrop(event: CdkDragDrop<any[]>, targetStatus: string) {
+		if (event.previousContainer !== event.container) {
+			const draggedItem = event.item.data;
+
+			// Tray movement or auto-add to tray
+			if (draggedItem?.Name?.startsWith('KHAY')) {
+				this.moveTrayBetweenStatuses(draggedItem, targetStatus);
 			} else {
-				this.dynamicScriptLoaderService
-					.loadResources(this.kanbanSource.source)
-					.then(() => {
-						setTimeout(() => {
-							this.initKanban();
-						}, 100);
-					})
-					.catch((error) => console.error('Error loading script', error));
+				this.autoAddToTray(draggedItem, targetStatus);
 			}
-		});
+		}
 	}
 
-	initKanban() {
-		const cardShape = {
-			label: true,
-			description: false,
-			progress: true,
-			start_date: false,
-			end_date: false,
-			users: { show: false, values: [] },
-			priority: { show: false, values: [] },
-			color: false,
-			menu: false,
-			cover: false,
-			attached: false,
-		};
+	handleTrayDrop(tray: any, targetStatus: string) {
+		if (targetStatus === 'Serving' && tray.Orders.length > 0) {
+			// Move all orders from tray to serving
+			tray.Orders.forEach((order) => {
+				order.Lines.forEach((line) => {
+					line.Status = 'Serving';
+					line.LineStatus = 'Serving';
 
-		const cardTemplate = ({ cardFields, selected, dragging, cardShape }) => {
-			const group = cardFields.item || cardFields.task || {};
+					// Update raw data
+					const rawLineIndex = this.rawItems.findIndex((item) => item.Id === line.Id);
+					if (rawLineIndex >= 0) {
+						this.rawItems[rawLineIndex].Status = 'Serving';
+						this.rawItems[rawLineIndex].LineStatus = 'Serving';
+					}
+				});
 
-			//const isShowEmptyFields = false;
-			const isStackFields = false;
-			const isColorColumns = true;
+				// Create serving group for this order
+				let servingGroup = this.items.find((group) => group.IDOrder === order.IDOrder && group.Status === 'Serving');
 
-			const firstLine = group.Lines[0] || {};
-			const kitchenCode = firstLine._Kitchen?.Code || '';
-			const preparedCount = group.Lines.filter((l) => (l._Item?.PreparedQty ?? 0) >= (l._Item?.RequiredQty ?? 0)).length;
-			const totalCount = group.Lines.length;
-			const percent = totalCount > 0 ? Math.round((preparedCount / totalCount) * 100) : 0;
-			const barColor =
-				group.Status === 'Waiting'
-					? '#ffc409'
-					: group.Status === 'Preparing'
-						? '#3880ff'
-						: group.Status === 'Ready'
-							? '#2dd36f'
-							: group.Status === 'Serving'
-								? '#7044ff'
-								: group.Status === 'Cancelled'
-									? '#eb445a'
-									: '#2dd36f';
-
-			const orderDetailData = {
-				Order: `#${group.IDOrder}`,
-				Kitchen: kitchenCode,
-				Count: `${preparedCount}/${totalCount} Món`,
-			};
-
-			const orderDetailFields = [
-				{ Name: 'Order', Icon: 'reader-outline', Color: 'medium' },
-				{ Name: 'Kitchen', Icon: 'restaurant-outline', Color: 'primary' },
-				{ Name: 'Count', Icon: 'pricetags-outline', Color: 'primary' },
-			];
-
-			const generateFieldsHtml = (fields, data) => {
-				const fieldHtml = fields
-					.map((field) => {
-						const color = field.Color || '';
-						const icon = field.Icon || '';
-						const fieldValue = data[field.Name] || '-';
-						const show = data[field.Name];
-						const displayText = data[field.Name] ? `${field.Name}: ${fieldValue}` : '';
-						return show
-							? `
-							<div class="wx-card-icons svelte-vhwr63">
-							  <div class="wx-icons-container svelte-vhwr63">
-								<div class="wx-date svelte-vhwr63">
-								  <span class="icon-status">
-									<ion-icon class="menu-icon ios ion-color ion-color-${color} hydrated" role="img" name="${icon}"></ion-icon>
-								  </span>
-								  <span class="wx-date-value svelte-vhwr63">${displayText}</span>
-								</div>
-							  </div>
-							  <div class="wx-icons-container svelte-vhwr63">  </div>
-							</div>
-						  `
-							: '';
-					})
-					.join('');
-				return `
-					<div class="wx-footer svelte-vhwr63 stack-fields">
-					 
-					</div>
-				  `;
-			};
-
-			const fieldsHtml = generateFieldsHtml(orderDetailFields, orderDetailData);
-			let colorColumns = '#ffffff';
-			const style = isColorColumns ? `style="background: ${colorColumns};"` : '';
-			const dataId = (cardFields && (cardFields.id || cardFields.task?.id)) || '';
-
-			const lines = group.Lines.map((l, idx) => {
-				const isDone = (l._Item?.PreparedQty ?? 0) >= (l._Item?.RequiredQty ?? 0);
-				const acceptedBy = l.AcceptedBy || '';
-				const acceptedAt = l.AcceptedAt || '';
-
-				let lineActions = '';
-				// if (group.Status === 'Waiting') {
-				// 	lineActions = `
-				// 			<button class="btn" data-action="accept-line" title="Tiếp nhận món"><ion-icon name="hand-right-outline"></ion-icon></button>
-				// 		`;
-				// } else if (group.Status === 'Preparing') {
-				// 	lineActions = `
-				// 			<button class="btn" data-action="return-line" title="Trả món"><ion-icon name="checkmark-done-outline"></ion-icon></button>
-				// 		`;
-				// }
-
-				const showSeparator = idx < group.Lines.length - 1;
-				const separator = showSeparator
-					? `
-							<div style="
-								height: 0.125rem;
-								background: #e2e8ed;
-								margin: 12px 0;
-								opacity: 0.6;
-								border-radius: 2px; 
-							"></div>
-						`
-					: '';
-				return `
-				  <div class="line" data-action-scope="line" data-line-id="${l.Id}" data-order-id="${group.IDOrder}">
-					<div class="line-left ${isDone ? 'done' : ''}"><span class="qty">${l._Item?.RequiredQty ?? ''}x</span> <span class="name">${l._Item?.Name || ''}</span></div>
-					<div class="line-actions">
-						${lineActions}
-					</div>
-					${acceptedBy ? `<div class=\"meta\">${acceptedBy} · ${acceptedAt}</div>` : ''}
-				  </div>
-				  ${separator}
-				`;
-			}).join('');
-
-			 let headerActions = '';
-			// if (group.Status === 'Waiting') {
-			// 	headerActions = `
-			// 		<button class="btn" data-action="accept-order" data-order-id="${group.IDOrder}" title="Tiếp nhận đơn">
-			// 			<ion-icon name="hand-right-outline"></ion-icon>
-			// 		</button>
-			// 	`;
-			// } else if (group.Status === 'Preparing') {
-			// 	headerActions = `
-			// 		<button class="btn" data-action="return-order" data-order-id="${group.IDOrder}" title="Trả đơn">
-			// 			<ion-icon name="checkmark-done-outline"></ion-icon>
-			// 		</button>
-			// 	`;
-			// }
-
-			return `
-			  <div class="wx-content svelte-kqkezg" data-card-id="${dataId}" ${style}>
-				  <div class="wx-card-header svelte-upffav">
-					<div class="header-left">
-						<div class="header-top-row">
-							<div class="order-number">#${group.IDOrder} ${group.TableCode || 'GLA08'}</div>
-							<div class="order-time">18:45</div>
-						</div>
-						<div class="header-bottom-row">
-							<div class="progress-info">0/${group.Lines.length} Món</div>
-							<div class="timer-warning">
-								<ion-icon name="time-outline"></ion-icon>05:00
-							</div>
-						</div>
-					</div>
-					<div class="header-actions">
-						${headerActions}
-					</div>
-				  </div>
-				  <div class="wx-progress">
-					<div class="bar" style="width:${percent}%; background:${barColor}"></div>
-					<div class="label">${preparedCount}/${totalCount}</div>
-				  </div>
-				  <div class="wx-body svelte-kqkezg">
-					${lines}
-				  </div>
-				  <div class="wx-footer ${isStackFields ? 'stack-fields' : 'no-stack-fields'} wx-with-content">
-					 ${fieldsHtml}
-				  </div>
-			  </div>
-			`;
-		};
-
-		this.board = new kanban.Kanban('#kanban_here', {
-			rowKey: 'row_custom_key',
-			columnKey: 'column_custom_key',
-			cardShape,
-			cardTemplate: kanban.template((card) => cardTemplate(card)),
-			readonly: {
-				edit: true,
-				add: false,
-				select: true,
-				dnd: true,
-			},
-		});
-
-		this.board.api.intercept('select-card', ({ id }) => {
-			const group = this.items.find((d) => d.IDOrder == id);
-			if (group) {
-				this.onOpenitem({ IDOrder: group.IDOrder });
-			}
-			return false;
-		});
-
-		let dragMoveHandler: any = null;
-		let dragOffsetX = 0;
-		let dragOffsetY = 0;
-		let dragSourceEl: HTMLElement | null = null;
-		let lastDownX = 0;
-		let lastDownY = 0;
-		let srcRectCache: DOMRect | null = null;
-		let calibrated = false;
-		let alignShiftX = 0;
-		document.addEventListener('mousedown', (e: MouseEvent) => {
-			lastDownX = e.clientX;
-			lastDownY = e.clientY;
-		});
-		this.board.api.on('start-drag-card', (ev) => {
-			// Drag preview
-			const src = document.querySelector(`.wx-content[data-card-id="${ev.id}"]`) as HTMLElement;
-			if (src) {
-				dragSourceEl = src; // Ẩn source
-				src.classList.add('drag-source-hide');
-				const r = src.getBoundingClientRect();
-				srcRectCache = r;
-				dragOffsetX = Math.max(0, Math.min(lastDownX - r.left, r.width));
-				dragOffsetY = Math.max(0, Math.min(lastDownY - r.top, r.height));
-			}
-			calibrated = false;
-			alignShiftX = 0;
-			dragMoveHandler = (e: MouseEvent) => {
-				const ghost = document.querySelector('.wx-dragged-card') as HTMLElement;
-				if (!ghost) return;
-				ghost.style.position = 'fixed';
-				ghost.style.transform = 'none';
-				ghost.style.pointerEvents = 'none';
-				ghost.style.zIndex = '10000';
-				if (!calibrated && srcRectCache) {
-					const gr = ghost.getBoundingClientRect();
-					const scaleX = gr.width && srcRectCache.width ? gr.width / srcRectCache.width : 1;
-					const scaleY = gr.height && srcRectCache.height ? gr.height / srcRectCache.height : 1;
-					dragOffsetX = dragOffsetX * scaleX;
-					dragOffsetY = dragOffsetY * scaleY;
-					alignShiftX = gr.width * 0.7;
-					calibrated = true;
-				}
-				ghost.style.left = `${e.clientX - dragOffsetX - alignShiftX}px`;
-				ghost.style.top = `${e.clientY - dragOffsetY}px`;
-			};
-			document.addEventListener('mousemove', dragMoveHandler);
-		});
-
-		this.board.api.intercept('move-card', (move) => {
-			const group = this.items.find((d) => d.IDOrder == move.id);
-			if (group && this.groupColumn) {
-				group[this.groupColumn] = move.columnId;
-				this.loadKanban();
-			}
-			// Cleanup drag listeners & source visibility
-			if (dragMoveHandler) {
-				document.removeEventListener('mousemove', dragMoveHandler);
-				dragMoveHandler = null;
-			}
-			if (dragSourceEl) {
-				dragSourceEl.classList.remove('drag-source-hide');
-				dragSourceEl = null;
-			}
-		});
-
-		this.loadKanban();
-	}
-
-	loadKanban() {
-		const cards = this.items.map((group: any) => {
-			return {
-				item: group,
-				id: group.IDOrder,
-				label: `Order ${group.IDOrder}`,
-				row_custom_key: 'all',
-				column_custom_key: group[this.groupColumn] || 'none',
-			};
-		});
-
-		const statuses = this.dataSources.Status || this.statusList || [];
-		let columns = statuses.reduce((acc: any[], s: any) => {
-			const label = typeof s === 'string' ? s : s?.Name;
-			const id = typeof s === 'string' ? s : (s?.Code ?? label);
-			if (label != null && !acc.some((c) => c.label == String(label))) {
-				acc.push({ id: String(id), label: String(label) });
-			}
-			return acc;
-		}, []);
-
-		columns.forEach((column: any) => {
-			column.collapsed = false;
-		});
-
-		const rows = [{ id: 'all', label: '' }];
-
-		this.board.parse({
-			columns,
-			rows,
-			cards,
-		});
-
-		setTimeout(() => {
-			const labels = document.querySelectorAll('.wx-label.collapsable');
-			labels.forEach((el: Element) => {
-				if ((el.textContent || '').trim() === '') {
-					(el as HTMLElement).style.display = 'none';
+				if (!servingGroup) {
+					servingGroup = {
+						IDOrder: order.IDOrder,
+						Status: 'Serving',
+						Lines: order.Lines.map((line) => ({ ...line, Status: 'Serving', LineStatus: 'Serving' })),
+						TableCode: order.TableCode,
+						PlacedAt: new Date(),
+						GroupKey: `${order.IDOrder}_Serving_${Date.now()}`,
+					};
+					this.items.push(servingGroup);
+				} else {
+					order.Lines.forEach((line) => {
+						const existingLine = servingGroup.Lines.find((l) => l.Id === line.Id);
+						if (!existingLine) {
+							servingGroup.Lines.push({ ...line, Status: 'Serving', LineStatus: 'Serving' });
+						}
+					});
 				}
 			});
 
-			// delegate click actions
-			const container = document.getElementById('kanban_here');
-			if (container && !(container as any)._wo_click_attached) {
-				container.addEventListener('click', (ev: any) => {
-					const target = ev.target && (ev.target.closest('[data-action]') as HTMLElement);
-					if (!target) return;
-					const action = target.getAttribute('data-action');
-					const scopeEl = target.closest('[data-action-scope]') as HTMLElement;
-					const orderId = Number(target.getAttribute('data-order-id') || scopeEl?.getAttribute('data-order-id') || '0');
-					const lineId = Number(scopeEl?.getAttribute('data-line-id') || '0');
-					switch (action) {
-						case 'accept-order':
-							this.acceptOrder(orderId);
-							break;
-						case 'return-order':
-							this.returnOrder(orderId);
-							break;
-						case 'accept-line':
-							this.acceptLine(orderId, lineId);
-							break;
-						case 'return-line':
-							this.returnLine(orderId, lineId);
-							break;
-						case 'recipe':
-							this.viewRecipe(orderId, lineId);
-							break;
-						case 'split-line':
-							this.splitLine(orderId, lineId);
-							break;
-					}
-				});
-				(container as any)._wo_click_attached = true;
-			}
-		}, 0);
+			// Clear the tray
+			const orderCount = tray.Orders.length;
+			const itemCount = tray.Orders.reduce((total, order) => total + order.Lines.length, 0);
+			tray.Orders = [];
+
+			// Reload data
+			this.items = [...this.rawItems];
+			this.loadedData();
+
+			this.env.showMessage(`Moved ${tray.Name} with ${orderCount} orders (${itemCount} items) to serving`, 'success');
+		}
 	}
 
+	moveTrayBetweenStatuses(tray: any, targetStatus: string) {
+		// Ready ↔ Serving tray movement
+		const sourceTrays = tray.Id <= 3 ? this.readyTrays : this.servingTrays;
+		const targetTrays = targetStatus === 'Ready' ? this.readyTrays : this.servingTrays;
+
+		// Remove from source
+		const sourceIndex = sourceTrays.findIndex((t) => t.Id === tray.Id);
+		if (sourceIndex >= 0) {
+			sourceTrays.splice(sourceIndex, 1);
+		}
+
+		// Add to target
+		const emptySlot = targetTrays.findIndex((t) => t.Orders.length === 0);
+		if (emptySlot >= 0) {
+			targetTrays[emptySlot] = { ...tray };
+		} else {
+			targetTrays.push({ ...tray });
+		}
+
+		// Update status for all items
+		tray.Orders.forEach((order) => {
+			order.Lines.forEach((line) => {
+				line.Status = targetStatus;
+				line.LineStatus = targetStatus;
+
+				// Sync raw data
+				const rawLineIndex = this.rawItems.findIndex((item) => item.Id === line.Id);
+				if (rawLineIndex >= 0) {
+					this.rawItems[rawLineIndex].Status = targetStatus;
+					this.rawItems[rawLineIndex].LineStatus = targetStatus;
+				}
+			});
+		});
+
+		this.env.showMessage(`Moved ${tray.Name} to ${targetStatus}`, 'success');
+	}
+
+	autoAddToTray(item: any, targetStatus: string) {
+		// Auto-add from other statuses to tray
+		const targetTrays = this.getTraysByStatus(targetStatus);
+		const availableTray = targetTrays.find((tray) => tray.Orders.length < 5) || targetTrays[0];
+
+		if (item.IDOrder) {
+			this.addOrderToTray(item, availableTray, targetStatus);
+		} else if (item._Item) {
+			this.addLineToTray(item, availableTray, targetStatus);
+		}
+	}
+
+	addOrderToTray(order: any, tray: any, status: string) {
+		const existingOrder = tray.Orders.find((o) => o.IDOrder === order.IDOrder);
+		if (!existingOrder) {
+			tray.Orders.push({
+				IDOrder: order.IDOrder,
+				TableCode: order.TableCode,
+				Lines: order.Lines.map((line) => ({ ...line, Status: status, LineStatus: status })),
+			});
+
+			// Sync raw data
+			order.Lines.forEach((line) => {
+				const rawLineIndex = this.rawItems.findIndex((item) => item.Id === line.Id);
+				if (rawLineIndex >= 0) {
+					this.rawItems[rawLineIndex].Status = status;
+					this.rawItems[rawLineIndex].LineStatus = status;
+				}
+			});
+
+			this.env.showMessage(`Added order #${order.IDOrder} to ${tray.Name}`, 'success');
+		}
+	}
+
+	addLineToTray(line: any, tray: any, status: string) {
+		let existingOrder = tray.Orders.find((o) => o.IDOrder === line.IDOrder);
+		if (!existingOrder) {
+			existingOrder = {
+				IDOrder: line.IDOrder,
+				TableCode: line._Kitchen?.Code || '',
+				Lines: [],
+			};
+			tray.Orders.push(existingOrder);
+		}
+
+		const existingLine = existingOrder.Lines.find((l) => l.Id === line.Id);
+		if (!existingLine) {
+			existingOrder.Lines.push({ ...line, Status: status, LineStatus: status });
+
+			// Sync raw data
+			const rawLineIndex = this.rawItems.findIndex((item) => item.Id === line.Id);
+			if (rawLineIndex >= 0) {
+				this.rawItems[rawLineIndex].Status = status;
+				this.rawItems[rawLineIndex].LineStatus = status;
+			}
+		}
+
+		this.env.showMessage(`Added "${line._Item?.Name}" to ${tray.Name}`, 'success');
+	}
+
+	// Kitchen workflow actions
 	acceptOrder(orderId: number) {
 		const group: any = this.items.find((g: any) => g.IDOrder === orderId);
 		if (!group) return;
+
 		(group.Lines || []).forEach((l: any) => {
 			l.AcceptedBy = 'Chef';
 			l.AcceptedAt = new Date().toLocaleTimeString();
 			l.LineStatus = 'Preparing';
 		});
 		group.Status = 'Preparing';
-		this.loadKanban();
-	}
 
-	returnOrder(orderId: number) {
-		const group: any = this.items.find((g: any) => g.IDOrder === orderId);
-		if (!group) return;
-		(group.Lines || []).forEach((l: any) => {
-			const rq = l._Item?.RequiredQty ?? 0;
-			if (l._Item) l._Item.PreparedQty = rq;
-			l.LineStatus = 'Ready';
-		});
-		group.Status = 'Ready';
-		this.loadKanban();
+		this.env.showMessage(`Accepted order #${orderId}`, 'success');
 	}
 
 	acceptLine(orderId: number, lineId: number) {
@@ -464,49 +515,84 @@ export class WorkOrderDetailPage extends PageBase {
 		if (!group) return;
 		const line = (group.Lines || []).find((l: any) => l.Id === lineId);
 		if (!line) return;
+
 		line.AcceptedBy = 'Chef';
 		line.AcceptedAt = new Date().toLocaleTimeString();
 		line.LineStatus = 'Preparing';
-		this.loadKanban();
+
+		this.env.showMessage(`Accepted item ${line._Item?.Name}`, 'success');
 	}
 
-	returnLine(orderId: number, lineId: number) {
-		const group = this.items.find((g) => g.IDOrder === orderId);
+	completeOrder(orderId: number) {
+		const group: any = this.items.find((g: any) => g.IDOrder === orderId);
 		if (!group) return;
-		const line = group.Lines.find((l) => l.Id === lineId);
+
+		(group.Lines || []).forEach((l: any) => {
+			const rq = l._Item?.RequiredQty ?? 0;
+			if (l._Item) l._Item.PreparedQty = rq;
+			l.LineStatus = 'Ready';
+		});
+		group.Status = 'Ready';
+
+		this.env.showMessage(`Completed order #${orderId}`, 'success');
+	}
+
+	completeLine(orderId: number, lineId: number) {
+		// Update in raw data
+		const rawLine = this.rawItems.find((item) => item.Id === lineId);
+		if (rawLine) {
+			const rq = rawLine._Item?.RequiredQty ?? 0;
+			if (rawLine._Item) rawLine._Item.PreparedQty = rq;
+			rawLine.Status = 'Ready';
+			rawLine.LineStatus = 'Ready';
+		}
+
+		// Update in current display data
+		const group: any = this.items.find((g: any) => g.IDOrder === orderId);
+		if (!group) return;
+		const line = (group.Lines || []).find((l: any) => l.Id === lineId);
 		if (!line) return;
+
 		const rq = line._Item?.RequiredQty ?? 0;
 		if (line._Item) line._Item.PreparedQty = rq;
+		line.Status = 'Ready';
 		line.LineStatus = 'Ready';
-		this.loadKanban();
+
+		// Reload to update displays
+		this.items = [...this.rawItems];
+		this.loadedData();
+
+		this.env.showMessage(`Completed item ${line._Item?.Name}`, 'success');
 	}
 
-	viewRecipe(orderId: number, lineId: number) {}
+	serveOrder(orderId: number) {
+		const group: any = this.items.find((g: any) => g.IDOrder === orderId);
+		if (!group) return;
 
-	splitLine(orderId: number, lineId: number) {
-		// todo tách 1 line thành SO mới (use case: món cần làm riêng, bếp khác, timing khác)
-		const idx = this.items.findIndex((g: any) => g.IDOrder === orderId);
-		if (idx < 0) return;
-		const group: any = this.items[idx];
-		const lineIdx = group.Lines.findIndex((l: any) => l.Id === lineId);
-		if (lineIdx < 0) return;
-		const line = group.Lines.splice(lineIdx, 1)[0];
-		const newId = Math.max(...this.items.map((g: any) => g.IDOrder)) + 1;
-		this.items.splice(idx + 1, 0, { IDOrder: newId, Status: group.Status, Lines: [line], TableCode: group.TableCode, PlacedAt: group.PlacedAt });
-		this.loadKanban();
+		group.Status = 'Serving';
+		(group.Lines || []).forEach((l: any) => {
+			l.LineStatus = 'Serving';
+		});
+
+		this.env.showMessage(`Started serving order #${orderId}`, 'success');
+	}
+
+	viewRecipe(orderId: number, lineId: number) {
+		// TODO: Implement recipe modal
+		this.env.showMessage('Recipe view feature under development', 'warning');
 	}
 
 	preLoadData(event?: any): void {
 		this.query.IDKitchen = 1;
-		Promise.all([this.env.getStatus('WorkOrder')]).then((values: any) => {
-			this.statusList = values[0];
-			//Status Waiting => Preparing => Ready => Serving => Return,cancelled
-			this.statusList = ['Waiting', 'Preparing', 'Ready', 'Serving', 'Cancelled'];
-		});
+		// statusList already defined in class property
+		// Promise.all([this.env.getStatus('WorkOrder')]).then((values: any) => {
+		// 	this.statusList = values[0] || this.statusList;
+		// });
 		super.preLoadData(event);
 	}
+
 	loadData(event?) {
-		this.items = [
+		this.rawItems = [
 			{
 				Id: 1,
 				Code: 'OL001',
@@ -546,7 +632,7 @@ export class WorkOrderDetailPage extends PageBase {
 				Name: '',
 				IDOrder: 33,
 				IDOrderLine: 3226,
-				Status: 'Preparing',
+				Status: 'Ready',
 				_Kitchen: { Name: 'Bếp 2', Code: 'KITCHEN', Id: 2 },
 				_Item: { Id: 4, Code: 'GOI001', Name: 'Gỏi cuốn tôm thịt', RequiredQty: 2, PreparedQty: 2 },
 				_UoM: { Id: 1, Code: '', Name: 'Cuốn' },
@@ -606,43 +692,34 @@ export class WorkOrderDetailPage extends PageBase {
 				_Item: { Id: 9, Code: 'BIA001', Name: 'Bia chai', RequiredQty: 5, PreparedQty: 5 },
 				_UoM: { Id: 1, Code: '', Name: 'Chai' },
 			},
+			{
+				Id: 10,
+				Code: 'OL010',
+				Name: '',
+				IDOrder: 35,
+				IDOrderLine: 3232,
+				Status: 'Ready',
+				_Kitchen: { Name: 'Bếp 1', Code: 'GLA08', Id: 1 },
+				_Item: { Id: 10, Code: 'COM001', Name: 'Cơm gà Hải Nam', RequiredQty: 1, PreparedQty: 1 },
+				_UoM: { Id: 1, Code: '', Name: 'Phần' },
+			},
+			{
+				Id: 11,
+				Code: 'OL011',
+				Name: '',
+				IDOrder: 35,
+				IDOrderLine: 3233,
+				Status: 'Ready',
+				_Kitchen: { Name: 'Bếp 1', Code: 'GLA08', Id: 1 },
+				_Item: { Id: 11, Code: 'SOUP002', Name: 'Soup rau củ', RequiredQty: 1, PreparedQty: 1 },
+				_UoM: { Id: 1, Code: '', Name: 'Tô' },
+			},
 		];
 
+		// Copy rawItems to items for processing
+		this.items = [...this.rawItems];
 		this.loadedData(event);
 	}
-
-	// loadedData(event?: any, ignoredFromGroup?: boolean): void {
-	// 	const grouped = this.items.reduce((acc, line) => {
-	// 		if (!acc[line.IDOrder]) {
-	// 			acc[line.IDOrder] = {
-	// 				IDOrder: line.IDOrder,
-	// 				Status: line.Status,
-	// 				Lines: [],
-	// 				TableCode: line._Kitchen?.Code || '',
-	// 				PlacedAt: new Date(Date.now()),
-	// 			};
-	// 		}
-	// 		if (!line.LineStatus) line.LineStatus = 'Waiting';
-	// 		acc[line.IDOrder].Lines.push(line);
-	// 		return acc;
-	// 	}, {});
-
-	// 	this.items = Object.values(grouped);
-	// 	super.loadedData(event);
-	// 	if (this.board) {
-	// 		this.loadKanban();
-	// 	}
-	// }
-
-	getTotalLinesInOrder(orderId: number): number {
-		return this.items.reduce((count, group: any) => {
-			if (group.IDOrder === orderId) {
-				count += group.Lines.length;
-			}
-			return count;
-		}, 0);
-	}
-
 
 	loadedData(event?: any, ignoredFromGroup?: boolean): void {
 		const orderGroups = this.items.reduce((acc, line) => {
@@ -657,39 +734,80 @@ export class WorkOrderDetailPage extends PageBase {
 		const finalGroups = {};
 		let groupIndex = 0;
 
-		Object.keys(orderGroups).forEach(orderId => {
+		Object.keys(orderGroups).forEach((orderId) => {
 			const lines = orderGroups[orderId];
-			
-			// Group lines theo Status
-			const statusGroups = lines.reduce((acc, line) => {
-				const status = line.Status || line.LineStatus || 'Waiting';
-				if (!acc[status]) {
-					acc[status] = [];
-				}
-				acc[status].push(line);
-				return acc;
-			}, {});
 
-			Object.keys(statusGroups).forEach(status => {
-				const groupKey = `${orderId}_${status}_${groupIndex++}`;
-				const linesInGroup = statusGroups[status];
-				
-				finalGroups[groupKey] = {
-					IDOrder: parseInt(orderId),
-					Status: status,
-					Lines: linesInGroup,
-					TableCode: linesInGroup[0]._Kitchen?.Code || '',
-					PlacedAt: new Date(Date.now()),
-					GroupKey: groupKey,
-				};
-			});
+			// Separate ready lines and other lines
+			const readyLines = lines.filter((l) => l.Status === 'Ready');
+			const otherLines = lines.filter((l) => l.Status !== 'Ready');
+
+			// Auto-add ready lines to tray
+			if (readyLines.length > 0) {
+				this.autoAddLinesToTray(parseInt(orderId), readyLines);
+			}
+
+			// Create main order group with ALL lines (ready lines will be marked as strikethrough)
+			if (lines.length > 0) {
+				// Group other lines by status
+				const statusGroups = otherLines.reduce((acc, line) => {
+					const status = line.Status || line.LineStatus || 'Waiting';
+					if (!acc[status]) {
+						acc[status] = [];
+					}
+					acc[status].push(line);
+					return acc;
+				}, {});
+
+				// Create cards for each status group
+				Object.keys(statusGroups).forEach((status) => {
+					const groupKey = `${orderId}_${status}_${groupIndex++}`;
+					const linesInGroup = statusGroups[status];
+
+					// Add ready lines to Preparing group for strikethrough display
+					if (status === 'Preparing' && readyLines.length > 0) {
+						linesInGroup.push(...readyLines);
+					}
+
+					finalGroups[groupKey] = {
+						IDOrder: parseInt(orderId),
+						Status: status,
+						Lines: linesInGroup,
+						TableCode: linesInGroup[0]._Kitchen?.Code || '',
+						PlacedAt: new Date(Date.now() - Math.random() * 1000 * 60 * 30),
+						GroupKey: groupKey,
+					};
+				});
+			}
 		});
 
 		this.items = Object.values(finalGroups);
 		super.loadedData(event);
-		if (this.board) {
-			this.loadKanban();
-		}
 	}
+
+	autoAddLinesToTray(orderId: number, readyLines: any[]) {
+		// Find available ready tray
+		let targetTray = this.readyTrays.find((tray) => tray.Orders.length < 5) || this.readyTrays[0];
+
+		// Find or create order in tray
+		let existingOrder = targetTray.Orders.find((order) => order.IDOrder === orderId);
+
+		if (!existingOrder) {
+			existingOrder = {
+				IDOrder: orderId,
+				TableCode: readyLines[0]._Kitchen?.Code || '',
+				Lines: [],
+			};
+			targetTray.Orders.push(existingOrder);
+		}
+
+		// Add ready lines (avoid duplicates)
+		readyLines.forEach((line) => {
+			const existingLine = existingOrder.Lines.find((l) => l.Id === line.Id);
+			if (!existingLine) {
+				existingOrder.Lines.push({ ...line, Status: 'Ready' });
+			}
+		});
+	}
+
 	onOpenitem(item) {}
 }
