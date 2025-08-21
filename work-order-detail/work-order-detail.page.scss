@@ -232,7 +232,7 @@
 	align-items: center;
 	font-size: 12px;
 	color: #666;
-	
+
 	ion-icon {
 		margin-right: 4px;
 		font-size: 14px;
@@ -244,56 +244,19 @@
 		display: none;
 	}
 
-	/* ===== TRAY CARD ===== */
-	.tray-container {
-		background: #fff;
-		border-radius: 12px;
-		padding: 12px;
-		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-	}
-
-	.tray-header-main {
-		margin-bottom: 8px;
-	}
-
-	.tray-name {
-		font-weight: 600;
-		font-size: 14px;
-	}
-
 	.tray-count {
 		font-size: 12px;
 		color: #888;
 		margin-left: 6px;
 	}
 
-	.tray-order {
-		margin-bottom: 8px;
-		padding: 8px;
-		border-radius: 8px;
-		background: #f9f9f9;
-	}
-
-	.order-header {
-		font-size: 13px;
-		font-weight: 500;
-		margin-bottom: 4px;
-	}
-
-	.tray-line {
-		display: flex;
-		gap: 6px;
-		font-size: 13px;
-	}
-
 	.empty-tray {
 		text-align: center;
 		color: #aaa;
-		font-size: 13px;
+		font-size: 14px;
 		padding: 10px;
 	}
 
-	/* ===== ORDER CARD ===== */
 	.order-card {
 		background: #fff;
 		border-radius: 12px;
@@ -312,7 +275,7 @@
 		font-weight: 600;
 	}
 
-	.order-time{
+	.order-time {
 		color: #c5000f;
 	}
 
@@ -348,7 +311,7 @@
 		height: 6px;
 		border-radius: 4px;
 		background: #eee;
-		
+
 	}
 
 	.progress-fill {
@@ -360,6 +323,7 @@
 	.card-body .order-line {
 		padding: 6px 0;
 	}
+
 	.line-content-row {
 		padding-bottom: 6px;
 	}
@@ -376,6 +340,69 @@
 	.line-separator {
 		border-bottom: 1px solid #ddd;
 		margin: 4px 0;
+	}
+
+	.tray-order {
+		background: #fff;
+		padding: 12px;
+		border-bottom: #333 solid 1px;
+
+	}
+
+	.tray-order:last-child {
+		border-bottom: none;
+
+	}
+
+	.order-line[draggable="true"] {
+		cursor: grab;
+		transition: opacity 0.2s ease;
+
+		&:hover {
+			background-color: rgba(0, 123, 255, 0.1);
+			border-radius: 4px;
+		}
+
+		&:active {
+			cursor: grabbing;
+		}
+	}
+
+	.tray-card {
+		position: relative;
+		transition: all 0.2s ease;
+
+		&.drag-over {
+			background-color: rgba(76, 175, 80, 0.1);
+			border: 2px dashed #4caf50;
+			box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+		}
+
+		.drop-zone {
+			padding: 10px;
+			text-align: center;
+			color: #666;
+			font-style: italic;
+			border: 1px dashed #ddd;
+			border-radius: 4px;
+			margin: 8px 0;
+			min-height: 40px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+			&.has-items {
+				border: none;
+				background: none;
+				min-height: auto;
+				padding: 0;
+				text-align: left;
+			}
+		}
+	}
+
+	.drag-source-hide {
+		opacity: 0.3;
 	}
 
 }
