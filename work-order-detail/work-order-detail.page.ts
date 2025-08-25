@@ -128,7 +128,7 @@ export class WorkOrderDetailPage extends PageBase {
 					<div class="card-header">
 						<div class="header-top-tray">
 							<span class="order-number">${tray.Name}</span>
-							<span class="tray-count">${orderCount} Orders • ${itemCount} Items</span>
+							<span class="tray-count">${orderCount} Tables - ${itemCount} Items</span>
 						</div>
 					</div>
 
@@ -136,26 +136,45 @@ export class WorkOrderDetailPage extends PageBase {
 						${(tray.Orders || [])
 							.map(
 								(order) => `
-							<div class="tray-order" data-order-id="${order.IDOrder}">
-								<div class="card-header">
-									<div class="header-top">
-										<span class="order-number">#${order.IDOrder} ${order.TableCode || ''}</span>
-										<span class="order-time">${new Date(order.PlacedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+								<div class="tray-order" data-order-id="${order.IDOrder}">
+									<div class="card-header">
+										<div class="header-top">
+											<span class="order-number">#${order.IDOrder} ${order.TableCode || ''}</span>
+											<span class="count-down-order">
+												<ion-icon name="play-circle-outline" color="success" slot="start"></ion-icon>
+												<span class="accept-time">${order.AcceptedAtMsDone ? new Date(order.AcceptedAtMsDone).toLocaleTimeString([], { hour12: false, minute: '2-digit', second: '2-digit' }) : order.AcceptedAt ? new Date(order.AcceptedAt).toLocaleTimeString([], { hour12: false, minute: '2-digit', second: '2-digit' }) : ''}</span>
+											</span>
+										</div>
+										<div class="header-bottom">
+											
+										</div>
 									</div>
-								</div>
 								<div class="card-body">
 									${(order.Lines || [])
 										.map(
 											(line, idx, arr) => `
-													<div class="order-line" draggable="${trayColumn === 'Serving' ? 'false' : 'true'}" data-order-id="${order.IDOrder}" data-line-id="${line.Id}">
+											<div class="order-line" draggable="${trayColumn === 'Serving' ? 'false' : 'true'}" data-order-id="${order.IDOrder}" data-line-id="${line.Id}">
 												<div class="line-content-row">
 													<div class="line-content">
 														<span class="qty">${line._Item?.RequiredQty}x</span>
 														<span class="item-name">${line._Item?.Name}</span>
-														${line.Note ? `<span class="line-note">${line.Note}</span>` : ''}
+														${line.Note ? `</br><span class="line-note">${line.Note}</span>` : ''}
 													</div>
 												</div>
-												
+												${
+													line.AcceptedAtMs || line.AcceptedAt || line.AcceptedAtMsDone
+														? `
+														<div class="chef-meta">
+															<div class="avatar">
+																<img src="${line._Staff?.Avatar} " onError="this.src='../../assets/avartar-empty.jpg'" title="${line._Staff?.FullName || line.AcceptedBy || ''}">
+															</div>
+															<div class="chef-info">
+																<span class="bold">${line._Staff?.FullName || line.AcceptedBy || ''}</span>
+															</div>
+														</div>
+														`
+														: ''
+												}
 											</div>
 											${idx < arr.length - 1 ? '<div class="line-separator"></div>' : ''}
 										`
@@ -173,7 +192,7 @@ export class WorkOrderDetailPage extends PageBase {
 				`;
 			} else {
 				const cardStatus = data.Status || card.cardFields.column_custom_key;
-				// Không hiển thị order ở Ready/Serving (dùng khay)
+				// hide card Ready Serving nếu như order đã hoàn thành (để tránh trùng với khay)
 				if (cardStatus === 'Ready' || cardStatus === 'Serving') {
 					return '';
 				}
@@ -184,9 +203,9 @@ export class WorkOrderDetailPage extends PageBase {
 					<div class="header-top">
 						<span class="order-number">#${data.IDOrder} ${data.TableCode || ''}</span>
 						${
-							cardStatus === 'Waiting' || cardStatus === 'Preparing'
+							cardStatus === 'Waiting' || cardStatus === 'Preparing' || cardStatus === 'Cancelled'
 								? `
-								<span class="order-time">${new Date(data.PlacedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+								<span class="order-time">${data.PlacedAt ? new Date(data.PlacedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : ''}</span>
 								`
 								: ''
 						}
@@ -194,10 +213,16 @@ export class WorkOrderDetailPage extends PageBase {
 					<div class="header-bottom">
 						<div class="qty-container">
 							<span class="progress-badge">${completedCount}/${(data.Lines || []).length} Items</span>
-                        
-							<span class="order-time">
-							<ion-icon name="play-circle-outline" color="danger" slot="start"></ion-icon>
-							${new Date(data.PlacedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+
+							<span class="count-down-order">
+								${
+									cardStatus !== 'Cancelled'
+										? `
+								<ion-icon name="play-circle-outline" color="danger" slot="start"></ion-icon>
+								<span class="elapsed" data-accepted-atms="${Number(data.AcceptedAtMs || Date.parse(data.AcceptedAt) || (data.PlacedAt ? new Date(data.PlacedAt).getTime() + 5 * 60 * 1000 : 0))}">--:--</span>
+								`
+										: ''
+								}
 							</span>
 						</div>
 						<div class="progress-container">
@@ -207,7 +232,7 @@ export class WorkOrderDetailPage extends PageBase {
 							<div class="progress-bar">
 								<div class="progress-fill" style="width: ${data.process || 0}%"></div>
 							</div>
-                    
+
 							`
 									: ''
 							}
@@ -219,7 +244,7 @@ export class WorkOrderDetailPage extends PageBase {
 					${(data.Lines || [])
 						.map((line, i) => {
 							const isDone = (line.LineStatus === 'Ready' || line.LineStatus === 'Serving') && cardStatus === 'Preparing';
-							// Kéo 1 món khi còn hoạt động; Cancelled khóa
+							// block drag nếu line đã xong hoặc order đang ở trạng thái không cho phép
 							let allowDrag = true;
 							if (cardStatus === 'Preparing') {
 								allowDrag = line.LineStatus === 'Preparing';
@@ -235,10 +260,24 @@ export class WorkOrderDetailPage extends PageBase {
 								<div class="line-content">
 									<span class="qty">${line._Item?.RequiredQty}x</span>
 									<span class="item-name">${line._Item?.Name}</span>
-									${line.Note ? `<span class="line-note">${line.Note}</span>` : ''}
+									${line.Note ? `</br><span class="line-note">${line.Note}</span>` : ''}
 								</div>
+								
 							</div>
-							
+							${
+								line.LineStatus === 'Preparing' && (line.AcceptedAtMs || line.AcceptedAt)
+									? `
+												<div class="chef-meta">
+													<div class="avatar">
+														<img src="${line._Staff?.Avatar} " onError="this.src='../../assets/avartar-empty.jpg'" title="${line._Staff?.FullName || line.AcceptedBy || ''}">
+													</div>
+													<div class="chef-info">
+														<span class="bold">${line._Staff?.FullName || line.AcceptedBy || ''}</span>
+													</div>
+												</div>
+												`
+									: ''
+							}
 						</div>
 						${i < (data.Lines || []).length - 1 ? '<div class="line-separator"></div>' : ''}
 					`;
@@ -256,7 +295,7 @@ export class WorkOrderDetailPage extends PageBase {
 			cardShape,
 			cardTemplate: kanban.template((card) => cardTemplate(card)),
 			readonly: {
-				edit: true,
+				edit: false,
 				add: false,
 				select: true,
 				dnd: true,
@@ -284,10 +323,10 @@ export class WorkOrderDetailPage extends PageBase {
 
 		this.board.api.on('start-drag-card', (ev) => {
 			// Drag preview
-			const dragged = this.items.find((d: any) => d.id == ev.id);
-			const kind = dragged?.type === 'tray' ? 'tray' : 'order';
-			const oid = dragged?.IDOrder ?? ev.id;
-			console.log(`[DRAG CARD] Start: ${kind} ${oid}`);
+			// const dragged = this.items.find((d: any) => d.id == ev.id);
+			// const kind = dragged?.type === 'tray' ? 'tray' : 'order';
+			// const oid = dragged?.IDOrder ?? ev.id;
+			// console.log(`[DRAG CARD] Start: ${kind} ${oid}`);
 			// fix ghost position
 			const root = document.querySelector('.wx-kanban') as HTMLElement | null;
 			const ghost = document.querySelector('.wx-kanban .wx-dragged-card') as HTMLElement | null;
@@ -308,19 +347,17 @@ export class WorkOrderDetailPage extends PageBase {
 			if (draggedCard) {
 				if (draggedCard.type === 'tray') {
 					// Move tray Ready, Serving
-					console.log(`[DROP CARD] TRAY ${draggedCard?.trayData?.Id ?? draggedCard?.id} -> ${move.columnId}`);
 					this.handleTrayMove(draggedCard, move.columnId);
 				} else {
 					// Move Order
-					console.log(`[DROP CARD] ORDER ${draggedCard?.IDOrder ?? move.id} -> ${move.columnId}`);
 					this.handleOrderMove(draggedCard, move.columnId);
 				}
 			}
 
-			const group = this.items.find((d) => d.IDOrder == move.id);
-			if (group && this.groupColumn) {
-				group[this.groupColumn] = move.columnId;
-			}
+			// const group = this.items.find((d) => d.IDOrder == move.id);
+			// if (group && this.groupColumn) {
+			// 	group[this.groupColumn] = move.columnId;
+			// }
 		});
 
 		this.board.api.on('end-drag-card', (ev) => {
@@ -331,13 +368,42 @@ export class WorkOrderDetailPage extends PageBase {
 				root.style.removeProperty('--ghost-x');
 				root.style.removeProperty('--ghost-y');
 			}
-			// show drag-source 
+			// show drag-source
 			const source = document.querySelector(`.wx-card[data-id="${ev?.id}"]`) as HTMLElement | null;
 			if (source) source.classList.remove('drag-source-hide');
 		});
 
 		// set handler drag/drop orderline
 		this.setupLineDragHandlers();
+
+		// tick hiển thị thời gian thực hiện theo giây
+		if (!(this as any)._elapsed_tick_attached) {
+			(this as any)._elapsed_tick_attached = true;
+			setInterval(() => {
+				const els = document.querySelectorAll('.elapsed[data-accepted-atms]');
+				els.forEach((el) => {
+					const span = el as HTMLElement;
+					const attr = span.getAttribute('data-accepted-atms');
+					if (!attr) return;
+					let diff = 0;
+					if (attr.startsWith('done:')) {
+						const parts = attr.split(':');
+						const doneSec = Number(parts[1]);
+						if (Number.isNaN(doneSec)) return;
+						diff = Math.max(0, doneSec);
+					} else {
+						const at = Number(attr);
+						if (!at || Number.isNaN(at)) return;
+						diff = Math.max(0, Math.floor((Date.now() - at) / 1000));
+					}
+					const hh = Math.floor(diff / 3600);
+					const mm = Math.floor((diff % 3600) / 60);
+					const ss = diff % 60;
+					const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
+					span.textContent = hh > 0 ? `${pad(hh)}:${pad(mm)}:${pad(ss)}` : `${pad(mm)}:${pad(ss)}`;
+				});
+			}, 1000);
+		}
 
 		this.loadKanban();
 	}
@@ -408,6 +474,13 @@ export class WorkOrderDetailPage extends PageBase {
 						const trayObj = this.trays.find((t) => String(t.Id) === String(trayId));
 						const trayType = trayObj?.Type || '';
 						console.log(`[DROP LINE] ORDER ${ctx.orderId} LINE ${ctx.lineId} -> TRAY ${trayId} (${trayType})`);
+						const idx = this.rawItems.findIndex((it) => it.Id === Number(ctx.lineId) && it.IDOrder === Number(ctx.orderId));
+						if (idx >= 0) {
+							this.rawItems[idx].AcceptedBy = this.env?.user || 'Chef';
+							this.rawItems[idx].AcceptedAtMs = Date.now();
+							this.rawItems[idx].AcceptedAt = new Date(this.rawItems[idx].AcceptedAtMs).toISOString();
+						}
+
 						this.removeLineFromAllTrays(parseInt(ctx.lineId));
 						this.addLineToTray(parseInt(ctx.orderId), parseInt(ctx.lineId), parseInt(trayId));
 						(this as any).__lineDragCtx = null;
@@ -437,7 +510,6 @@ export class WorkOrderDetailPage extends PageBase {
 						this.env
 							.showPrompt('Bạn có muốn hủy món này?', null, 'Hủy món')
 							.then(() => {
-								console.log(`[DROP LINE] ORDER ${ctx.orderId} LINE ${ctx.lineId} -> Cancelled`);
 								this.cancelLine(parseInt(ctx.orderId), parseInt(ctx.lineId));
 							})
 							.finally(() => {
@@ -468,6 +540,10 @@ export class WorkOrderDetailPage extends PageBase {
 							if (this.rawItems[idx].LineStatus === 'Serving') return;
 							console.log(`[DROP LINE] ORDER ${ctx.orderId} LINE ${ctx.lineId} -> Preparing`);
 							this.rawItems[idx].LineStatus = 'Preparing';
+							this.rawItems[idx].AcceptedBy = this.env?.user || 'Chef';
+							this.rawItems[idx].AcceptedAtMs = Date.now();
+							this.rawItems[idx].AcceptedAt = new Date(this.rawItems[idx].AcceptedAtMs).toISOString();
+
 							this.removeLineFromAllTrays(parseInt(ctx.lineId));
 							this.loadedData();
 							(this as any).__lineDragCtx = null;
@@ -525,139 +601,6 @@ export class WorkOrderDetailPage extends PageBase {
 					},
 					{ capture: true }
 				);
-				// const highlight = (colEl: HTMLElement | null, on: boolean) => {
-				// 	if (!colEl) return;
-				// 	if (on) colEl.classList.add('drag-over');
-				// 	else colEl.classList.remove('drag-over');
-				// };
-				// let lastHoverTray: HTMLElement | null = null;
-				// let lastHoverOrder: HTMLElement | null = null;
-				// const clearTrayHover = () => {
-				// 	// Xóa trạng thái hover
-				// 	if (lastHoverOrder) {
-				// 		lastHoverOrder.classList.remove('drag-over-child');
-				// 		lastHoverOrder = null;
-				// 	}
-				// 	if (lastHoverTray) {
-				// 		lastHoverTray.classList.remove('dragging-line');
-				// 		lastHoverTray.classList.remove('drag-over');
-				// 		lastHoverTray = null;
-				// 	}
-				// };
-				// const handleColumnDrop = (e: DragEvent, colId: string) => {
-				// 	const data: any = (this as any).__lineDragCtx;
-				// 	if (!(data?.orderId && data?.lineId)) return;
-				// 	const orderId = parseInt(data.orderId);
-				// 	const lineId = parseInt(data.lineId);
-				// 	switch (colId) {
-				// 		case 'Ready':
-				// 		case 'Serving': {
-				// 			const list = this.trays.filter((t) => t.Type === colId);
-				// 			const inputs = list.map((t) => ({ type: 'radio', label: `${t.Name}`, value: t.Id }));
-				// 			this.env.showPrompt('Chọn khay để bỏ món vào', null, 'Chọn khay', 'Chọn', 'Hủy', inputs).then((selectedId: number) => {
-				// 				if (!selectedId) return;
-				// 				this.addLineToTray(orderId, lineId, Number(selectedId));
-				// 				(this as any).__lineDragCtx = null;
-				// 			});
-				// 			break;
-				// 		}
-				// 		case 'Cancelled':
-				// 			{
-				// 				const idx = this.rawItems.findIndex((it) => it.Id === lineId && it.IDOrder === orderId);
-				// 				if (idx >= 0 && this.rawItems[idx].LineStatus === 'Serving') return;
-				// 				this.env.showPrompt('Bạn có muốn hủy món này?', null, 'Hủy món').then(() => {
-				// 					console.log(`[DROP LINE][DELEGATE] ORDER ${orderId} LINE ${lineId} -> Cancelled`);
-				// 					this.cancelLine(orderId, lineId);
-				// 					(this as any).__lineDragCtx = null;
-				// 				});
-				// 			}
-				// 			break;
-				// 		case 'Preparing':
-				// 			{
-				// 				const idx = this.rawItems.findIndex((it) => it.Id === lineId && it.IDOrder === orderId);
-				// 				if (idx >= 0) {
-				// 					console.log(`[DROP LINE][DELEGATE] ORDER ${orderId} LINE ${lineId} -> Preparing`);
-				// 					this.rawItems[idx].LineStatus = 'Preparing';
-				// 					this.removeLineFromAllTrays(lineId);
-				// 					this.loadedData();
-				// 					(this as any).__lineDragCtx = null;
-				// 				}
-				// 			}
-				// 			break;
-				// 		case 'Waiting':
-				// 			{
-				// 				const idx = this.rawItems.findIndex((it) => it.Id === lineId && it.IDOrder === orderId);
-				// 				if (idx >= 0) {
-				// 					console.log(`[DROP LINE][DELEGATE] ORDER ${orderId} LINE ${lineId} -> Waiting`);
-				// 					this.rawItems[idx].LineStatus = 'Waiting';
-				// 					this.removeLineFromAllTrays(lineId);
-				// 					this.loadedData();
-				// 					(this as any).__lineDragCtx = null;
-				// 				}
-				// 			}
-				// 			break;
-				// 	}
-				// };
-
-				// boardContainer.addEventListener(
-				// 	'dragover',
-				// 	(e: DragEvent) => {
-				// 		const target = e.target as HTMLElement;
-				// 		const columnEl = target?.closest?.('.wx-column[data-column-id]') as HTMLElement | null;
-				// 		const colId = columnEl?.getAttribute?.('data-column-id') || '';
-				// 		if (colId === 'Cancelled' || colId === 'Preparing' || colId === 'Waiting' || colId === 'Ready' || colId === 'Serving') {
-				// 			e.preventDefault();
-				// 			highlight(columnEl, true);
-				// 		}
-				// 		const trayEl = target?.closest?.('.tray-card[data-tray-id]') as HTMLElement | null;
-				// 		if (trayEl) {
-				// 			// Chỉ khi đang kéo line
-				// 			const ctx: any = (this as any).__lineDragCtx;
-				// 			if (ctx && ctx.orderId && ctx.lineId) {
-				// 				if (lastHoverTray !== trayEl) {
-				// 					clearTrayHover();
-				// 					lastHoverTray = trayEl;
-				// 					trayEl.classList.add('dragging-line');
-				// 					trayEl.classList.add('drag-over');
-				// 				}
-				// 				const orderEl = trayEl.querySelector(`.tray-order[data-order-id="${ctx.orderId}"]`) as HTMLElement | null;
-				// 				if (orderEl) {
-				// 					if (lastHoverOrder !== orderEl) {
-				// 						if (lastHoverOrder) lastHoverOrder.classList.remove('drag-over-child');
-				// 						lastHoverOrder = orderEl;
-				// 						orderEl.classList.add('drag-over-child');
-				// 					}
-				// 				} else {
-				// 					if (lastHoverOrder) {
-				// 						lastHoverOrder.classList.remove('drag-over-child');
-				// 						lastHoverOrder = null;
-				// 					}
-				// 				}
-				// 			}
-				// 		} else {
-				// 			clearTrayHover();
-				// 		}
-				// 	},
-				// 	{ capture: true }
-				// );
-
-				// boardContainer.addEventListener(
-				// 	'drop',
-				// 	(e: DragEvent) => {
-				// 		const target = e.target as HTMLElement;
-				// 		const columnEl = target?.closest?.('.wx-column[data-column-id]') as HTMLElement | null;
-				// 		const colId = columnEl?.getAttribute?.('data-column-id') || '';
-				// 		if (colId === 'Cancelled' || colId === 'Preparing' || colId === 'Waiting' || colId === 'Ready' || colId === 'Serving') {
-				// 			e.preventDefault();
-				// 			highlight(columnEl, false);
-				// 			handleColumnDrop(e, colId);
-				// 		}
-				// 		// Xóa hover khi thả
-				// 		clearTrayHover();
-				// 	},
-				// 	{ capture: true }
-				// );
-
 				(boardContainer as any)._wo_line_dnd_attached = true;
 			}
 		}, 500);
@@ -694,6 +637,10 @@ export class WorkOrderDetailPage extends PageBase {
 				IDOrder: orderId,
 				TableCode: line._Kitchen?.Code || '',
 				PlacedAt: line.PlacedAt,
+				PlacedBy: line.PlacedBy,
+				AcceptedAt: line.AcceptedAt,
+				AcceptedBy: line.AcceptedBy,
+				AcceptedAtMs: line.AcceptedAtMs,
 				Lines: [],
 			};
 			targetTray.Orders.push(existingOrder);
@@ -704,7 +651,7 @@ export class WorkOrderDetailPage extends PageBase {
 			console.log('Line already in tray');
 			return;
 		}
-		
+
 		existingOrder.Lines.push({ ...line, Status: newStatus });
 		this.rawItems[lineIndex].LineStatus = newStatus;
 		// Refresh the kanban display
@@ -719,7 +666,7 @@ export class WorkOrderDetailPage extends PageBase {
 			// Remove empty orders
 			tray.Orders = tray.Orders.filter((order: any) => order.Lines.length > 0);
 		});
-		console.log(`[TRAY] Removed line ${lineId} from all trays`);
+		//console.log(`[TRAY] Removed line ${lineId} from all trays`);
 	}
 
 	handleTrayMove(tray: any, targetColumn: string): void {
@@ -742,20 +689,24 @@ export class WorkOrderDetailPage extends PageBase {
 					}
 				});
 			});
-			console.log(`[UPDATE TRAY] Tray ${tray?.trayData?.Id} -> ${targetColumn}`);
+			//console.log(`[UPDATE TRAY] Tray ${tray?.trayData?.Id} -> ${targetColumn}`);
 		}
 
 		this.loadedData();
 	}
 
 	handleOrderMove(order: any, targetColumn: string): void {
+		if (order.Status === targetColumn) {
+			return;
+		}
+
 		order.Status = targetColumn;
 		order.column_custom_key = targetColumn;
 
 		if (targetColumn === 'Cancelled') {
-			// block nếu có món đang Serving
-			const serving = order.Lines.some((l: any) => this.rawItems.find((r) => r.Id === l.Id)?.LineStatus === 'Serving');
-			if (serving) return; // không thể hủy khi đang Serving
+			// todo block nếu có món đang Serving
+			//const serving = order.Lines.some((l: any) => this.rawItems.find((r) => r.Id === l.Id)?.LineStatus === 'Serving');
+			//if (serving) return; // không thể hủy khi đang Serving
 			this.env.showPrompt('Bạn có muốn hủy toàn bộ order này?', null, 'Hủy order').then(() => {
 				order.Lines.forEach((line: any) => {
 					const rawLineIndex = this.rawItems.findIndex((item) => item.Id === line.Id);
@@ -805,6 +756,10 @@ export class WorkOrderDetailPage extends PageBase {
 				IDOrder: orderId,
 				TableCode: readyLines[0]._Kitchen?.Code || '',
 				PlacedAt: readyLines[0].PlacedAt,
+				PlacedBy: readyLines[0]?.PlacedBy,
+				AcceptedAt: readyLines[0]?.AcceptedAt,
+				AcceptedBy: readyLines[0]?.AcceptedBy,
+				AcceptedAtMs: readyLines[0]?.AcceptedAtMs,
 				Lines: [],
 			};
 			targetTray.Orders.push(existingOrder);
@@ -832,6 +787,10 @@ export class WorkOrderDetailPage extends PageBase {
 				IDOrder: orderId,
 				TableCode: servingLines[0]._Kitchen?.Code || '',
 				PlacedAt: servingLines[0].PlacedAt,
+				PlacedBy: servingLines[0]?.PlacedBy,
+				AcceptedAt: servingLines[0]?.AcceptedAt,
+				AcceptedBy: servingLines[0]?.AcceptedBy,
+				AcceptedAtMs: servingLines[0]?.AcceptedAtMs,
 				Lines: [],
 			};
 			targetTray.Orders.push(existingOrder);
@@ -859,8 +818,12 @@ export class WorkOrderDetailPage extends PageBase {
 		if (!existingOrder) {
 			existingOrder = {
 				IDOrder: order.IDOrder,
-				TableCode: order.TableCode || order.Lines[0]?._Kitchen?.Code || '',
+				TableCode: order.Lines[0]?._Kitchen?.Code || '',
 				PlacedAt: order.PlacedAt,
+				PlacedBy: order.PlacedBy,
+				AcceptedAt: order.AcceptedAt,
+				AcceptedBy: order.AcceptedBy,
+				AcceptedAtMs: order.AcceptedAtMs,
 				Lines: [],
 			};
 			targetTray.Orders.push(existingOrder);
@@ -891,8 +854,12 @@ export class WorkOrderDetailPage extends PageBase {
 		if (!existingOrder) {
 			existingOrder = {
 				IDOrder: order.IDOrder,
-				TableCode: order.TableCode || order.Lines[0]?._Kitchen?.Code || '',
+				TableCode: order.Lines[0]?._Kitchen?.Code || '',
 				PlacedAt: order.PlacedAt,
+				PlacedBy: order.PlacedBy,
+				AcceptedAt: order.AcceptedAt,
+				AcceptedBy: order.AcceptedBy,
+				AcceptedAtMs: order.AcceptedAtMs,
 				Lines: [],
 			};
 			targetTray.Orders.push(existingOrder);
@@ -1006,10 +973,7 @@ export class WorkOrderDetailPage extends PageBase {
 							this.returnLine(orderId, lineId);
 							break;
 						case 'recipe':
-							this.viewRecipe(orderId, lineId);
-							break;
-						case 'split-line':
-							this.splitLine(orderId, lineId);
+							this.viewBOM(orderId, lineId);
 							break;
 					}
 				});
@@ -1034,7 +998,8 @@ export class WorkOrderDetailPage extends PageBase {
 			.filter((l) => l.IDOrder === orderId)
 			.forEach((l: any) => {
 				l.AcceptedBy = 'Chef';
-				l.AcceptedAt = new Date().toLocaleTimeString();
+				l.AcceptedAtMs = Date.now();
+				l.AcceptedAt = new Date(l.AcceptedAtMs).toISOString();
 				l.LineStatus = 'Preparing';
 			});
 		this.loadedData();
@@ -1055,7 +1020,8 @@ export class WorkOrderDetailPage extends PageBase {
 		const idx = this.rawItems.findIndex((l) => l.IDOrder === orderId && l.Id === lineId);
 		if (idx < 0) return;
 		this.rawItems[idx].AcceptedBy = 'Chef';
-		this.rawItems[idx].AcceptedAt = new Date().toLocaleTimeString();
+		this.rawItems[idx].AcceptedAtMs = Date.now();
+		this.rawItems[idx].AcceptedAt = new Date(this.rawItems[idx].AcceptedAtMs).toISOString();
 		this.rawItems[idx].LineStatus = 'Preparing';
 		this.loadedData();
 	}
@@ -1066,23 +1032,14 @@ export class WorkOrderDetailPage extends PageBase {
 		const rq = this.rawItems[idx]._Item?.RequiredQty ?? 0;
 		if (this.rawItems[idx]._Item) this.rawItems[idx]._Item.PreparedQty = rq;
 		this.rawItems[idx].LineStatus = 'Ready';
+		// Nếu đang Preparing thì lưu lại thời điểm hoàn thành
+		if (this.rawItems[idx].AcceptedAtMs && !this.rawItems[idx].AcceptedAtMsDone) {
+			this.rawItems[idx].AcceptedAtMsDone = Date.now();
+		}
 		this.loadedData();
 	}
 
-	viewRecipe(orderId: number, lineId: number) {}
-
-	splitLine(orderId: number, lineId: number) {
-		// TODO: tách 1 món thành đơn mới
-		const idx = this.items.findIndex((g: any) => g.IDOrder === orderId);
-		if (idx < 0) return;
-		const group: any = this.items[idx];
-		const lineIdx = group.Lines.findIndex((l: any) => l.Id === lineId);
-		if (lineIdx < 0) return;
-		const line = group.Lines.splice(lineIdx, 1)[0];
-		const newId = Math.max(...this.items.map((g: any) => g.IDOrder)) + 1;
-		this.items.splice(idx + 1, 0, { IDOrder: newId, Status: group.Status, Lines: [line], TableCode: group.TableCode, PlacedAt: group.PlacedAt });
-		this.loadKanban();
-	}
+	viewBOM(orderId: number, lineId: number) {}
 
 	preLoadData(event?: any): void {
 		this.query.IDKitchen = 1;
@@ -1094,7 +1051,12 @@ export class WorkOrderDetailPage extends PageBase {
 		super.preLoadData(event);
 	}
 	loadData(event?) {
+		const now = new Date();
+		const placedAt = new Date(now.getTime() - 40 * 60 * 1000); // 40 phút trước
+		const acceptedAt = new Date(placedAt.getTime() + 10 * 60 * 1000); // 10 phút sau khi đặt
+		const readyAt = new Date(acceptedAt.getTime() + 15 * 60 * 1000); // 15 phút sau khi bắt đầu làm
 		this.rawItems = [
+			// Order 32
 			{
 				Id: 1,
 				Code: 'OL001',
@@ -1102,9 +1064,18 @@ export class WorkOrderDetailPage extends PageBase {
 				IDOrder: 32,
 				IDOrderLine: 3223,
 				Status: 'Preparing',
+				LineStatus: 'Preparing',
+				PlacedAt: placedAt,
+				PlacedBy: 'UserA',
+				AcceptedAt: acceptedAt.toISOString(),
+				AcceptedAtMs: acceptedAt.getTime(),
+				AcceptedAtMsDone: null,
+				AcceptedBy: 'ChefA',
+				_Staff: { Id: 101, FullName: 'Chef A', Code: 'CHFA', Email: 'chef.a@example.com', Avatar: 'assets/chef-a.jpg' },
 				_Kitchen: { Name: 'Bếp 1', Code: 'GLA08', Id: 1 },
 				_Item: { Id: 1, Code: 'ACBA001', Name: 'Bánh mì ốp la', RequiredQty: 2, PreparedQty: 1 },
 				_UoM: { Id: 1, Code: '', Name: 'Phần' },
+				Note: '',
 			},
 			{
 				Id: 2,
@@ -1113,9 +1084,18 @@ export class WorkOrderDetailPage extends PageBase {
 				IDOrder: 32,
 				IDOrderLine: 3224,
 				Status: 'Waiting',
+				LineStatus: 'Waiting',
+				PlacedAt: placedAt,
+				PlacedBy: 'UserA',
+				AcceptedAt: '',
+				AcceptedAtMs: null,
+				AcceptedAtMsDone: null,
+				AcceptedBy: '',
+				_Staff: null,
 				_Kitchen: { Name: 'Bếp 1', Code: 'GLA08', Id: 1 },
-				_Item: { Id: 2, Code: 'PHO001', Name: 'Phở bò tái', RequiredQty: 1, PreparedQty: 0 },
-				_UoM: { Id: 1, Code: '', Name: 'Tô' },
+				_Item: { Id: 2, Code: 'ITEM002', Name: 'Gà hấp muối', RequiredQty: 1, PreparedQty: 0 },
+				_UoM: { Id: 1, Code: '', Name: 'Phần' },
+				Note: '',
 			},
 			{
 				Id: 3,
@@ -1124,10 +1104,21 @@ export class WorkOrderDetailPage extends PageBase {
 				IDOrder: 32,
 				IDOrderLine: 3225,
 				Status: 'Waiting',
+				LineStatus: 'Waiting',
+				PlacedAt: placedAt,
+				PlacedBy: 'UserA',
+				AcceptedAt: '',
+				AcceptedAtMs: null,
+				AcceptedAtMsDone: null,
+				AcceptedBy: '',
+				_Staff: null,
 				_Kitchen: { Name: 'Bếp 1', Code: 'GLA08', Id: 1 },
 				_Item: { Id: 3, Code: 'TRA001', Name: 'Trà đá', RequiredQty: 3, PreparedQty: 1 },
 				_UoM: { Id: 1, Code: '', Name: 'Ly' },
+				Note: '',
 			},
+
+			// Order 33
 			{
 				Id: 4,
 				Code: 'OL004',
@@ -1135,9 +1126,18 @@ export class WorkOrderDetailPage extends PageBase {
 				IDOrder: 33,
 				IDOrderLine: 3226,
 				Status: 'Preparing',
+				LineStatus: 'Preparing',
+				PlacedAt: placedAt,
+				PlacedBy: 'UserB',
+				AcceptedAt: acceptedAt.toISOString(),
+				AcceptedAtMs: null,
+				AcceptedAtMsDone: null,
+				AcceptedBy: 'ChefB',
+				_Staff: { Id: 102, FullName: 'Chef B', Code: 'CHFB', Email: 'chef.b@example.com', Avatar: 'assets/chef-b.jpg' },
 				_Kitchen: { Name: 'Bếp 2', Code: 'KITCHEN', Id: 2 },
 				_Item: { Id: 4, Code: 'GOI001', Name: 'Gỏi cuốn tôm thịt', RequiredQty: 2, PreparedQty: 2 },
 				_UoM: { Id: 1, Code: '', Name: 'Cuốn' },
+				Note: '',
 			},
 			{
 				Id: 5,
@@ -1146,9 +1146,18 @@ export class WorkOrderDetailPage extends PageBase {
 				IDOrder: 33,
 				IDOrderLine: 3227,
 				Status: 'Ready',
+				LineStatus: 'Ready',
+				PlacedAt: placedAt,
+				PlacedBy: 'UserB',
+				AcceptedAt: acceptedAt.toISOString(),
+				AcceptedAtMs: null,
+				AcceptedAtMsDone: readyAt.getTime(),
+				AcceptedBy: 'ChefB',
+				_Staff: { Id: 102, FullName: 'Chef B', Code: 'CHFB', Email: 'chef.b@example.com', Avatar: 'assets/chef-b.jpg' },
 				_Kitchen: { Name: 'Bếp 2', Code: 'KITCHEN', Id: 2 },
 				_Item: { Id: 5, Code: 'NUON001', Name: 'Sườn nướng mật ong', RequiredQty: 1, PreparedQty: 0 },
 				_UoM: { Id: 1, Code: '', Name: 'Phần' },
+				Note: '',
 			},
 			{
 				Id: 6,
@@ -1157,10 +1166,21 @@ export class WorkOrderDetailPage extends PageBase {
 				IDOrder: 33,
 				IDOrderLine: 3228,
 				Status: 'Ready',
+				LineStatus: 'Ready',
+				PlacedAt: placedAt,
+				PlacedBy: 'UserB',
+				AcceptedAt: acceptedAt.toISOString(),
+				AcceptedAtMs: null,
+				AcceptedAtMsDone: readyAt.getTime(),
+				AcceptedBy: 'ChefB',
+				_Staff: null,
 				_Kitchen: { Name: 'Bếp 2', Code: 'KITCHEN', Id: 2 },
 				_Item: { Id: 6, Code: 'NUOC001', Name: 'Nước cam ép', RequiredQty: 2, PreparedQty: 2 },
 				_UoM: { Id: 1, Code: '', Name: 'Ly' },
+				Note: '',
 			},
+
+			// Order 34
 			{
 				Id: 7,
 				Code: 'OL007',
@@ -1168,9 +1188,18 @@ export class WorkOrderDetailPage extends PageBase {
 				IDOrder: 34,
 				IDOrderLine: 3229,
 				Status: 'Serving',
+				LineStatus: 'Serving',
+				PlacedAt: placedAt,
+				PlacedBy: 'UserC',
+				AcceptedAt: '2025-08-25T08:10:00.000Z',
+				AcceptedAtMs: null,
+				AcceptedAtMsDone: null,
+				AcceptedBy: 'ChefC',
+				_Staff: { Id: 103, FullName: 'Chef C', Code: 'CHFC', Email: 'chef.c@example.com', Avatar: 'assets/chef-c.jpg' },
 				_Kitchen: { Name: 'Bếp 3', Code: 'BBQ', Id: 3 },
 				_Item: { Id: 7, Code: 'GA001', Name: 'Gà quay lu', RequiredQty: 1, PreparedQty: 1 },
 				_UoM: { Id: 1, Code: '', Name: 'Con' },
+				Note: '',
 			},
 			{
 				Id: 8,
@@ -1179,9 +1208,18 @@ export class WorkOrderDetailPage extends PageBase {
 				IDOrder: 34,
 				IDOrderLine: 3230,
 				Status: 'Cancelled',
+				LineStatus: 'Cancelled',
+				PlacedAt: placedAt,
+				PlacedBy: 'UserC',
+				AcceptedAt: '',
+				AcceptedAtMs: null,
+				AcceptedAtMsDone: null,
+				AcceptedBy: '',
+				_Staff: null,
 				_Kitchen: { Name: 'Bếp 3', Code: 'BBQ', Id: 3 },
 				_Item: { Id: 8, Code: 'SUP001', Name: 'Súp cua trứng bắc thảo', RequiredQty: 1, PreparedQty: 0 },
 				_UoM: { Id: 1, Code: '', Name: 'Tô' },
+				Note: '',
 			},
 			{
 				Id: 9,
@@ -1190,10 +1228,21 @@ export class WorkOrderDetailPage extends PageBase {
 				IDOrder: 34,
 				IDOrderLine: 3231,
 				Status: 'Cancelled',
+				LineStatus: 'Cancelled',
+				PlacedAt: placedAt,
+				PlacedBy: 'UserC',
+				AcceptedAt: '',
+				AcceptedAtMs: null,
+				AcceptedAtMsDone: null,
+				AcceptedBy: '',
+				_Staff: null,
 				_Kitchen: { Name: 'Bếp 3', Code: 'BBQ', Id: 3 },
 				_Item: { Id: 9, Code: 'BIA001', Name: 'Bia chai', RequiredQty: 5, PreparedQty: 5 },
 				_UoM: { Id: 1, Code: '', Name: 'Chai' },
+				Note: '',
 			},
+
+			// Order 35
 			{
 				Id: 10,
 				Code: 'OL010',
@@ -1201,9 +1250,18 @@ export class WorkOrderDetailPage extends PageBase {
 				IDOrder: 35,
 				IDOrderLine: 3232,
 				Status: 'Ready',
+				LineStatus: 'Ready',
+				PlacedAt: placedAt,
+				PlacedBy: 'UserB',
+				AcceptedAt: acceptedAt.toISOString(),
+				AcceptedAtMs: null,
+				AcceptedAtMsDone: readyAt.getTime(),
+				AcceptedBy: 'ChefB',
+				_Staff: null,
 				_Kitchen: { Name: 'Bếp 1', Code: 'GLA08', Id: 1 },
 				_Item: { Id: 10, Code: 'COM001', Name: 'Cơm gà Hải Nam', RequiredQty: 1, PreparedQty: 1 },
 				_UoM: { Id: 1, Code: '', Name: 'Phần' },
+				Note: '',
 			},
 			{
 				Id: 11,
@@ -1212,9 +1270,80 @@ export class WorkOrderDetailPage extends PageBase {
 				IDOrder: 35,
 				IDOrderLine: 3233,
 				Status: 'Ready',
+				LineStatus: 'Ready',
+				PlacedAt: placedAt,
+				PlacedBy: 'UserB',
+				AcceptedAt: acceptedAt.toISOString(),
+				AcceptedAtMs: null,
+				AcceptedAtMsDone: readyAt.getTime(),
+				AcceptedBy: 'ChefB',
+				_Staff: null,
 				_Kitchen: { Name: 'Bếp 1', Code: 'GLA08', Id: 1 },
 				_Item: { Id: 11, Code: 'SOUP002', Name: 'Soup rau củ', RequiredQty: 1, PreparedQty: 1 },
 				_UoM: { Id: 1, Code: '', Name: 'Tô' },
+				Note: '',
+			},
+
+			// Order 36
+			{
+				Id: 12,
+				Code: 'OL012',
+				Name: '',
+				IDOrder: 36,
+				IDOrderLine: 3234,
+				Status: 'Preparing',
+				LineStatus: 'Preparing',
+				PlacedAt: placedAt,
+				PlacedBy: 'UserA',
+				AcceptedAt: acceptedAt.toISOString(),
+				AcceptedAtMs: acceptedAt.getTime(),
+				AcceptedAtMsDone: null,
+				AcceptedBy: 'ChefA',
+				_Staff: { Id: 101, FullName: 'Chef A', Code: 'CHFA', Email: 'chef.a@example.com', Avatar: 'assets/chef-a.jpg' },
+				_Kitchen: { Name: 'Bếp 1', Code: 'GLA08', Id: 1 },
+				_Item: { Id: 1, Code: 'ACB331', Name: 'Bánh mì ốp la chả', RequiredQty: 2, PreparedQty: 1 },
+				_UoM: { Id: 1, Code: '', Name: 'Phần' },
+				Note: '',
+			},
+			{
+				Id: 13,
+				Code: 'OL013',
+				Name: '',
+				IDOrder: 36,
+				IDOrderLine: 3235,
+				Status: 'Waiting',
+				LineStatus: 'Waiting',
+				PlacedAt: placedAt,
+				PlacedBy: 'UserA',
+				AcceptedAt: '',
+				AcceptedAtMs: null,
+				AcceptedAtMsDone: null,
+				AcceptedBy: '',
+				_Staff: null,
+				_Kitchen: { Name: 'Bếp 1', Code: 'GLA08', Id: 1 },
+				_Item: { Id: 2, Code: 'ITE111', Name: 'Cơm gà', RequiredQty: 1, PreparedQty: 0 },
+				_UoM: { Id: 1, Code: '', Name: 'Phần' },
+				Note: '',
+			},
+			{
+				Id: 14,
+				Code: '1L013',
+				Name: '',
+				IDOrder: 36,
+				IDOrderLine: 3236,
+				Status: 'Ready',
+				LineStatus: 'Ready',
+				PlacedAt: placedAt,
+				PlacedBy: 'UserA',
+				AcceptedAt: '',
+				AcceptedAtMs: null,
+				AcceptedAtMsDone: readyAt.getTime(),
+				AcceptedBy: '',
+				_Staff: null,
+				_Kitchen: { Name: 'Bếp 1', Code: 'GLA08', Id: 1 },
+				_Item: { Id: 2, Code: 'ITE451', Name: 'Cơm chiên cá mặn', RequiredQty: 1, PreparedQty: 0 },
+				_UoM: { Id: 1, Code: '', Name: 'Phần' },
+				Note: '',
 			},
 		];
 		this.items = [...this.rawItems];
@@ -1222,14 +1351,14 @@ export class WorkOrderDetailPage extends PageBase {
 	}
 
 	loadedData(event?: any, ignoredFromGroup?: boolean): void {
-		// Group lines by order from rawItems as source of truth
+		// Group lines by order from rawItems
 		const orderGroups = this.rawItems.reduce(
 			(acc: Record<string, any[]>, line: any) => {
 				if (!acc[line.IDOrder]) acc[line.IDOrder] = [];
 				if (!line.LineStatus) line.LineStatus = line.Status || 'Waiting';
-				// test
-				if (!line.PlacedAt) {
-					line.PlacedAt = new Date();
+				// Nếu đã xong thì dùng AcceptedAtMsDone để hiển thị thời gian hoàn thành
+				if (line.LineStatus === 'Ready' && line.AcceptedAtMsDone) {
+					line.AcceptedAtMs = line.AcceptedAtMsDone;
 				}
 				acc[line.IDOrder].push(line);
 				return acc;
@@ -1243,6 +1372,10 @@ export class WorkOrderDetailPage extends PageBase {
 			const lines = orderGroups[orderId];
 			if (!lines?.length) return;
 
+			// compute order-level AcceptedAtMsDone (latest done time among lines)
+			const _doneTimes = lines.map((l: any) => l.AcceptedAtMsDone).filter((v) => v);
+			const orderAcceptedAtMsDone = _doneTimes.length ? Math.max(..._doneTimes) : undefined;
+
 			const waitingLines = lines.filter((l) => (l.LineStatus || l.Status || 'Waiting') === 'Waiting');
 			const preparingLines = lines.filter((l) => (l.LineStatus || l.Status || 'Waiting') === 'Preparing');
 			const readyLines = lines.filter((l) => (l.LineStatus || l.Status || 'Waiting') === 'Ready');
@@ -1253,12 +1386,18 @@ export class WorkOrderDetailPage extends PageBase {
 
 			if (waitingLines.length) {
 				kanbanCard.push({
-					id: `${orderId}_Waiting`,
+					id: orderId,
+					//id: `${orderId}_Waiting`,
 					IDOrder: parseInt(orderId),
 					Status: 'Waiting',
 					Lines: waitingLines,
 					TableCode: lines[0]?._Kitchen?.Code || '',
 					PlacedAt: lines[0]?.PlacedAt,
+					PlacedBy: lines[0]?.PlacedBy,
+					AcceptedAt: lines[0]?.AcceptedAt,
+					AcceptedBy: lines[0]?.AcceptedBy,
+					AcceptedAtMs: lines[0]?.AcceptedAtMs,
+					AcceptedAtMsDone: orderAcceptedAtMsDone,
 					label: `Order ${orderId}`,
 					column_custom_key: 'Waiting',
 					process: 0,
@@ -1274,12 +1413,18 @@ export class WorkOrderDetailPage extends PageBase {
 				const done = doneLines.length;
 				const percent = Math.max(0, Math.min(100, Math.round((done / total) * 100)));
 				kanbanCard.push({
-					id: `${orderId}_Preparing`,
+					id: orderId,
+					//id: `${orderId}_Preparing`,
 					IDOrder: parseInt(orderId),
 					Status: 'Preparing',
 					Lines: linesForPreparingCard,
 					TableCode: lines[0]?._Kitchen?.Code || '',
 					PlacedAt: lines[0]?.PlacedAt,
+					PlacedBy: lines[0]?.PlacedBy,
+					AcceptedAt: lines[0]?.AcceptedAt,
+					AcceptedBy: lines[0]?.AcceptedBy,
+					AcceptedAtMs: lines[0]?.AcceptedAtMs,
+					AcceptedAtMsDone: orderAcceptedAtMsDone,
 					label: `Order ${orderId}`,
 					column_custom_key: 'Preparing',
 					process: percent,
@@ -1289,12 +1434,18 @@ export class WorkOrderDetailPage extends PageBase {
 
 			if (cancelledLines.length) {
 				kanbanCard.push({
-					id: `${orderId}_Cancelled`,
+					id: orderId,
+					//id: `${orderId}_Cancelled`,
 					IDOrder: parseInt(orderId),
 					Status: 'Cancelled',
 					Lines: cancelledLines,
 					TableCode: lines[0]?._Kitchen?.Code || '',
 					PlacedAt: lines[0]?.PlacedAt,
+					PlacedBy: lines[0]?.PlacedBy,
+					AcceptedAt: lines[0]?.AcceptedAt,
+					AcceptedBy: lines[0]?.AcceptedBy,
+					AcceptedAtMs: lines[0]?.AcceptedAtMs,
+					AcceptedAtMsDone: orderAcceptedAtMsDone,
 					label: `Order ${orderId}`,
 					column_custom_key: 'Cancelled',
 					process: 0,
@@ -1306,7 +1457,8 @@ export class WorkOrderDetailPage extends PageBase {
 			.filter((t) => t.Type === 'Ready')
 			.forEach((tray) => {
 				kanbanCard.push({
-					id: `tray-ready ${tray.Id}`,
+					id: tray.Id,
+					//id: `tray-ready ${tray.Id}`,
 					type: 'tray',
 					label: `${tray.Name}`,
 					trayData: tray,
@@ -1319,7 +1471,8 @@ export class WorkOrderDetailPage extends PageBase {
 			.filter((t) => t.Type === 'Serving')
 			.forEach((tray) => {
 				kanbanCard.push({
-					id: `tray-serving ${tray.Id}`,
+					id: tray.Id,
+					//id: `tray-serving ${tray.Id}`,
 					type: 'tray',
 					label: `${tray.Name}`,
 					trayData: tray,
