@@ -284,46 +284,20 @@ export class ForecastDetailPage extends PageBase {
 
 	addRows(row: any, addNew = false) {
 		let groups = <FormArray>this.formGroup.controls.Rows;
+		let existedItems = groups.controls.map((d) => d.get('IDItem').value);
 		let group = this.formBuilder.group({
 			Key: [row?.Key || row?.IDItem + '-' + row?.IDUoM],
 			_IDItemDataSource: [
-				{
-					searchProvider: this.itemProvider,
-					loading: false,
-					input$: new Subject<string>(),
-					existedItems: groups.controls.map((d) => d.get('IDItem').value),
-					selected: [
-						{
-							Id: row?.IDItem,
-							Name: row?.ItemName,
-						},
-					],
-					items$: null,
-					initSearch() {
-						this.loading = false;
-						this.items$ = concat(
-							of(this.selected),
-							this.input$.pipe(
-								distinctUntilChanged(),
-								tap(() => (this.loading = true)),
-								switchMap((term) =>
-									this.searchProvider
-										.search({
-											SortBy: ['Id_desc'],
-											Take: 20,
-											Skip: 0,
-											Term: term,
-											Id_ne: this.existedItems.length > 0 ? this.existedItems : '',
-										})
-										.pipe(
-											catchError(() => of([])), // empty list on error
-											tap(() => (this.loading = false))
-										)
-								)
-							)
-						);
-					},
-				},
+				this.buildSelectDataSource((term) => {
+					return this.pageProvider.commonService.connect('GET', 'SALE/Forecast/ItemSearch/', {
+						// IsVendorSearch: this._IDVendor ? true : false,
+						SortBy: ['Id_desc'],
+						Take: 20,
+						Skip: 0,
+						Term: term,
+						Id_ne: existedItems.length > 0 ? existedItems : '',
+					});
+				}),
 			],
 			_UoMDataSource: [row?.UoMs],
 			IDForecast: new FormControl({ value: row?.IDForecast, disabled: true }),
@@ -332,7 +306,17 @@ export class ForecastDetailPage extends PageBase {
 			IDUoM: [row?.IDUoM, Validators.required],
 			IsChecked: [false],
 		});
+		if (row?.IDItem) {
+			group.get('_IDItemDataSource').value.selected = [
+				{
+					Id: row?.IDItem,
+					Name: row?.ItemName,
+				},
+			];
+		}
+
 		group.get('_IDItemDataSource').value?.initSearch();
+
 		groups.push(group);
 	}
 
