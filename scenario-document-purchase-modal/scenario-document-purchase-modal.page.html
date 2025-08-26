@@ -1,0 +1,57 @@
+<ion-header>
+	<ion-toolbar>
+		<ion-buttons slot="start" class="ion-hide-sm-down_">
+			<ion-button color="dark" class="ion-hide-sm-down"> {{'Select purchase order' | translate}} </ion-button>
+		</ion-buttons>
+
+		<ion-buttons slot="primary">
+
+			<span class="split ion-hide-sm-down">|</span>
+
+			<ion-button [disabled]="selectedItems.length==0" fill="solid" size="small" color="primary"
+				(click)="SaveSelected()">
+				&nbsp;{{'Add' | translate}} {{selectedItems.length}} {{'document' | translate}}&nbsp;
+			</ion-button>
+
+			<ion-button title="{{'Search' | translate}}" (click)="pageConfig.isShowSearch =! pageConfig.isShowSearch">
+				<ion-icon slot="icon-only" name="search-outline"></ion-icon>
+			</ion-button>
+
+			<ion-button (click)="refresh()" title="{{'Refresh' | translate}}">
+				<ion-icon slot="icon-only" name="reload-outline"></ion-icon>
+			</ion-button>
+
+			<ion-button title="{{'Close' | translate}}" color="secondary" (click)="closeModal()">
+				<ion-icon slot="icon-only" name="close"></ion-icon>
+			</ion-button>
+		</ion-buttons>
+	</ion-toolbar>
+</ion-header>
+<ion-content appScrollbarTheme class="header-table">
+	<app-data-table class="box-shadow responsive" [rows]="items" [trackBy]="'Id'" [(selectedRows)]="selectedItems"
+		[showSpinner]="pageConfig.showSpinner" [showFilter]="pageConfig.isShowSearch" [(query)]="query"
+		(dataInfinite)="loadData($event)" (filter)="onDatatableFilter($event)" (sort)="onSort($event)"
+		(selectedRowsChange)="showCommandBySelectedRows($event)">
+		<datatable-column [checkbox]="true" name=""></datatable-column>
+		<datatable-column class="col-id" name="#" property="Id" [navLink]="'purchase-order'">
+		</datatable-column>
+		<datatable-column class="col-date" format="yyyy-MM-dd" name="Order date" property="OrderDate"
+			filterControlType="time-frame"></datatable-column>
+		<datatable-column class="col-date" format="yyyy-MM-dd" name="Expected receipt date"
+			property="ExpectedReceiptDate" filterControlType="date"></datatable-column>
+		<datatable-column class="col-name flex-break" name="Vendor" property="VendorName"></datatable-column>
+		<datatable-column class="col-name flex-break" name="Goods owner" property="StorerName"></datatable-column>
+		<datatable-column class="col-number bold" format="1.0-0" name="Total"
+			property="TotalAfterTax"></datatable-column>
+		<datatable-column class="col-status" name="Status" property="Status" filterControlType="ng-select-status"
+			[filterDataSource]="statusList">
+			<ng-template let-i="row" datatable-cell-template>
+				<ion-badge [color]="i.StatusColor" [title]="i.StatusText"> {{i.StatusText | translate}} </ion-badge>
+			</ng-template>
+		</datatable-column>
+	</app-data-table>
+	<ion-infinite-scroll color="primary" threshold="20%" (ionInfinite)="loadData($event)"
+		[disabled]="!pageConfig.infiniteScroll || pageConfig.isEndOfData">
+		<ion-infinite-scroll-content loadingSpinner="dots"></ion-infinite-scroll-content>
+	</ion-infinite-scroll>
+</ion-content>

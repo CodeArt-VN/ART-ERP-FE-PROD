@@ -1,0 +1,138 @@
+::ng-deep {
+    app-data-table .col-uom {
+        max-width: 90px;
+        min-width: 90px;
+        justify-content: center;
+
+        .c-input {
+            text-align: center;
+        }
+    }
+
+    app-data-table .col-anem .text-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+    }
+
+    .table-contain {
+        overflow: hidden;
+        overflow-x: auto !important;
+        margin: auto;
+    }
+
+
+    .c-control {
+        min-width: 250px;
+        flex: 1;
+        margin-right: 10px;
+    }
+
+    .c-control.document {
+        min-width: 200px;
+    }
+
+    .c-control .c-input.ng-select {
+        min-height: 40px;
+    }
+
+    .button-wrapper {
+        display: flex;
+        width: 100%;
+        gap: 8px;
+    }
+
+    .button-wrapper ion-button {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .col-mrpname {
+        white-space: nowrap !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 150px;
+        max-width: 250px;
+        gap: 3px;
+    }
+
+    .vendor-name {
+        font-size: 80%;
+    }
+
+
+    app-data-table .col-custom {
+        max-width: 100px;
+        min-width: 80px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        justify-content: center;
+    }
+
+    .col-check {
+        max-width: 100px;
+        min-width: 100px;
+        justify-content: center;
+        text-align: center;
+
+        ion-checkbox {
+            height: 17px;
+            width: 17px;
+        }
+    }
+
+    .col-mrpname {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 400px;
+        max-width: 400px;
+    }
+
+    .col-number.quantity {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 150px;
+        max-width: 150px;
+    }
+
+    .col-date {
+        min-width: 100px;
+        max-width: 100px;
+    }
+
+    .col-check {
+        max-width: 100px;
+        min-width: 100px;
+        justify-content: center;
+        text-align: center;
+
+        ion-checkbox {
+            height: 17px;
+            width: 17px;
+        }
+    }
+
+    .col-number.quantity {
+        min-width: 210px;
+        max-width: 210px;
+    }
+
+    .vendor-name,
+    .item-name {
+        font-size: 80%;
+    }
+
+    .cell.col-custom {
+        justify-content: flex-end;
+        min-width: 100px;
+        max-width: 125px;
+    }
+
+    .negative {
+        color: #c5000f;
+    }
+}

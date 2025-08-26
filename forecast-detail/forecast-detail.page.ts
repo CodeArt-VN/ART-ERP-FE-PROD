@@ -676,6 +676,21 @@ export class ForecastDetailPage extends PageBase {
 				}
 			});
 	}
+	createMRPScenario() {
+		let subQuery = {
+			Id: this.item.Id,
+		};
+		this.env
+			.showLoading('Please wait for a few moments', this.commonService.connect('POST', 'SALE/Forecast/CreateMRPScenario/' + this.item.Id, subQuery).toPromise())
+			.then((result) => {
+				console.log(result);
+				if (result) {
+					this.env.showMessage('Saved', 'success');
+				} else {
+					this.env.showMessage('Cannot save, please try again', 'danger');
+				}
+			});
+	}
 
 	@ViewChild('importfile') importfile: any;
 	onClickImport() {
