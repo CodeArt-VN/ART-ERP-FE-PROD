@@ -22,7 +22,7 @@
 <ion-content appScrollbarTheme class="ion-padding">
 	<div id="order-detail-page" style="position: absolute"></div>
 	<form [formGroup]="formGroup">
-		<ion-row class="hr-group ion-no-padding caption" *ngIf="env.isMobile">
+		<ion-row class="hr-group ion-no-padding caption" *ngIf="isMobile">
 			<ion-col size="12" size-sm="12" size-md="12" size-xl="12">
 				<ion-list-header class="ion-no-padding">
 					<ion-label color="primary">{{'BOM' | translate}} <span *ngIf="id">#{{id}}</span> </ion-label>
@@ -38,7 +38,7 @@
 			</ion-col>
 		</ion-row>
 	</form>
-	<ion-toolbar *ngIf="env.isMobile" color="primary" class="bomtabs">
+	<ion-toolbar *ngIf="isMobile" color="primary" class="bomtabs">
 		<ion-segment scrollable="true" (ionChange)="segmentChanged($event)" [value]="segmentView.Page">
 			<ion-segment-button value="s1">
 				<ion-label>{{'General information' | translate}}</ion-label>
@@ -50,11 +50,11 @@
 	</ion-toolbar>
 	<div class="main-view" *ngIf="item && pageConfig.showSpinner==false">
 		<div *ngIf="segmentView.Page == 's1'">
-			<div [ngClass]="{'row-full shadow full-screen mobile-screen': env.isMobile}">
+			<div [ngClass]="{'row-full shadow full-screen mobile-screen': isMobile}">
 				<ion-grid fixed>
 					<form [formGroup]="formGroup">
 						<ion-row class="hr-group ion-no-padding">
-							<ion-col [size]="env.isMobile ? 12: 4" *ngIf="!env.isMobile">
+							<ion-col [size]="isMobile ? 12: 4" *ngIf="!isMobile">
 								<ion-list-header class="ion-no-padding">
 									<ion-label color="primary"
 										>{{'BOM' | translate}}
@@ -78,7 +78,7 @@
 									</ion-label>
 								</ion-item>
 							</ion-col>
-							<ion-col [size]="env.isMobile ? 12: 4">
+							<ion-col [size]="isMobile ? 12: 4">
 								<app-form-control
 									[field]="{id :'IDItem', label:'Finished goods',dataSource:_IDItemDataSource, type:'ng-select-item',bindValue:'Id', bindLabel:'Name', form:formGroup }"
 									(change)="IDItemChange($event)"
@@ -88,7 +88,7 @@
 								<app-form-control [field]="{id :'BatchSize', label:'Quantity/batch', type:'number', form:formGroup }" (change)="saveChange()"> </app-form-control>
 							</ion-col>
 
-							<ion-col [size]="env.isMobile ? 12: 4">
+							<ion-col [size]="isMobile ? 12: 4">
 								<app-form-control
 									[field]="{id :'Type', label:'Classification', type:'ng-select-level',dataSource:typeList, bindLabel:'Name',bindValue:'Code', form:formGroup ,  placeholder:'Search'}"
 									(controlChange)="saveChange()"
@@ -111,7 +111,7 @@
 					</form>
 				</ion-grid>
 			</div>
-			<div *ngIf="!env.isMobile" class="row-full shadow full-screen" [ngClass]="{'mobile-screen': env.isMobile}">
+			<div *ngIf="!isMobile" class="row-full shadow full-screen" [ngClass]="{'mobile-screen': isMobile}">
 				<form [formGroup]="formGroup">
 					<ng-container formArrayName="Lines">
 						<div class="table-contain">
@@ -297,11 +297,11 @@
 			</div>
 		</div>
 		<div *ngIf="segmentView.Page == 's2'">
-			<div class="row-full shadow full-screen" [ngClass]="{'mobile-screen': env.isMobile}">
+			<div class="row-full shadow full-screen" [ngClass]="{'mobile-screen': isMobile}">
 				<form [formGroup]="formGroup">
 					<ng-container formArrayName="Lines">
 						<!-- mobile version -->
-						<div *ngIf="env.isMobile" style="min-height: calc(100vh - 410px)">
+						<div *ngIf="isMobile" style="min-height: calc(100vh - 410px)">
 							<ion-card class="bom-details ion-no-margin">
 								<ng-container *ngFor="let g of formGroup.get('Lines')['controls']; let idx = index;">
 									<ng-container [formGroup]="g">

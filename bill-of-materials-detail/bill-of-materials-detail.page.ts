@@ -25,6 +25,7 @@ import { catchError, distinctUntilChanged, map, switchMap, tap } from 'rxjs/oper
 	standalone: false,
 })
 export class BillOfMaterialsDetailPage extends PageBase {
+	isMobile = false;
 	@ViewChild('importfile') importfile: any;
 
 	segmentView = {
