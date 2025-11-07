@@ -46,11 +46,11 @@
 				<ion-item lines="none">
 					<div class="button-wrapper">
 						<ion-button fill="solid" size="small" shape="round" color="success"
-							(click)="addDocumentPopover.dismiss(); showDocumentModal(true)">
+							(click)="addDocumentPopover.dismiss(); showDocumentModal(false)">
 							<ion-label>{{'Add' | translate}}</ion-label>
 						</ion-button>
 						<ion-button fill="solid" size="small" shape="round" color="warning"
-							(click)="addDocumentPopover.dismiss(); showDocumentModal(false)">
+							(click)="addDocumentPopover.dismiss(); showDocumentModal(true)">
 							<ion-label>{{'Except' | translate}}</ion-label>
 						</ion-button>
 					</div>
@@ -329,8 +329,8 @@
 													property="IsPrevent">
 													<ng-template let-i="row" datatable-cell-template>
 														<ion-icon class="min-btn"
-															[name]="i.IsPrevent?'checkmark-outline': 'ban-outline'"
-															[color]="i.IsPrevent?'primary':'red'"></ion-icon>
+															[name]="i.IsPrevent?'ban-outline': ''"
+															[color]="i.IsPrevent?'red':''"></ion-icon>
 													</ng-template>
 												</datatable-column>
 												<datatable-column class="col-icon" name="" property="Id"
