@@ -78,6 +78,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
 			BatchSize: [1, Validators.required],
 			IsDisabled: [false],
 			Lines: this.formBuilder.array([]),
+			Groups: this.formBuilder.array([]),
 		});
 	}
 
@@ -115,6 +116,34 @@ export class BillOfMaterialsDetailPage extends PageBase {
 		if (this.item?._Item) {
 			this._IDItemDataSource.selected.push(this.item._Item);
 		}
+		if (this.item && this.item.Id != 0) {
+			console.log('🔵 BOM Detail loaded item:', this.item);
+			let groups: any[] = [];
+			let currentGroup: any = null;
+
+			// If there are leading Items before the first Group, create an anonymous Group
+			// to collect them so they are not lost (previous implementation skipped pushing
+			// the initial currentGroup if the first Line wasn't a Group).
+			this.item?.Lines?.forEach((g) => {
+				if (g.Type == 'Group') {
+					// push the group object itself but ensure it has an Items array
+					currentGroup = g;
+					currentGroup.Items = [];
+					groups.push(currentGroup);
+				} else {
+					// If we encounter an Item and there is no currentGroup yet, create a wrapper
+					// Group to hold leading items so they are grouped properly in the UI.
+					if (!currentGroup) {
+						currentGroup = { Type: 'Group', Name: '', Items: [] };
+						groups.push(currentGroup);
+					}
+					currentGroup.Items.push(g);
+				}
+			});
+			if (this.item.Type == 'Sales' || this.item?.Type == 'BTSales') this.item.Groups = groups;
+			else this.item.Groups = this.item?.Lines;
+		}
+
 		super.loadedData(event);
 
 		if (this.id == 0) {
@@ -134,10 +163,10 @@ export class BillOfMaterialsDetailPage extends PageBase {
 	}
 
 	setLines() {
-		this.formGroup.controls.Lines = new FormArray([]);
+		this.formGroup.controls.Groups = new FormArray([]);
 
-		if (this.item.Lines?.length)
-			this.item.Lines.forEach((i) => {
+		if (this.item.Groups?.length)
+			this.item.Groups.forEach((i) => {
 				this.addOrderLine(i);
 
 				//add button show price vao
@@ -145,6 +174,9 @@ export class BillOfMaterialsDetailPage extends PageBase {
 			});
 
 		this.calcTotalLine();
+
+		// Sync Groups sang Lines sau khi setLines
+		this.syncGroupsToLines();
 	}
 
 	togglePrice(index) {
@@ -158,8 +190,8 @@ export class BillOfMaterialsDetailPage extends PageBase {
 			let cost = sUoM?.PriceList.find((d) => d.Type == 'StdCostPriceList');
 			if (cost) stdCost = cost.Price;
 		}
-
-		let groups = <FormArray>this.formGroup.controls.Lines;
+		let groups = <FormArray>this.formGroup.controls.Groups;
+		const lastSort = Math.max(...groups.controls.map((g) => g.get('Sort')?.value ?? 0), 0);
 		let group = this.formBuilder.group({
 			_IDItemDataSource: this.buildSelectDataSource((term) => {
 				return this.pageProvider.commonService.connect('GET', 'PROD/BillOfMaterials/ComponentSearch/', {
@@ -191,16 +223,29 @@ export class BillOfMaterialsDetailPage extends PageBase {
 			IDWarehouse: [line.IDWarehouse],
 			Name: [line.Name],
 			Remark: [line.Remark],
-			Sort: [line.Sort],
+			Sort: [line.Sort ?? lastSort + 1],
+			MaxQuantity: [line.MaxQuantity],
+			MinSelect: [line.MinSelect],
+			MaxSelect: [line.MaxSelect],
+			IsRequired: [line.IsRequired],
+			ExtraPrice: [line.ExtraPrice],
+			AllowMultiple: [line.AllowMultiple],
 		});
 
 		groups.push(group);
+
+		if (line.Items && line.Items.length > 0) {
+			line.Items.forEach((itemLine) => {
+				this.addOrderLine(itemLine);
+			});
+		}
 
 		if (!line.Id) {
 			group.controls.IDBOM.markAsDirty();
 			group.controls.Type.markAsDirty();
 			group.controls.AdditionalQuantity.markAsDirty();
 			group.controls.IssueMethod.markAsDirty();
+			group.controls.Sort.markAsDirty();
 		}
 		group.controls._IDItemDataSource.value.selected.push(line._Item);
 		group.get('_IDItemDataSource').value?.initSearch();
@@ -222,7 +267,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
 						text: 'Đồng ý xóa',
 						cssClass: 'danger-btn',
 						handler: () => {
-							let groups = <FormArray>this.formGroup.controls.Lines;
+							let groups = <FormArray>this.formGroup.controls.Groups;
 							let Ids = [];
 							Ids.push({
 								Id: groups.controls[index]['controls'].Id.value,
@@ -234,6 +279,8 @@ export class BillOfMaterialsDetailPage extends PageBase {
 							if (permanentlyRemove) {
 								this.bomDetailProvider.delete(Ids).then((resp) => {
 									groups.removeAt(index);
+									// Sync Groups sang Lines sau khi xóa
+									this.syncGroupsToLines();
 									this.calcTotalLine();
 									this.env.showMessage('Deleted!', 'success');
 								});
@@ -248,7 +295,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
 	}
 
 	_IDItemDataSource = this.buildSelectDataSource((term) => {
-		return this.pageProvider.commonService.connect('GET', 'PROD/BillOfMaterials/ItemSearch/',{ Take: 20, Skip: 0, Term: term });
+		return this.pageProvider.commonService.connect('GET', 'PROD/BillOfMaterials/ItemSearch/', { Take: 20, Skip: 0, Term: term });
 	});
 	// _IDItemDataSource = {
 	// 	searchProvider: this.commonService,
@@ -330,6 +377,25 @@ export class BillOfMaterialsDetailPage extends PageBase {
 			group.controls.IssueMethod.enable();
 			this.formGroup.updateValueAndValidity();
 		}
+		if (group.controls.Type.value == 'Group') {
+			// Remove validators for group headers so item-related fields are not required
+			if (group.controls.Type.value == 'Group') {
+				const controlsToClear = ['IDItem', 'IDUoM', 'UoMPrice', 'Quantity', 'IssueMethod'];
+				controlsToClear.forEach((name) => {
+					const ctrl = group.controls[name];
+					if (ctrl) {
+						ctrl.clearValidators();
+						ctrl.setErrors(null);
+						ctrl.updateValueAndValidity();
+					}
+				});
+
+				// Also disable item-specific controls for group rows
+				['_Item', 'IDItem', 'IDUoM', 'UoMPrice', 'Quantity', 'IssueMethod'].forEach((name) => {
+					if (group.controls[name]) group.controls[name].disable();
+				});
+			}
+		}
 		//if(!stop) this.saveChange();
 	}
 
@@ -352,37 +418,70 @@ export class BillOfMaterialsDetailPage extends PageBase {
 		this.segmentView.Page = ev.detail.value;
 	}
 
+	/**
+	 * Đồng bộ dữ liệu từ Groups sang Lines để gửi xuống BackEnd
+	 * Groups là FormArray dùng cho UI, Lines là FormArray dùng để lưu
+	 * Groups đã được flatten thành mảng phẳng, nên chỉ cần clone trực tiếp
+	 * Loại bỏ các Group header chưa có Id (Type = 'Group' và Id = null/0)
+	 */
+	syncGroupsToLines() {
+		const groupsFA = this.formGroup.get('Groups') as FormArray;
+		if (!groupsFA) {
+			return;
+		}
+
+		// Tạo Lines FormArray mới bằng cách clone Groups
+		const linesFA = this.cloneFormArray(groupsFA);
+
+		// Loại bỏ các Group header chưa có Id (Type = 'Group' và Id = null/0)
+		// Duyệt ngược để tránh lỗi index khi xóa
+		for (let i = linesFA.controls.length - 1; i >= 0; i--) {
+			const control = linesFA.at(i) as FormGroup;
+			const type = control.get('Type')?.value;
+			const id = control.get('Id')?.value;
+
+			// Xóa các Group header chưa có Id
+			if (type === 'Group' && id === null) {
+				linesFA.removeAt(i);
+			}
+		}
+
+		// Cập nhật Lines control với dữ liệu đã sync
+		this.formGroup.setControl('Lines', linesFA);
+	}
+
 	async saveChange() {
 		this.calcTotalLine();
-		return super.saveChange2();
 
-		// if (this.formGroup.controls.Lines.valid) {
-		// }
+		// Đồng bộ Groups sang Lines trước khi save
+		this.syncGroupsToLines();
+
+		return super.saveChange2();
 	}
 
 	savedChange(savedItem = null, form = this.formGroup) {
 		super.savedChange(savedItem, form);
-		let groups = <FormArray>this.formGroup.controls.Lines;
+		let groups = <FormArray>this.formGroup.controls.Groups;
 		let idsBeforeSaving = new Set(groups.controls.map((g) => g.get('Id').value));
 		this.item = savedItem;
-		if (this.item.Lines?.length > 0) {
-			let newIds = new Set(this.item.Lines.map((i) => i.Id));
-			const diff = [...newIds].filter((item) => !idsBeforeSaving.has(item));
-			if (diff?.length > 0) {
-				groups.controls
-					.find((d) => !d.get('Id').value)
-					?.get('Id')
-					.setValue(diff[0]);
-			}
-		}
-	
+		this.loadedData(null);
+		// if (this.item.Groups?.length > 0) {
+		// 	let newIds = new Set(this.item.Groups.map((i) => i.Id));
+		// 	const diff = [...newIds].filter((item) => !idsBeforeSaving.has(item));
+		// 	if (diff?.length > 0) {
+		// 		groups.controls
+		// 			.find((d) => !d.get('Id').value)
+		// 			?.get('Id')
+		// 			.setValue(diff[0]);
+		// 	}
+		// }
 	}
 	async calcTotalLine(resetPrice = false) {
-		if (this.formGroup.controls.Lines) {
+		if (this.formGroup.controls.Groups) {
 			this.item.TotalPrice = 0;
 			this.item.TotalStdCost = 0;
 
-			this.formGroup.controls.Lines['controls'].forEach((group: FormGroup) => {
+			this.formGroup.controls.Groups['controls'].forEach((group: FormGroup) => {
 				if (resetPrice) {
 					this.changedIDUoM(group, false);
 				}
@@ -400,10 +499,65 @@ export class BillOfMaterialsDetailPage extends PageBase {
 			});
 
 			if (resetPrice) this.saveChange();
+
+			// Don't make Lines and Groups point to the same FormArray instance.
+			// Aliasing the same FormArray under two keys caused subtle change-detection
+			// problems (e.g. re-run of loadedData and transient null item state).
+			// Instead create a cloned FormArray so Lines and Groups are independent
+			// but contain the same values/structure.
 		}
 
 		// this.item.TotalDiscount = this.formGroup.controls.Lines.value.map(x => x.TotalDiscount).reduce((a, b) => (+a) + (+b), 0);
 		// this.item.TotalAfterTax = this.formGroup.controls.Lines.value.map(x => x.IsPromotionItem ? 0 : (x.UoMPrice * x.UoMQuantityExpected - x.TotalDiscount)).reduce((a, b) => (+a) + (+b), 0)
+	}
+
+	/**
+	 * Deep-clone a FormArray (groups/lines) so the controls are new instances
+	 * and not the same object referenced by another control name.
+	 */
+	private cloneFormArray(fa: FormArray): FormArray {
+		const cloned = new FormArray([]);
+
+		fa.controls.forEach((c) => {
+			if (c instanceof FormGroup) cloned.push(this.cloneFormGroup(c));
+			else if (c instanceof FormArray) cloned.push(this.cloneFormArray(c));
+			else cloned.push(this.cloneFormControl(c as FormControl));
+		});
+
+		if (fa.dirty) cloned.markAsDirty({ onlySelf: true });
+		if (fa.touched) cloned.markAsTouched({ onlySelf: true });
+
+		return cloned;
+	}
+
+	private cloneFormGroup(fg: FormGroup): FormGroup {
+		const cloned = new FormGroup({});
+
+		Object.keys(fg.controls).forEach((key) => {
+			const child = fg.controls[key];
+			if (child instanceof FormGroup) cloned.addControl(key, this.cloneFormGroup(child));
+			else if (child instanceof FormArray) cloned.addControl(key, this.cloneFormArray(child));
+			else cloned.addControl(key, this.cloneFormControl(child as FormControl));
+		});
+
+		// clone state
+		if (fg.dirty) cloned.markAsDirty({ onlySelf: true });
+		if (fg.touched) cloned.markAsTouched({ onlySelf: true });
+
+		return cloned;
+	}
+
+	private cloneFormControl(c: FormControl): FormControl {
+		const clone = new FormControl(c.value, c.validator, c.asyncValidator);
+
+		// clone state
+		if (c.dirty) clone.markAsDirty({ onlySelf: true });
+		else clone.markAsPristine({ onlySelf: true });
+
+		if (c.touched) clone.markAsTouched({ onlySelf: true });
+		else clone.markAsUntouched({ onlySelf: true });
+
+		return clone;
 	}
 
 	resetPrice() {
@@ -443,13 +597,148 @@ export class BillOfMaterialsDetailPage extends PageBase {
 	}
 
 	doReorder(ev, groups) {
-		groups = ev.detail.complete(groups);
-		for (let i = 0; i < groups.length; i++) {
-			const g = groups[i];
-			g.controls.Sort.setValue(i + 1);
-			g.controls.Sort.markAsDirty();
+		const fa = <FormArray>this.formGroup.get('Groups');
+		const flat = fa.controls.slice();
+
+		const from = ev.detail.from;
+		const to = ev.detail.to;
+
+		// Helper to check control type
+		const isGroupAtIndex = (idx: number) => flat[idx] && flat[idx].get('Type') && flat[idx].get('Type').value === 'Group';
+
+		// Build blocks (each block is a Group header + its child items or just a contiguous run of items)
+		const blocks: { controls: any[]; start: number; end: number }[] = [];
+		let i = 0;
+		while (i < flat.length) {
+			const start = i;
+			const ctrl = flat[i];
+			const blockControls = [];
+
+			if (ctrl.get('Type') && ctrl.get('Type').value === 'Group') {
+				// Group header + following items until next Group
+				blockControls.push(ctrl);
+				i++;
+				while (i < flat.length && !(flat[i].get('Type') && flat[i].get('Type').value === 'Group')) {
+					blockControls.push(flat[i]);
+					i++;
+				}
+			} else {
+				// contiguous items w/o a header
+				while (i < flat.length && !(flat[i].get('Type') && flat[i].get('Type').value === 'Group')) {
+					blockControls.push(flat[i]);
+					i++;
+				}
+			}
+
+			const end = start + blockControls.length - 1;
+			blocks.push({ controls: blockControls, start, end });
 		}
 
+		// Find which block the dragged index belongs to
+		let blockFromIndex = -1;
+		for (let bi = 0; bi < blocks.length; bi++) {
+			const b = blocks[bi];
+			if (from >= b.start && from <= b.end) {
+				blockFromIndex = bi;
+				break;
+			}
+		}
+
+		// If dragged item belongs to a block that isn't a Group header (i.e., block first element is not Group),
+		// allow regular single-row reordering inside the block by delegating to ev.detail.complete
+		if (blockFromIndex === -1) {
+			// fallback to default behavior
+			const newOrder = ev.detail.complete(flat);
+			for (let i = 0; i < newOrder.length; i++) {
+				const g = newOrder[i];
+				g.controls.Sort?.setValue(i + 1);
+				g.controls.Sort?.markAsDirty();
+			}
+			this.saveChange();
+			return;
+		}
+
+		const blockFrom = blocks[blockFromIndex];
+
+		// if the dragged index is inside a block which is not a group header-based block (first element not Group) and the
+		// first control of the block is not a Group, treat it as a simple move within the flat array
+		// const movedControlIsGroupHeader = blockFrom.controls[0].get('Type') && blockFrom.controls[0].get('Type').value === 'Group';
+		const movedControlIsGroupHeader = flat[from].get('Type').value === 'Group';
+
+		if (!movedControlIsGroupHeader) {
+			// Move single control behavior
+			const newOrder = ev.detail.complete(flat);
+			for (let i = 0; i < newOrder.length; i++) {
+				const g = newOrder[i];
+				g.controls.Sort?.setValue(i + 1);
+				g.controls.Sort?.markAsDirty();
+			}
+			this.saveChange();
+			return;
+		}
+
+		// Find target block index for the 'to' position
+		let blockToIndex = -1;
+		// Special-case: if user drops at end (to == flat.length) - treat as after last block
+		if (to >= flat.length) {
+			blockToIndex = blocks.length - 1;
+		} else {
+			for (let bi = 0; bi < blocks.length; bi++) {
+				const b = blocks[bi];
+				if (to >= b.start && to <= b.end) {
+					blockToIndex = bi;
+					break;
+				}
+			}
+		}
+
+		// If blockFrom is the same as blockTo and 'to' is somewhere inside blockFrom, nothing to do
+		if (blockFromIndex === blockToIndex) {
+			// user dropped within same block - let default single-element reorder handle it
+			const newOrder = ev.detail.complete(flat);
+			for (let i = 0; i < newOrder.length; i++) {
+				const g = newOrder[i];
+				g.controls.Sort?.setValue(i + 1);
+				g.controls.Sort?.markAsDirty();
+			}
+			this.saveChange();
+			return;
+		}
+
+		// Remove the block from blocks array
+		const blocksWithout = blocks.slice();
+		const movedBlock = blocksWithout.splice(blockFromIndex, 1)[0];
+
+		// Decide insertion index in blocksWithout
+		// If moving forward (from < to), insert after the target block, else insert before the target block
+		let insertionBlockIndex = blockToIndex;
+		if (from < to) insertionBlockIndex = blockToIndex + (blockToIndex > blockFromIndex ? 0 : 0);
+		if (from < to) insertionBlockIndex = blockToIndex + 1;
+
+		// Bound checking
+		if (insertionBlockIndex < 0) insertionBlockIndex = 0;
+		if (insertionBlockIndex > blocksWithout.length) insertionBlockIndex = blocksWithout.length;
+
+		blocksWithout.splice(insertionBlockIndex, 0, movedBlock);
+
+		// Build final flat order
+		const finalOrder = blocksWithout.reduce((acc, b) => acc.concat(b.controls), [] as any[]);
+
+		// Rebuild FormArray in the new order
+		for (let i = fa.length - 1; i >= 0; i--) fa.removeAt(i);
+		finalOrder.forEach((ctrl) => fa.push(ctrl));
+
+		// update Sort and mark dirty
+		for (let i = 0; i < fa.length; i++) {
+			const g = fa.at(i) as FormGroup;
+			if (g.get('Sort')) {
+				g.get('Sort').setValue(i + 1);
+				g.get('Sort').markAsDirty();
+			}
+		}
+
+		// Sync Groups sang Lines sau khi reorder
+		this.syncGroupsToLines();
 		this.saveChange();
 	}
 
@@ -541,12 +830,12 @@ export class BillOfMaterialsDetailPage extends PageBase {
 	}
 
 	IDItemChange(e) {
-		let itemBOM = e.BOMs.find((f) =>f.IDBOM != this.item.Id);
+		let itemBOM = e.BOMs.find((f) => f.IDBOM != this.item.Id);
 		if (itemBOM) {
 			this.env
 				.showPrompt('Bạn có muốn xem định mức này không?', null, 'Đã thiết lập BOM cho sản phẩm ' + e.Name)
 				.then((_) => {
-					this.nav('bill-of-materials/' + itemBOM.IDBOM,'forward');
+					this.nav('bill-of-materials/' + itemBOM.IDBOM, 'forward');
 					this.id = itemBOM.IDBOM;
 					this.loadData();
 				})

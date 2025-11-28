@@ -113,7 +113,7 @@
 			</div>
 			<div *ngIf="!isMobile" class="row-full shadow full-screen" [ngClass]="{'mobile-screen': isMobile}">
 				<form [formGroup]="formGroup">
-					<ng-container formArrayName="Lines">
+					<ng-container formArrayName="Groups">
 						<div class="table-contain">
 							<section class="table" style="min-width: 1270px">
 								<header class="bold" style="padding-right: 0">
@@ -125,6 +125,14 @@
 									<div class="col-qty cell">{{'Quantity' | translate}}</div>
 									<div class="col-qty cell" title="{{'Is the required resource to start or finish the production' | translate}}">{{'Add' | translate}}</div>
 									<div class="col-uom cell">{{'Provide' | translate}}</div>
+									@if(item.Type=='Sales' || item.Type=='BTSales'){
+									<div class="col-checkbox-custom cell">{{'IsRequired' | translate}}</div>
+									<div class="col-checkbox-custom cell">{{'AllowMultiple' | translate}}</div>
+									<div class="col-qty cell">{{'Min select' | translate}}</div>
+									<div class="col-qty cell">{{'Max select' | translate}}</div>
+									<div class="col-qty cell">{{'Max quantity' | translate}}</div>
+									<div class="col-total cell">{{'Extra price' | translate}}</div>
+									}
 									<div class="col-total cell" *ngIf="pageConfig.canViewPrice">
 										<small class="clickable" (click)="resetPrice()" *ngIf="pageConfig.canEditPrice">{{'Reset' | translate}}</small>
 										{{'Price' | translate}}
@@ -134,8 +142,8 @@
 									<div class="col-total cell" *ngIf="pageConfig.canViewStdCost">{{'Total Std Cost' | translate}}</div>
 									<div class="col-del cell" *ngIf="pageConfig.canEdit"></div>
 								</header>
-								<ion-reorder-group (ionItemReorder)="doReorder($event, formGroup.get('Lines')['controls'])" [disabled]="!pageConfig.canEdit">
-									<ng-container *ngFor="let g of formGroup.get('Lines')['controls']; let idx = index;">
+								<ion-reorder-group (ionItemReorder)="doReorder($event, formGroup.get('Groups')['controls'])" [disabled]="!pageConfig.canEdit">
+									<ng-container *ngFor="let g of formGroup.get('Groups')['controls']; let idx = index;">
 										<ng-container [formGroup]="g">
 											<div class="row" [ngClass]="{'header': g.controls.Type.value=='CTStage'}">
 												<ion-reorder slot="start"></ion-reorder>
@@ -153,7 +161,7 @@
 														</select>
 													</div>
 												</div>
-												<ng-container *ngIf="g.controls.Type.value!='CTItem'">
+												<ng-container *ngIf="g.controls.Type.value!='CTItem' && g.controls.Type.value!='Item'">
 													<div class="col-name cell">
 														<input
 															formControlName="Name"
@@ -163,13 +171,48 @@
 														/>
 													</div>
 												</ng-container>
-												<ng-container *ngIf="g.controls.Type.value=='CTItem'">
+												<ng-container *ngIf="g.controls.Type.value=='Group'">
+													<div class="col-uom cell"></div>
+													<div class="col-qty cell"></div>
+													<div class="col-qty cell"></div>
+													<div class="col-uom cell"></div>
+													@if(item.Type=='Sales' || item.Type=='BTSales'){
+													<div class="col-checkbox-custom cell">
+														<app-input-control [field]="{id :'IsRequired', label:'Required', type:'checkbox', form:g }" (change)="saveChange()">
+														</app-input-control>
+													</div>
+													<div class="col-checkbox-custom cell">
+														<app-input-control
+															[field]="{id :'AllowMultiple', label:'Allow multiple', type:'checkbox', form:g }"
+															(change)="saveChange()"
+														></app-input-control>
+													</div>
+													<div class="col-qty cell">
+														<app-input-control
+															[field]="{id :'MinSelect', label:'Min select', type:'number', form:g }"
+															(change)="saveChange()"
+														></app-input-control>
+													</div>
+													<div class="col-qty cell">
+														<app-input-control
+															[field]="{id :'MaxSelect', label:'Max select', type:'number', form:g }"
+															(change)="saveChange()"
+														></app-input-control>
+													</div>
+													<div class="col-qty cell"></div>
+													<div class="col-total cell"></div>
+													}
+													<div class="col-total cell" *ngIf="pageConfig.canViewPrice"></div>
+													<div class="col-total cell" *ngIf="pageConfig.canViewPrice"></div>
+													<div class="col-total cell" *ngIf="pageConfig.canViewStdCost"></div>
+													<div class="col-total cell" *ngIf="pageConfig.canViewStdCost"></div>
+												</ng-container>
+												<ng-container *ngIf="g.controls.Type.value=='CTItem' || g.controls.Type.value=='Item'">
 													<div class="col-name cell">
 														<app-input-control
-														[field]="{id :'IDItem', label:'Component', type:'ng-select-item', dataSource:g.controls._IDItemDataSource.value, bindValue:'Id', bindLabel:'Name', form:g, appendTo:'#order-detail-page', placeHolder:'Search for name or product code', virtualScroll:true }"
-														(change)="changedIDItem(g,$event)"
-													></app-input-control>
-												
+															[field]="{id :'IDItem', label:'Component', type:'ng-select-item', dataSource:g.controls._IDItemDataSource.value, bindValue:'Id', bindLabel:'Name', form:g, appendTo:'#order-detail-page', placeHolder:'Search for name or product code', virtualScroll:true }"
+															(change)="changedIDItem(g,$event)"
+														></app-input-control>
 													</div>
 													<div class="col-uom cell">
 														<select
@@ -217,6 +260,24 @@
 															<option [disabled]="t.Flag" *ngFor="let t of issueMethodList" [value]="t.Code">{{t.Name}}</option>
 														</select>
 													</div>
+													@if(item.Type=='Sales' || item.Type=='BTSales'){
+													<div class="col-checkbox-custom cell"></div>
+													<div class="col-checkbox-custom cell"></div>
+													<div class="col-qty cell"></div>
+													<div class="col-qty cell"></div>
+													<div class="col-qty cell">
+														<app-input-control
+															[field]="{id :'MaxQuantity', label:'Max quantity', type:'number', form:g }"
+															(change)="saveChange()"
+														></app-input-control>
+													</div>
+													<div class="col-total cell">
+														<app-input-control
+															[field]="{id :'ExtraPrice', label:'Extra price', type:'number', form:g }"
+															(change)="saveChange()"
+														></app-input-control>
+													</div>
+													}
 													<div class="col-total cell" *ngIf="pageConfig.canViewPrice">
 														<input
 															formControlName="UoMPrice"
@@ -242,7 +303,7 @@
 										</ng-container>
 									</ng-container>
 								</ion-reorder-group>
-								<div class="row" *ngIf="pageConfig.canEdit && item?.Lines?.length > 1">
+								<div class="row" *ngIf="pageConfig.canEdit && item?.Groups?.length > 1">
 									<div
 										class="col-id cell"
 										*ngIf="pageConfig.canEdit"
@@ -261,6 +322,18 @@
 									<div class="col-uom cell">
 										<div style="height: 35px"></div>
 									</div>
+									<div class="col-uom cell"></div>
+									<div class="col-qty cell"></div>
+									<div class="col-qty cell"></div>
+									<div class="col-uom cell"></div>
+									@if(item.Type=='Sales' || item.Type=='BTSales'){
+									<div class="col-checkbox cell"></div>
+									<div class="col-checkbox cell"></div>
+									<div class="col-qty cell"></div>
+									<div class="col-qty cell"></div>
+									<div class="col-qty cell"></div>
+									<div class="col-total cell"></div>
+									}
 									<div class="col-total cell">
 										<b>Tổng cộng:</b>
 									</div>
@@ -281,7 +354,7 @@
 				</form>
 
 				<div class="table-contain">
-					<div class="row" *ngIf="pageConfig.canEdit && this.id && item?.Lines?.length < 2">
+					<div class="row" *ngIf="pageConfig.canEdit && this.id && item?.Groups?.length < 2">
 						<div class="cell">
 							<ion-button
 								fill="clear"
@@ -299,11 +372,11 @@
 		<div *ngIf="segmentView.Page == 's2'">
 			<div class="row-full shadow full-screen" [ngClass]="{'mobile-screen': isMobile}">
 				<form [formGroup]="formGroup">
-					<ng-container formArrayName="Lines">
+					<ng-container formArrayName="Groups">
 						<!-- mobile version -->
 						<div *ngIf="isMobile" style="min-height: calc(100vh - 410px)">
 							<ion-card class="bom-details ion-no-margin">
-								<ng-container *ngFor="let g of formGroup.get('Lines')['controls']; let idx = index;">
+								<ng-container *ngFor="let g of formGroup.get('Groups')['controls']; let idx = index;">
 									<ng-container [formGroup]="g">
 										<ion-card-content class="info barcode" [ngClass]="{'ctheader': g.controls.Type.value=='CTStage'}">
 											<ng-container *ngIf="g.controls.Type.value!='CTItem'">
@@ -328,7 +401,7 @@
 													></ion-textarea>
 												</div>
 											</ng-container>
-											<ng-container *ngIf="g.controls.Type.value=='CTItem'">
+											<ng-container *ngIf="g.controls.Type.value=='CTItem' || g.controls.Type.value=='Item'">
 												<div class="ct-item">
 													<div class="ct-del-item" *ngIf="pageConfig.canEdit" (click)="removeOrderLine(idx, false)">
 														<ion-icon color="danger" class="min-btn" name="trash-outline"></ion-icon>
@@ -493,7 +566,7 @@
 									</ng-container>
 								</ng-container>
 
-								<div class="btn-add-new" *ngIf="pageConfig.canEdit && formGroup.controls.Lines.valid">
+								<div class="btn-add-new" *ngIf="pageConfig.canEdit && formGroup.controls.Groups.valid">
 									<div class="btnAddNewContainer" *ngIf="pageConfig.canEdit">
 										<ion-icon class="min-btn" title="{{'Add product' | translate}}" name="add-circle-outline"></ion-icon>
 										<b
