@@ -116,6 +116,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
 		if (this.item?._Item) {
 			this._IDItemDataSource.selected.push(this.item._Item);
 		}
+		// Build Groups từ Lines để sử dụng sau
 		if (this.item && this.item.Id != 0) {
 			console.log('🔵 BOM Detail loaded item:', this.item);
 			let groups: any[] = [];
@@ -142,6 +143,21 @@ export class BillOfMaterialsDetailPage extends PageBase {
 			});
 			if (this.item.Type == 'Sales' || this.item?.Type == 'BTSales') this.item.Groups = groups;
 			else this.item.Groups = this.item?.Lines;
+		}
+
+		// QUAN TRỌNG: Clear Groups FormArray trước khi patchValue để tránh conflict
+		// Nguyên nhân: Sau khi thao tác trên Groups, formGroup có Groups FormArray với controls.
+		// Khi refresh, this.item từ Backend không có Groups, nhưng formGroup vẫn có Groups FormArray cũ.
+		// Khi patchValue(this.item) được gọi trong super.loadedData(), có thể gây conflict
+		// giữa dữ liệu mới (không có Groups trong item) và FormArray cũ (có Groups với controls),
+		// gây ra change detection và có thể trigger lại loadAnItem() -> loadedData() với this.item = null.
+		// Giải pháp: Clear Groups FormArray trước khi patchValue. Groups sẽ được build lại trong setLines().
+		if (this.formGroup && this.formGroup.get('Groups')) {
+			const groupsFA = this.formGroup.get('Groups') as FormArray;
+			groupsFA.clear();
+			// while (groupsFA.length > 0) {
+			// 	groupsFA.removeAt(0);
+			// }
 		}
 
 		super.loadedData(event);
@@ -464,17 +480,17 @@ export class BillOfMaterialsDetailPage extends PageBase {
 		let groups = <FormArray>this.formGroup.controls.Groups;
 		let idsBeforeSaving = new Set(groups.controls.map((g) => g.get('Id').value));
 		this.item = savedItem;
-		this.loadedData(null);
-		// if (this.item.Groups?.length > 0) {
-		// 	let newIds = new Set(this.item.Groups.map((i) => i.Id));
-		// 	const diff = [...newIds].filter((item) => !idsBeforeSaving.has(item));
-		// 	if (diff?.length > 0) {
-		// 		groups.controls
-		// 			.find((d) => !d.get('Id').value)
-		// 			?.get('Id')
-		// 			.setValue(diff[0]);
-		// 	}
-		// }
+		// this.loadedData(null);
+		if (this.item.Groups?.length > 0) {
+			let newIds = new Set(this.item.Groups.map((i) => i.Id));
+			const diff = [...newIds].filter((item) => !idsBeforeSaving.has(item));
+			if (diff?.length > 0) {
+				groups.controls
+					.find((d) => !d.get('Id').value)
+					?.get('Id')
+					.setValue(diff[0]);
+			}
+		}
 	}
 	async calcTotalLine(resetPrice = false) {
 		if (this.formGroup.controls.Groups) {
