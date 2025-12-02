@@ -145,19 +145,9 @@ export class BillOfMaterialsDetailPage extends PageBase {
 			else this.item.Groups = this.item?.Lines;
 		}
 
-		// QUAN TRỌNG: Clear Groups FormArray trước khi patchValue để tránh conflict
-		// Nguyên nhân: Sau khi thao tác trên Groups, formGroup có Groups FormArray với controls.
-		// Khi refresh, this.item từ Backend không có Groups, nhưng formGroup vẫn có Groups FormArray cũ.
-		// Khi patchValue(this.item) được gọi trong super.loadedData(), có thể gây conflict
-		// giữa dữ liệu mới (không có Groups trong item) và FormArray cũ (có Groups với controls),
-		// gây ra change detection và có thể trigger lại loadAnItem() -> loadedData() với this.item = null.
-		// Giải pháp: Clear Groups FormArray trước khi patchValue. Groups sẽ được build lại trong setLines().
 		if (this.formGroup && this.formGroup.get('Groups')) {
 			const groupsFA = this.formGroup.get('Groups') as FormArray;
 			groupsFA.clear();
-			// while (groupsFA.length > 0) {
-			// 	groupsFA.removeAt(0);
-			// }
 		}
 
 		super.loadedData(event);
@@ -190,9 +180,6 @@ export class BillOfMaterialsDetailPage extends PageBase {
 			});
 
 		this.calcTotalLine();
-
-		// Sync Groups sang Lines sau khi setLines
-		this.syncGroupsToLines();
 	}
 
 	togglePrice(index) {
@@ -295,8 +282,6 @@ export class BillOfMaterialsDetailPage extends PageBase {
 							if (permanentlyRemove) {
 								this.bomDetailProvider.delete(Ids).then((resp) => {
 									groups.removeAt(index);
-									// Sync Groups sang Lines sau khi xóa
-									this.syncGroupsToLines();
 									this.calcTotalLine();
 									this.env.showMessage('Deleted!', 'success');
 								});
@@ -442,7 +427,12 @@ export class BillOfMaterialsDetailPage extends PageBase {
 	 */
 	syncGroupsToLines() {
 		const groupsFA = this.formGroup.get('Groups') as FormArray;
-		if (!groupsFA) {
+		if (!groupsFA || groupsFA.length === 0) {
+			// Nếu Groups rỗng, clear Lines luôn
+			if (this.formGroup.get('Lines')) {
+				const linesFA = this.formGroup.get('Lines') as FormArray;
+				linesFA.clear();
+			}
 			return;
 		}
 
@@ -456,8 +446,8 @@ export class BillOfMaterialsDetailPage extends PageBase {
 			const type = control.get('Type')?.value;
 			const id = control.get('Id')?.value;
 
-			// Xóa các Group header chưa có Id
-			if (type === 'Group' && id === null) {
+			// Xóa các Group header chưa có Id (null hoặc 0)
+			if (type === 'Group' && (id === null)) {
 				linesFA.removeAt(i);
 			}
 		}
@@ -480,17 +470,17 @@ export class BillOfMaterialsDetailPage extends PageBase {
 		let groups = <FormArray>this.formGroup.controls.Groups;
 		let idsBeforeSaving = new Set(groups.controls.map((g) => g.get('Id').value));
 		this.item = savedItem;
-		// this.loadedData(null);
-		if (this.item.Groups?.length > 0) {
-			let newIds = new Set(this.item.Groups.map((i) => i.Id));
-			const diff = [...newIds].filter((item) => !idsBeforeSaving.has(item));
-			if (diff?.length > 0) {
-				groups.controls
-					.find((d) => !d.get('Id').value)
-					?.get('Id')
-					.setValue(diff[0]);
-			}
-		}
+		this.loadedData(null);
+		// if (this.item.Groups?.length > 0) {
+		// 	let newIds = new Set(this.item.Groups.map((i) => i.Id));
+		// 	const diff = [...newIds].filter((item) => !idsBeforeSaving.has(item));
+		// 	if (diff?.length > 0) {
+		// 		groups.controls
+		// 			.find((d) => !d.get('Id').value)
+		// 			?.get('Id')
+		// 			.setValue(diff[0]);
+		// 	}
+		// }
 	}
 	async calcTotalLine(resetPrice = false) {
 		if (this.formGroup.controls.Groups) {
@@ -515,12 +505,6 @@ export class BillOfMaterialsDetailPage extends PageBase {
 			});
 
 			if (resetPrice) this.saveChange();
-
-			// Don't make Lines and Groups point to the same FormArray instance.
-			// Aliasing the same FormArray under two keys caused subtle change-detection
-			// problems (e.g. re-run of loadedData and transient null item state).
-			// Instead create a cloned FormArray so Lines and Groups are independent
-			// but contain the same values/structure.
 		}
 
 		// this.item.TotalDiscount = this.formGroup.controls.Lines.value.map(x => x.TotalDiscount).reduce((a, b) => (+a) + (+b), 0);
@@ -753,8 +737,19 @@ export class BillOfMaterialsDetailPage extends PageBase {
 			}
 		}
 
-		// Sync Groups sang Lines sau khi reorder
-		this.syncGroupsToLines();
+		// Ensure the Ionic reorder gesture is completed so the UI does not keep
+		// an internal pending state which can cause the ionItemReorder event
+		// to fire again during subsequent change detection / re-render.
+		try {
+			// complete can accept a list but it's safe to call without args too
+			ev?.detail?.complete?.(finalOrder);
+		} catch (e) {
+			try {
+				ev?.detail?.complete?.();
+			} catch (e) {
+				// ignore - best-effort cleanup
+			}
+		}
 		this.saveChange();
 	}
 
