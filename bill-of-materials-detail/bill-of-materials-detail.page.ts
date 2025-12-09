@@ -227,12 +227,12 @@ export class BillOfMaterialsDetailPage extends PageBase {
 			Name: [line.Name],
 			Remark: [line.Remark],
 			Sort: [line.Sort ?? lastSort + 1],
-			MaxQuantity: [line.MaxQuantity],
-			MinSelect: [line.MinSelect],
-			MaxSelect: [line.MaxSelect],
-			IsRequired: [line.IsRequired],
-			ExtraPrice: [line.ExtraPrice],
+			MaxQuantity: new FormControl<number | null>(line.MaxQuantity ?? null),
 			AllowMultiple: [line.AllowMultiple],
+			MinSelect: new FormControl<number | null>(line.MinSelect ?? null),
+			MaxSelect: new FormControl<number | null>(line.MaxSelect ?? null),
+			ExtraPrice: new FormControl<number | null>(line.ExtraPrice ?? null),
+			IsRequired: [line.IsRequired],
 		});
 
 		groups.push(group);
@@ -447,7 +447,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
 			const id = control.get('Id')?.value;
 
 			// Xóa các Group header chưa có Id (null hoặc 0)
-			if (type === 'Group' && (id === null)) {
+			if (type === 'Group' && id === null) {
 				linesFA.removeAt(i);
 			}
 		}
@@ -457,12 +457,42 @@ export class BillOfMaterialsDetailPage extends PageBase {
 	}
 
 	async saveChange() {
+		this.cleanNumbersFromForm(this.formGroup);
 		this.calcTotalLine();
 
 		// Đồng bộ Groups sang Lines trước khi save
 		this.syncGroupsToLines();
 
 		return super.saveChange2();
+	}
+	cleanNumbersFromForm(form: FormGroup | FormArray) {
+		Object.keys(form.controls).forEach((key) => {
+			const control = form.get(key);
+
+			if (!control) return;
+
+			// Nếu là FormGroup hoặc FormArray → chạy đệ quy
+			if (control instanceof FormGroup || control instanceof FormArray) {
+				this.cleanNumbersFromForm(control);
+				return;
+			}
+
+			// Nếu là FormControl → xử lý value
+			if (control instanceof FormControl) {
+				const value = control.value;
+
+				// Nếu value === ''  → chuyển sang null
+				if (value === '') {
+					control.setValue(null, { emitEvent: false });
+					return;
+				}
+
+				// Nếu là số dạng string → convert number
+				if (typeof value === 'string' && value.trim() !== '' && !isNaN(Number(value))) {
+					control.setValue(Number(value), { emitEvent: false });
+				}
+			}
+		});
 	}
 
 	savedChange(savedItem = null, form = this.formGroup) {
