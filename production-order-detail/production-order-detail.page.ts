@@ -161,7 +161,7 @@ export class ProductionOrderDetailPage extends PageBase {
 								Skip: 0,
 								SkipMCP: true,
 								SkipAddress: true,
-								Term: term,
+								Keyword: term
 							})
 							.pipe(
 								catchError(() => of([])), // empty list on error

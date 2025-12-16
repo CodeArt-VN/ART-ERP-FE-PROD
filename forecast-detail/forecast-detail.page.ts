@@ -294,7 +294,7 @@ export class ForecastDetailPage extends PageBase {
 						SortBy: ['Id_desc'],
 						Take: 20,
 						Skip: 0,
-						Term: term,
+						Keyword: term,
 						Id_ne: existedItems.length > 0 ? existedItems : '',
 					});
 				}),
