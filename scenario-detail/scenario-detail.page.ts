@@ -388,9 +388,12 @@ export class ScenarioDetailPage extends PageBase {
 				});
 			}
 		});
-
-		this._Recommendations.items.forEach((i) => {
-			i.PriceText = lib.currencyFormat(i.Price);
+		
+		this._Recommendations.items.forEach(i => {
+			const price = i.Price;
+			i.PriceText = price == null || price === '' || price === undefined 
+				? ''
+				: lib.currencyFormat(price);
 		});
 		lib.buildFlatTree(this._Recommendations.items, [], true).then((res: any) => {
 			this._Recommendations.itemsState = res;
@@ -1077,5 +1080,34 @@ export class ScenarioDetailPage extends PageBase {
 					.catch((_) => {});
 			}
 		}
+	}
+
+	async exportRecommendations() {
+		if (this.submitAttempt) return;
+		this.submitAttempt = true;
+		const items = this._Recommendations?.items ?? [];
+		const filterItems = Array.from(
+			new Set(items.filter((i) => i.Price === null || i.Price === undefined || i.Price === '')
+					.map((i) => i.IDItem)
+					.filter(Boolean))
+				);
+
+		if (!filterItems.length) {
+			this.env.showMessage('No items without price found', 'warning');
+			this.submitAttempt = false;
+			return;
+		}
+
+		const query = { ...this.query, IDItem: filterItems };
+
+		this.env
+			.showLoading('Please wait for a few moments', this.prodRecommendProvider.export(query))
+			.then((response: any) => {
+				this.downloadURLContent(response);
+				this.submitAttempt = false;
+			})
+			.catch((err) => {
+				this.submitAttempt = false;
+			});
 	}
 }

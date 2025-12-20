@@ -121,6 +121,9 @@
 						title="{{'Vendors recommendation' | translate}}">
 						<ion-icon slot="icon-only" name="bulb-outline"></ion-icon>
 					</ion-button>
+					<ion-button class="ion-hide-sm-down" *ngIf="pageConfig.canExport && item.Id" (click)="exportRecommendations()" title="{{'Export' | translate}}">
+						<ion-icon slot="icon-only" name="cloud-download-outline"></ion-icon>
+					</ion-button>
 				</ion-buttons>
 			</ion-toolbar>
 			<div>
