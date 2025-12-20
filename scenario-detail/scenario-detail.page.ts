@@ -1098,7 +1098,7 @@ export class ScenarioDetailPage extends PageBase {
 			return;
 		}
 
-		const query = { ...this.query, IDItem: filterItems };
+		const query = { ...this.query, IDItem: filterItems, IDMRP: this.item.Id };
 
 		this.env
 			.showLoading('Please wait for a few moments', this.prodRecommendProvider.export(query))
