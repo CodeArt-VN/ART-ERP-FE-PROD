@@ -1,4 +1,4 @@
-<ion-header>
+<ion-header collapse="fade">
 	<ion-toolbar class="no-padding">
 		<ion-buttons slot="start">
 			<ion-button> {{'Create PO' | translate}} </ion-button>
@@ -11,7 +11,7 @@
 	</ion-toolbar>
 </ion-header>
 
-<ion-content appScrollbarTheme class="ion-padding" fullscreen>
+<ion-content appScrollbarTheme class="ion-padding">
 	<ion-grid fixed>
 		<form [formGroup]="formGroup">
 			<ion-row>
@@ -58,8 +58,20 @@
 		</form>
 	</ion-grid>
 </ion-content>
-<ion-footer>
+<ion-footer collapse="fade">
 	<ion-toolbar>
-		<ion-button slot="end" [disabled]="!formGroup.dirty" (click)="createPO()">{{'Create PO' | translate}}</ion-button>
+		<div slot="start">
+
+        </div>
+		
+		<div slot="end">
+			<ion-button [strong]="true" [disabled]="!formGroup.dirty" (click)="createPO()">
+				{{'Create PO' | translate}}
+			</ion-button>
+            <ion-button fill="outline" color="warning" (click)="closeModal()" >
+                {{'Cancel' | translate}}
+            </ion-button>
+        </div>
+		
 	</ion-toolbar>
 </ion-footer>
