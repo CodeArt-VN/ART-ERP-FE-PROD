@@ -21,5 +21,8 @@ export const PRODRoutes: Routes = [
     
     { path: 'forecast', loadChildren: () => import('./forecast/forecast.module').then(m => m.ForecastPageModule), canActivate: [AuthGuard] },
     { path: 'forecast/:id', loadChildren: () => import('./forecast-detail/forecast-detail.module').then(m => m.ForecastDetailPageModule), canActivate: [AuthGuard] },
+    
+    { path: 'item-replacement-group', loadChildren: () => import('./item-replacement-group/item-replacement-group.module').then(m => m.ItemReplacementGroupPageModule), canActivate: [AuthGuard] },
+    { path: 'item-replacement-group/:id', loadChildren: () => import('./item-replacement-group-detail/item-replacement-group-detail.module').then(m => m.ItemReplacementGroupDetailPageModule), canActivate: [AuthGuard] },
    
 ];
