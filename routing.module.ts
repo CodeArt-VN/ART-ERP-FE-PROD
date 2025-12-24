@@ -24,5 +24,6 @@ export const PRODRoutes: Routes = [
     
     { path: 'item-replacement-group', loadChildren: () => import('./item-replacement-group/item-replacement-group.module').then(m => m.ItemReplacementGroupPageModule), canActivate: [AuthGuard] },
     { path: 'item-replacement-group/:id', loadChildren: () => import('./item-replacement-group-detail/item-replacement-group-detail.module').then(m => m.ItemReplacementGroupDetailPageModule), canActivate: [AuthGuard] },
-   
+    
+    { path: 'apply-items-replacement', loadChildren: () => import('./apply-items-replacement/apply-items-replacement.module').then(m => m.ApplyItemsReplacementPageModule), canActivate: [AuthGuard] },
 ];
