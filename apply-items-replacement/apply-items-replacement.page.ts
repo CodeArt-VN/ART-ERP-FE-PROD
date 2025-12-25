@@ -50,14 +50,14 @@ export class ApplyItemsReplacementPage extends PageBase {
 
 		this.editRow(this.items[0]);
 	}
-	isShow = false;
+
 	editRow(row) {
-		this.isShow = true;
 		row.isEdit = true;
-		if(row.Id){ 
+		if (row.Id) {
 			row.EffectiveDateFrom = lib.dateFormat(row.EffectiveDateFrom);
 			row.EffectiveDateTo = lib.dateFormat(row.EffectiveDateTo);
 		}
+		const hasGroup = !!row?.IDGroup;
 		row._formGroup = this.formBuilder.group({
 			_IDGroupDataSource: this.buildSelectDataSource((term) => {
 				return this.itemReplacementGroupProvider.search({ SortBy: ['Id_desc'], Take: 20, Skip: 0, Keyword: term });
@@ -71,19 +71,20 @@ export class ApplyItemsReplacementPage extends PageBase {
 			Id: new FormControl({ value: row.Id, disabled: true }),
 			IDBranch: new FormControl({ value: row.IDBranch, disabled: true }),
 			IDGroup: [row.IDGroup, Validators.required],
-			IDReplaceByItem: [row.IDReplaceByItem, Validators.required],
-			IDItem: [row.IDItem, Validators.required],
+			IDReplaceByItem: new FormControl({ value: row.IDReplaceByItem, disabled: !hasGroup }, Validators.required),
+			IDItem: new FormControl({ value: row.IDItem, disabled: !hasGroup }, Validators.required),
 			EffectiveDateFrom: [row.EffectiveDateFrom],
 			EffectiveDateTo: [row.EffectiveDateTo],
 		});
 
-		row._formGroup.get('_IDGroupDataSource').value.initSearch();
+		if (row?._GroupReplace) row._formGroup.get('_IDGroupDataSource').value.selected.push(row?._GroupReplace);
 		if (row?._Item) row._formGroup.get('_IDItemDataSource').value.selected.push({ _Item: row?._Item});
 		if (row?._ReplaceByItem) row._formGroup.get('_IDItemReplaceDataSource').value.selected.push({_Item: row?._ReplaceByItem});
-		
+		row._formGroup.get('_IDGroupDataSource').value.initSearch();
 		row._formGroup.get('_IDItemDataSource').value.initSearch();
 		row._formGroup.get('_IDItemReplaceDataSource').value.initSearch();
-		console.log('editRow', row._formGroup.value);
+		row._prevEffectiveDateFrom = row.EffectiveDateFrom ?? null;
+		row._prevEffectiveDateTo = row.EffectiveDateTo ?? null;
 	}
 
 	cancelRow(row) {
@@ -92,7 +93,6 @@ export class ApplyItemsReplacementPage extends PageBase {
 		} else {
 			row.isEdit = false;
 		}
-		this.isShow = false;
 	}
 
 	saveRow(row) {
@@ -104,13 +104,11 @@ export class ApplyItemsReplacementPage extends PageBase {
 					lib.copyPropertiesValue(row._formGroup.value, row);
 				}
 				row.isEdit = false;
-				this.isShow = false;
 			})
 			.catch((err) => {
 				this.env.showMessage('Cannot save, please try again', 'danger');
 				this.cdr.detectChanges();
 				this.submitAttempt = false;
-				this.isShow = false;
 			});
 	}
 
@@ -151,16 +149,28 @@ export class ApplyItemsReplacementPage extends PageBase {
 				if (typeof dsReplace.initSearch === 'function') dsReplace.initSearch();
 			}
 
+			group.get('IDItem')?.enable();
+			group.get('IDReplaceByItem')?.enable();
 			group.get('IDItem').setValue(null);
 			group.get('IDItem').markAsDirty();
 			group.get('IDReplaceByItem').setValue(null);
 			group.get('IDReplaceByItem').markAsDirty();
+		} else {
+			row.IDGroup = null;
+			group.get('IDItem')?.setValue(null);
+			group.get('IDItem')?.disable();
+			group.get('IDReplaceByItem')?.setValue(null);
+			group.get('IDReplaceByItem')?.disable();
 		}
 	}
 
 	itemChange(e, row, group) {
 		if (!group) group = row?._formGroup;
-		if (!group || !e) return;
+		if (!group) return;
+		if (!group.get('IDGroup')?.value) {
+			this.env.showMessage('Please select group first', 'warning');
+			return;
+		}
 
 		const selectedId = e?.IDItem;
 		row.IDItem = selectedId;
@@ -171,23 +181,22 @@ export class ApplyItemsReplacementPage extends PageBase {
 		if (dsReplace) {
 			dsReplace.searchProvider = (term) => {
 				
-				let value = {
+				let value: any = {
 					IDGroup: groupId,
-					IDItem_ne: selectedId,
 					SortBy: ['Id_desc'],
 					Take: 20,
 					Skip: 0,
 					"_Item.Name": term,
 
 				}
-				if(!selectedId) delete value.IDItem_ne;
+				if (selectedId) value.IDItem_ne = selectedId;
 				return this.itemReplaceProvider.search(value);
 			}
 				
 			if (typeof dsReplace.initSearch === 'function') dsReplace.initSearch();
 		}
 
-		if (group.get('IDReplaceByItem')?.value === e.Id) {
+		if (selectedId && group.get('IDReplaceByItem')?.value === e.Id) {
 			group.get('IDReplaceByItem').setValue(null);
 			group.get('IDReplaceByItem').markAsDirty();
 		}
@@ -195,7 +204,11 @@ export class ApplyItemsReplacementPage extends PageBase {
 
 	itemReplaceChange(e, row, group) {
 		if (!group) group = row?._formGroup;
-		if (!group || !e) return;
+		if (!group) return;
+		if (!group.get('IDGroup')?.value) {
+			this.env.showMessage('Please select group first', 'warning');
+			return;
+		}
 
 		const selectedId = e?.IDItem;
 		row.IDReplaceByItem = selectedId;
@@ -204,19 +217,21 @@ export class ApplyItemsReplacementPage extends PageBase {
 		const ds = group.get('_IDItemDataSource')?.value;
 
 		if (ds) {
-			ds.searchProvider = (term) =>
-				this.itemReplaceProvider.search({
+			ds.searchProvider = (term) => {
+				const value: any = {
 					IDGroup: groupId,
-					IDItem_ne: selectedId,
 					SortBy: ['Id_desc'],
 					Take: 20,
 					Skip: 0,
 					Term: term,
-				});
+				};
+				if (selectedId) value.IDItem_ne = selectedId;
+				return this.itemReplaceProvider.search(value);
+			};
 			if (typeof ds.initSearch === 'function') ds.initSearch();
 		}
 
-		if (group.get('IDItem')?.value === e.Id) {
+		if (selectedId && group.get('IDItem')?.value === e.Id) {
 			group.get('IDItem').setValue(null);
 			group.get('IDItem').markAsDirty();
 		}
@@ -232,6 +247,8 @@ export class ApplyItemsReplacementPage extends PageBase {
 		const toCtrl = group.get('EffectiveDateTo');
 		const fromValue = fromCtrl?.value;
 		const toValue = toCtrl?.value;
+		const prevFrom = row?._prevEffectiveDateFrom ?? null;
+		const prevTo = row?._prevEffectiveDateTo ?? null;
 
 		fromCtrl?.setErrors(null);
 		toCtrl?.setErrors(null);
@@ -239,6 +256,8 @@ export class ApplyItemsReplacementPage extends PageBase {
 		if (!fromValue) {
 			fromCtrl?.setErrors({ required: true });
 			this.env.showMessage('Effective date from is required', 'warning');
+			fromCtrl?.setValue(prevFrom, { emitEvent: false });
+			toCtrl?.setValue(prevTo, { emitEvent: false });
 			return false;
 		}
 
@@ -249,9 +268,13 @@ export class ApplyItemsReplacementPage extends PageBase {
 			fromCtrl?.setErrors({ dateRange: true });
 			toCtrl?.setErrors({ dateRange: true });
 			this.env.showMessage('Effective date from must be earlier than or equal to effective date to', 'warning');
+			fromCtrl?.setValue(prevFrom, { emitEvent: false });
+			toCtrl?.setValue(prevTo, { emitEvent: false });
 			return false;
 		}
 
+		row._prevEffectiveDateFrom = fromValue ?? null;
+		row._prevEffectiveDateTo = toValue ?? null;
 		return true;
 	}
 }

@@ -17,12 +17,53 @@
 		(dataInfinite)="loadData($event)" (filter)="onDatatableFilter($event)" (sort)="onSort($event)">
 		<datatable-column [checkbox]="true"></datatable-column>
 
-		<datatable-column class="col-name" name="Item group" property="_Item" *ngIf="isShow">
-			<ng-template let-i="row" datatable-cell-template>
 
+		<datatable-column class="col-name" name="Item group" property="IDGroup">
+			<ng-template let-i="row" datatable-cell-template>
+				<div *ngIf="i && !i.isEdit">
+					<span (mousedown)="$event.stopPropagation()"> #{{ i?._GroupReplace?.Id }} </span>
+					<a [ngClass]="{ 'no-check-dirty': noCheckDirty }" class="clickable"
+						[routerLink]="['/item-replacement-group/' + i?._GroupReplace?.Id]" (mousedown)="$event.stopPropagation()"><ion-icon
+							name="open-outline"></ion-icon></a>
+					&nbsp;
+					<span [title]="i?._GroupReplace?.Name">
+						<b *ngIf="i?._GroupReplace?.Code" (mousedown)="$event.stopPropagation()">{{ i?._GroupReplace?.Code }}</b>
+						{{ i?._GroupReplace?.Name }}
+					</span>
+				</div>
 				<app-input-control *ngIf="i && i?.isEdit"
-					[field]="{id: 'IDGroup' , type : 'ng-select-item', form : i?._formGroup,  dataSource: i?._formGroup?.controls?._IDGroupDataSource?.value,  bindLabel: 'Name',  bindValue: 'Id', clearable: true,  placeholder: 'Type to search...', appendTo: '#ng-select-table'}"
-					(change)="groupChange($event, i, i?._formGroup)"></app-input-control>
+					[field]="{id: 'IDGroup' , type : 'ng-select-async', form : i?._formGroup,  dataSource: i?._formGroup?.controls?._IDGroupDataSource?.value, bindValue: 'Id', clearable: true,  placeholder: 'Type to search...', appendTo: '#ng-select-table'}"
+					(change)="groupChange($event, i, i?._formGroup)">
+					<ng-template input-control-template ng-label-tmp let-i="item">
+						<div *ngIf="i?.Id">
+							<span (mousedown)="$event.stopPropagation()">#{{ i?.Id }} </span>
+							<a [ngClass]="{ 'no-check-dirty': noCheckDirty }" class="clickable" [routerLink]="['/item-replacement-group/' + i?.Id]" (mousedown)="$event.stopPropagation()"
+								><ion-icon name="open-outline"></ion-icon
+							></a>
+							&nbsp;
+							<span [title]="i?.Name">
+								<b *ngIf="i?.Code" (mousedown)="$event.stopPropagation()">{{ i?.Code }}</b>
+								{{ i?.Name }}
+							</span>
+						</div>
+					</ng-template>
+					<ng-template input-control-template ng-option-tmp let-i="item" let-search="searchTerm">
+	
+						<div *ngIf="i">
+							<div>
+								<span [ngOptionHighlight]="search">{{ i.Name }}</span>
+							</div>
+							<small
+								>#<b
+									><span [ngClass]="{ 'no-check-dirty': noCheckDirty }" class="important" [ngOptionHighlight]="search">{{ i.Id }} - {{ i.Code }}</span></b
+								></small
+							>
+						</div>
+					</ng-template>
+
+				</app-input-control>
+	
+
 			</ng-template>
 		</datatable-column>
 
