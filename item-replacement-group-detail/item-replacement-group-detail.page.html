@@ -1,5 +1,14 @@
-<ion-header>
-	<app-toolbar [page]="this"> </app-toolbar>
+<ion-header collapse="fade">
+	<ion-toolbar>
+		<ion-buttons slot="primary">
+			<ion-button title="{{'Refresh' | translate}}" color="warning" (click)="refresh()">
+				<ion-icon slot="icon-only" name="reload-outline"></ion-icon>
+			</ion-button>
+			<ion-button title="{{'Close' | translate}}" color="secondary" (click)="closeModal()">
+				<ion-icon slot="icon-only" name="close"></ion-icon>
+			</ion-button>
+		</ion-buttons>
+	</ion-toolbar>
 </ion-header>
 
 <ion-content appScrollbarTheme class="ion-padding">
@@ -32,9 +41,12 @@
 					<ion-segment-button value="s1">
 						<ion-label>{{'Item replacement' | translate}}</ion-label>
 					</ion-segment-button>
-					<ion-segment-button value="s2">
-						<ion-label>{{'Other information' | translate}}</ion-label>
+					<ion-segment-button *ngIf="formGroup.get('Lines')['controls'].length >= 2" value="s2">
+						<ion-label>{{'Apply replacement item' | translate}}</ion-label>
 					</ion-segment-button>
+					<ion-segment-button value="s3">
+						<ion-label>{{'Other information' | translate}}</ion-label>
+					</ion-segment-button>					
 				</ion-segment>
 				<ion-buttons slot="end" *ngIf="segmentView=='s1'"> </ion-buttons>
 			</ion-toolbar>
@@ -119,7 +131,11 @@
 					</ion-button>
 				</div>
 			</div>
-			<div *ngIf="segmentView == 's2'">
+			
+			<div *ngIf="segmentView == 's2' && formGroup.get('Lines')['controls'].length >= 2">	
+				
+			</div>
+			<div *ngIf="segmentView == 's3'">
 				<div class="ion-padding">
 					<ion-grid fixed>
 						<ion-row class="hr-group" *ngIf="item?.Id">
@@ -144,3 +160,14 @@
 	</div>
 	<app-page-message [itemsLength]="item? 1: 0" [showSpinner]="pageConfig.showSpinner"></app-page-message>
 </ion-content>
+<ion-footer collapse="fade">
+	<ion-toolbar>
+		<div slot="start">
+			<ion-button fill="outline" *ngIf="item.Id && pageConfig.canDelete" (click)="delete()" color="danger"> {{'Delete' | translate}} </ion-button>
+		</div>
+
+		<div slot="end">
+			<ion-button fill="outline" *ngIf="!item.Id" color="warning" (click)="closeModal()"> {{'Cancel' | translate}} </ion-button>
+		</div>
+	</ion-toolbar>
+</ion-footer>

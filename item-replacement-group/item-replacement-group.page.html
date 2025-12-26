@@ -21,7 +21,11 @@
 			(selectedRowsChange)="showCommandBySelectedRows($event)"
 		>
 			<datatable-column [checkbox]="true" name=""></datatable-column>
-			<datatable-column class="col-id" name="#" property="Id" [navLink]="pageConfig.pageName"></datatable-column>
+			<datatable-column class="col-id" name="#" property="Id" [navLink]="pageConfig.pageName">
+				<ng-template let-i="row" datatable-cell-template>
+					<span (click)="showModal(i)">{{i?.Id}}</span>
+				</ng-template>
+			</datatable-column>
 			<datatable-column class="col-code" name="Code" property="Code"></datatable-column>
 			<datatable-column class="col-name flex-break" name="Name" property="Name"></datatable-column>
 			

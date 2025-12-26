@@ -1,5 +1,5 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
-import { NavController, LoadingController, AlertController, ModalController, PopoverController } from '@ionic/angular';
+import { Component, ChangeDetectorRef, Input } from '@angular/core';
+import { NavController, LoadingController, AlertController, ModalController, PopoverController, NavParams } from '@ionic/angular';
 import { PageBase } from 'src/app/page-base';
 import { ActivatedRoute } from '@angular/router';
 import { EnvService } from 'src/app/services/core/env.service';
@@ -25,6 +25,7 @@ export class ItemReplacementGroupDetailPage extends PageBase {
 		public itemProvider: WMS_ItemProvider,
 		public sysConfigProvider: SYS_ConfigProvider,
 		public popoverCtrl: PopoverController,
+		public navParams: NavParams,
 		public env: EnvService,
 		public navCtrl: NavController,
 		public route: ActivatedRoute,
@@ -36,8 +37,17 @@ export class ItemReplacementGroupDetailPage extends PageBase {
 		public commonService: CommonService
 	) {
 		super();
-		this.buildFormGroup();
+		this.id = this.route.snapshot.paramMap.get('id');
 		this.pageConfig.isDetailPage = true;
+		this.buildFormGroup();
+	}
+
+	preLoadData() {
+		if (this.navParams) {
+			this.item = JSON.parse(JSON.stringify(this.navParams.data?.item));
+			this.id = this.navParams.data.id;
+			this.loadData();
+		}
 	}
 
 	buildFormGroup() {
