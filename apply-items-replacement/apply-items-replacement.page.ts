@@ -73,7 +73,7 @@ export class ApplyItemsReplacementPage extends PageBase {
 			IDGroup: [row.IDGroup, Validators.required],
 			IDReplaceByItem: new FormControl({ value: row.IDReplaceByItem, disabled: !hasGroup }, Validators.required),
 			IDItem: new FormControl({ value: row.IDItem, disabled: !hasGroup }, Validators.required),
-			EffectiveDateFrom: [row.EffectiveDateFrom],
+			EffectiveDateFrom: [row.EffectiveDateFrom, Validators.required],
 			EffectiveDateTo: [row.EffectiveDateTo],
 		});
 
