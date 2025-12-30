@@ -606,4 +606,26 @@ export class ItemReplacementGroupDetailPage extends PageBase {
 			this.saveChange();
 		}
 	}
+
+	delete(publishEventCode = this.pageConfig.pageName) {
+		if (this.pageConfig.ShowDelete) {
+			this.env
+				.actionConfirm('delete', this.selectedItems.length, this.item?.Name, this.pageConfig.pageTitle, () =>
+					this.pageProvider.delete(this.pageConfig.isDetailPage ? this.item : this.selectedItems)
+				)
+				.then((_) => {
+					this.env.showMessage('DELETE_RESULT_SUCCESS', 'success');
+					this.env.publishEvent({ Code: publishEventCode });
+
+					if (this.pageConfig.isDetailPage) {
+						this.deleted();
+						this.closeModal();
+					}
+				})
+				.catch((err: any) => {
+					if (err != 'User abort action') this.env.showMessage('DELETE_RESULT_FAIL', 'danger');
+					console.log(err);
+				});
+		}
+	}
 }
