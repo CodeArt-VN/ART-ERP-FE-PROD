@@ -1,6 +1,6 @@
 // TODO: add BOM version:Thêm cột version(string), thêm 1 combo box dưới ô số lượng cho chọn version
 import { Component, ChangeDetectorRef, ViewChild } from '@angular/core';
-import { NavController, LoadingController, AlertController, PopoverController } from '@ionic/angular';
+import { NavController, LoadingController, AlertController, PopoverController, ModalController } from '@ionic/angular';
 import { PageBase } from 'src/app/page-base';
 import { ActivatedRoute } from '@angular/router';
 import { EnvService } from 'src/app/services/core/env.service';
@@ -8,6 +8,7 @@ import {
 	BRA_BranchProvider,
 	PROD_BillOfMaterialsDetailProvider,
 	PROD_BillOfMaterialsProvider,
+	PROD_ItemReplacementProvider,
 	SYS_TypeProvider,
 	WMS_ItemProvider,
 	WMS_PriceListProvider,
@@ -15,8 +16,8 @@ import {
 import { FormBuilder, Validators, FormControl, FormArray, FormGroup } from '@angular/forms';
 import { CommonService } from 'src/app/services/core/common.service';
 import { lib } from 'src/app/services/static/global-functions';
-import { concat, of, Subject } from 'rxjs';
-import { catchError, distinctUntilChanged, map, switchMap, tap } from 'rxjs/operators';
+import { ItemReplacementGroupDetailPage } from '../item-replacement-group-detail/item-replacement-group-detail.page';
+
 
 @Component({
 	selector: 'app-bill-of-materials-detail',
@@ -51,6 +52,8 @@ export class BillOfMaterialsDetailPage extends PageBase {
 		public itemProvider: WMS_ItemProvider,
 		public typeProvider: SYS_TypeProvider,
 		public priceListProvider: WMS_PriceListProvider,
+		public itemReplacementProvider: PROD_ItemReplacementProvider,
+		public modalController: ModalController,
 		public popoverCtrl: PopoverController,
 		public env: EnvService,
 		public navCtrl: NavController,
@@ -889,4 +892,88 @@ export class BillOfMaterialsDetailPage extends PageBase {
 			this.saveChange();
 		}
 	}
+
+	showReplacement(group) {
+		const itemId = group.get('IDItem')?.value;
+		if (!itemId) {
+			this.env.showMessage('Please select item first', 'warning');
+			return;
+		}
+
+		this.itemReplacementProvider
+			.search({ IDItem: itemId, Take: 20, Skip: 0 })
+			.toPromise()
+			.then((resp: any) => {
+				const rows = resp ?? [];
+				const groupMap = new Map<number, any>();
+				rows.forEach(r => {
+					if (r?.IDItem !== itemId || !r?.IDGroup) return;
+					const gid = Number(r.IDGroup);
+					if (!groupMap.has(gid)) {
+						groupMap.set(gid, {
+							Id: gid,
+							Name: r?._Group?.Name,
+							Data: [],
+						});
+					}
+					groupMap.get(gid).Data.push(r);
+				});
+
+				const groups = Array.from(groupMap.values());
+
+				if (groups.length === 0) {
+					this.openReplacementGroupModal(0, null);
+					return;
+				}
+
+				if (groups.length === 1) {
+					const g = groups[0];
+					this.openReplacementGroupModal(g.Id, g.Data);
+					return;
+				}
+				this.alertCtrl
+					.create({
+						header: 'Select replacement group',
+						inputs: groups.map(g => ({
+							type: 'radio',
+							label: `Group #${g.Id} - ${g.Name}`,
+							value: g.Id,
+							})),
+							buttons: [
+							{ text: 'Cancel', role: 'cancel' },
+							{
+								text: 'Select',
+								handler: (selectedId) => {
+									const selectedGroup = groupMap.get(selectedId);
+									if (selectedGroup) {
+										this.openReplacementGroupModal(
+											selectedGroup.Id,
+											selectedGroup.Data
+										);
+									}
+								},
+							},
+						],
+					})
+					.then(alert => alert.present());
+			})
+			.catch(() => {
+				this.env.showMessage('Cannot load replacement groups', 'danger');
+			});
+	}
+
+	async openReplacementGroupModal(groupId: number, item: any) {
+		const modal = await this.modalController.create({
+			component: ItemReplacementGroupDetailPage,
+			componentProps: {
+				id: groupId,
+				item: item
+			},
+			cssClass: 'modal90',
+		});
+
+		await modal.present();
+		await modal.onWillDismiss();
+	}
+
 }

@@ -1,0 +1,205 @@
+<ion-header>
+	<app-toolbar [page]="this">
+	</app-toolbar>
+</ion-header>
+
+<ion-content appScrollbarTheme class="scrollx">
+	<div id="ng-select-table" style="position: absolute"></div>
+	<ion-refresher [disabled]="!pageConfig.refresher" [disabled]="!pageConfig.refresher" slot="fixed"
+		(ionRefresh)="refresh($event)">
+		<ion-refresher-content></ion-refresher-content>
+	</ion-refresher>
+	<ion-fab *ngIf="pageConfig.isShowFeature" class="feature" vertical="top" horizontal="end" slot="fixed">
+		<div class="ion-padding"></div>
+	</ion-fab>
+	<app-data-table class="box-shadow responsive" [rows]="items" [trackBy]="'Id'" [(selectedRows)]="selectedItems"
+		[showSpinner]="pageConfig.showSpinner" [showFilter]="pageConfig.isShowSearch" [(query)]="query"
+		(dataInfinite)="loadData($event)" (filter)="onDatatableFilter($event)" (sort)="onSort($event)">
+		<datatable-column [checkbox]="true"></datatable-column>
+
+
+		<datatable-column class="col-name" name="Item group" property="IDGroup">
+			<ng-template let-i="row" datatable-cell-template>
+				<div *ngIf="i && !i.isEdit">
+					<span (mousedown)="$event.stopPropagation()"> #{{ i?._GroupReplace?.Id }} </span>
+					<a [ngClass]="{ 'no-check-dirty': noCheckDirty }" class="clickable"
+						[routerLink]="['/item-replacement-group/' + i?._GroupReplace?.Id]" (mousedown)="$event.stopPropagation()"><ion-icon
+							name="open-outline"></ion-icon></a>
+					&nbsp;
+					<span [title]="i?._GroupReplace?.Name">
+						<b *ngIf="i?._GroupReplace?.Code" (mousedown)="$event.stopPropagation()">{{ i?._GroupReplace?.Code }}</b>
+						{{ i?._GroupReplace?.Name }}
+					</span>
+				</div>
+				<app-input-control *ngIf="i && i?.isEdit"
+					[field]="{id: 'IDGroup' , type : 'ng-select-async', form : i?._formGroup,  dataSource: i?._formGroup?.controls?._IDGroupDataSource?.value, bindValue: 'Id', clearable: true,  placeholder: 'Type to search...', appendTo: '#ng-select-table'}"
+					(change)="groupChange($event, i, i?._formGroup)">
+					<ng-template input-control-template ng-label-tmp let-i="item">
+						<div *ngIf="i?.Id">
+							<span (mousedown)="$event.stopPropagation()">#{{ i?.Id }} </span>
+							<a [ngClass]="{ 'no-check-dirty': noCheckDirty }" class="clickable" [routerLink]="['/item-replacement-group/' + i?.Id]" (mousedown)="$event.stopPropagation()"
+								><ion-icon name="open-outline"></ion-icon
+							></a>
+							&nbsp;
+							<span [title]="i?.Name">
+								<b *ngIf="i?.Code" (mousedown)="$event.stopPropagation()">{{ i?.Code }}</b>
+								{{ i?.Name }}
+							</span>
+						</div>
+					</ng-template>
+					<ng-template input-control-template ng-option-tmp let-i="item" let-search="searchTerm">
+	
+						<div *ngIf="i">
+							<div>
+								<span [ngOptionHighlight]="search">{{ i.Name }}</span>
+							</div>
+							<small
+								>#<b
+									><span [ngClass]="{ 'no-check-dirty': noCheckDirty }" class="important" [ngOptionHighlight]="search">{{ i.Id }} - {{ i.Code }}</span></b
+								></small
+							>
+						</div>
+					</ng-template>
+
+				</app-input-control>
+	
+
+			</ng-template>
+		</datatable-column>
+
+		<datatable-column class="col-name" name="Item" property="_Item">
+			<ng-template let-i="row" datatable-cell-template>
+				<div *ngIf="i && !i.isEdit">
+					<span (mousedown)="$event.stopPropagation()"> #{{ i._Item?.Id }} </span>
+					<a [ngClass]="{ 'no-check-dirty': noCheckDirty }" class="clickable"
+						[routerLink]="['/item/' + i._Item.Id]" (mousedown)="$event.stopPropagation()"><ion-icon
+							name="open-outline"></ion-icon></a>
+					&nbsp;
+					<span [title]="i._Item.Name">
+						<b *ngIf="i._Item.Code" (mousedown)="$event.stopPropagation()">{{ i._Item.Code }}</b>
+						{{ i._Item.Name }}
+					</span>
+				</div>
+				<app-input-control *ngIf="i && i?.isEdit"
+					[field]="{id: 'IDItem' , type : 'ng-select-async', form : i?._formGroup,  dataSource: i?._formGroup?.controls?._IDItemDataSource?.value, bindValue: '_Item.Id', clearable: true,  placeholder: 'Type to search...', appendTo: '#ng-select-table'}"
+					(change)="itemChange($event, i, i?._formGroup)">
+					<ng-template input-control-template ng-label-tmp let-i="item">
+						<div *ngIf="i._Item?.Id">
+							<span (mousedown)="$event.stopPropagation()">#{{ i._Item?.Id }} </span>
+							<a [ngClass]="{ 'no-check-dirty': noCheckDirty }" class="clickable" [routerLink]="['/item/' + i._Item?.Id]" (mousedown)="$event.stopPropagation()"
+								><ion-icon name="open-outline"></ion-icon
+							></a>
+							&nbsp;
+							<span [title]="i._Item?.Name">
+								<b *ngIf="i._Item?.Code" (mousedown)="$event.stopPropagation()">{{ i._Item?.Code }}</b>
+								{{ i._Item?.Name }}
+							</span>
+						</div>
+					</ng-template>
+					<ng-template input-control-template ng-option-tmp let-i="item" let-search="searchTerm">
+						<div *ngIf="i">
+							<div>
+								<span [ngOptionHighlight]="search">{{ i._Item.Name }}</span>
+							</div>
+							<small
+								>#<b
+									><span [ngClass]="{ 'no-check-dirty': noCheckDirty }" class="important" [ngOptionHighlight]="search">{{ i._Item.Id }} - {{ i._Item.Code }}</span></b
+								></small
+							>
+						</div>
+					</ng-template>
+
+				</app-input-control>
+	
+
+			</ng-template>
+		</datatable-column>
+
+		<datatable-column class="col-name" name="Replace by item" property="_ReplaceByItem">
+			<ng-template let-i="row" datatable-cell-template>
+				<div *ngIf="i && !i.isEdit">
+					<span (mousedown)="$event.stopPropagation()"> #{{ i._ReplaceByItem?.Id }} </span>
+					<a [ngClass]="{ 'no-check-dirty': noCheckDirty }" class="clickable"
+						[routerLink]="['/item/' + i._ReplaceByItem.Id]" (mousedown)="$event.stopPropagation()"><ion-icon
+							name="open-outline"></ion-icon></a>
+					&nbsp;
+					<span [title]="i._ReplaceByItem.Name">
+						<b *ngIf="i._ReplaceByItem.Code" (mousedown)="$event.stopPropagation()">{{ i._ReplaceByItem.Code
+							}}</b>
+						{{ i._ReplaceByItem.Name }}
+					</span>
+				</div>
+				<app-input-control *ngIf="i && i?.isEdit" [field]="{id: 'IDReplaceByItem' , type : 'ng-select-async', form : i?._formGroup,  dataSource: i?._formGroup?.controls?._IDItemReplaceDataSource?.value,  bindValue: '_Item.Id', clearable: true,  placeholder: 'Type to search...', appendTo: '#ng-select-table'}"
+					(change)="itemReplaceChange($event, i, i?._formGroup)">
+					<ng-template input-control-template ng-label-tmp let-i="item">
+						<div *ngIf="i._Item?.Id">
+							<span (mousedown)="$event.stopPropagation()">#{{ i._Item?.Id }} </span>
+							<a [ngClass]="{ 'no-check-dirty': noCheckDirty }" class="clickable" [routerLink]="['/item/' + i._Item?.Id]" (mousedown)="$event.stopPropagation()"
+								><ion-icon name="open-outline"></ion-icon
+							></a>
+							&nbsp;
+							<span [title]="i._Item?.Name">
+								<b *ngIf="i._Item?.Code" (mousedown)="$event.stopPropagation()">{{ i._Item?.Code }}</b>
+								{{ i._Item?.Name }}
+							</span>
+						</div>
+					</ng-template>
+					<ng-template input-control-template ng-option-tmp let-i="item" let-search="searchTerm">
+						<div *ngIf="i">
+							<div>
+								<span [ngOptionHighlight]="search">{{ i._Item.Name }}</span>
+							</div>
+							<small
+								>#<b
+									><span [ngClass]="{ 'no-check-dirty': noCheckDirty }" class="important" [ngOptionHighlight]="search">{{ i._Item.Id }} - {{ i._Item.Code }}</span></b
+								></small
+							>
+						</div>
+					</ng-template>
+				</app-input-control>
+
+				
+
+			</ng-template>
+		</datatable-column>
+		<datatable-column class="col-date" name="Effective date from" property="EffectiveDateFrom"
+			filterControlType="date">
+			<ng-template let-i="row" datatable-cell-template>
+				<span *ngIf="!i?.isEdit">{{i?.EffectiveDateFrom | date: 'dd/MM/yyyy HH:mm'}}</span>
+				<app-input-control *ngIf="i?.isEdit"
+					[field]="{id:'EffectiveDateFrom', type : 'date', form : i?._formGroup, }"
+					(change)="saveDate(i)"></app-input-control>
+			</ng-template>
+		</datatable-column>
+
+		<datatable-column class="col-date" name="Effective date to" property="EffectiveDateTo" filterControlType="date">
+			<ng-template let-i="row" datatable-cell-template>
+				<span *ngIf="!i?.isEdit">{{i?.EffectiveDateTo | date: 'dd/MM/yyyy HH:mm'}}</span>
+				<app-input-control *ngIf="i?.isEdit"
+					[field]="{id:'EffectiveDateTo', type : 'date', form : i?._formGroup, }"
+					(change)="saveDate(i)"></app-input-control>
+			</ng-template>
+		</datatable-column>
+
+
+		<datatable-column class="col-icon" name="" property="Id">
+			<ng-template let-i="row" datatable-cell-template>
+				<ion-button *ngIf="!i?.isEdit" (click)="editRow(i)" size="small" title="{{'Edit' | translate}}"
+					fill="clear">
+					<ion-icon slot="icon-only" name="pencil"></ion-icon>
+				</ion-button>
+				<div class="text-center">
+					<ion-button *ngIf="i?.isEdit" (click)="saveRow(i)" size="small"> {{'Save' | translate}}
+					</ion-button>
+					<br />
+					<ion-button *ngIf="i?.isEdit" (click)="cancelRow(i)" size="small" fill="outline"> {{'Cancel' |
+						translate}} </ion-button>
+				</div>
+			</ng-template>
+		</datatable-column>
+	</app-data-table>
+	<ion-infinite-scroll color="primary" threshold="20%" (ionInfinite)="loadData($event)"
+		[disabled]="!pageConfig.infiniteScroll || pageConfig.isEndOfData">
+		<ion-infinite-scroll-content loadingSpinner="dots"></ion-infinite-scroll-content>
+	</ion-infinite-scroll>
+</ion-content>

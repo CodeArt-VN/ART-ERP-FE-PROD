@@ -1,0 +1,295 @@
+<ion-header collapse="fade">
+	<ion-toolbar>
+		<ion-buttons slot="primary">
+			<ion-button title="{{'Refresh' | translate}}" color="warning" (click)="refresh()">
+				<ion-icon slot="icon-only" name="reload-outline"></ion-icon>
+			</ion-button>
+			<ion-button title="{{'Close' | translate}}" color="secondary" (click)="closeModal()">
+				<ion-icon slot="icon-only" name="close"></ion-icon>
+			</ion-button>
+		</ion-buttons>
+	</ion-toolbar>
+</ion-header>
+
+<ion-content appScrollbarTheme class="ion-padding">
+	<div id="ng-select-table" style="position: absolute"></div>
+	<div class="main-view" *ngIf="item && pageConfig.showSpinner==false">
+		<ion-grid fixed>
+			<form [formGroup]="formGroup">
+				<ion-row class="hr-group">
+					<ion-col size="12" size-sm="12" size-md="12" size-xl="3">
+						<ion-list-header class="ion-no-padding">
+							<ion-label color="primary">{{'Group' | translate}}</ion-label>
+						</ion-list-header>
+					</ion-col>
+					<ion-col size="12" size-sm size-xl="4">
+						<app-form-control (change)="saveChange();" [field]="{id: 'Code', type: 'text', label: 'Code', form: formGroup}"></app-form-control>
+						<app-form-control (change)="saveChange();" [field]="{id: 'Name', type: 'text', label: 'Name', form: formGroup}"></app-form-control>
+						
+					</ion-col>
+					<ion-col size="12" size-sm size-xl="4">
+						<app-form-control (change)="saveChange();" [field]="{id: 'Sort', type: 'number', label: 'Sort', form: formGroup}"></app-form-control>			
+					</ion-col>
+					
+				</ion-row>
+			</form>
+		</ion-grid>
+
+		<div class="row-full shadow safe-max-width" style="max-width: 1760px">
+			<ion-toolbar color="primary">
+				<ion-segment scrollable="true" (ionChange)="segmentChanged($event)" [value]="segmentView">
+					<ion-segment-button value="s1">
+						<ion-label>{{'Item replacement' | translate}}</ion-label>
+					</ion-segment-button>
+					<ion-segment-button *ngIf="formGroup.get('Lines')['controls'].length >= 2" value="s2">
+						<ion-label>{{'Apply replacement item' | translate}}</ion-label>
+					</ion-segment-button>
+					<ion-segment-button value="s3">
+						<ion-label>{{'Other information' | translate}}</ion-label>
+					</ion-segment-button>					
+				</ion-segment>
+				<ion-buttons slot="end" *ngIf="segmentView=='s1'"> </ion-buttons>
+			</ion-toolbar>
+			<div *ngIf="segmentView == 's1'">
+				<form [formGroup]="formGroup">
+					<ng-container formArrayName="Lines">
+						<div class="table-contain">
+							<app-data-table [rows]="formGroup.get('Lines')['controls']" [showSpinner]="pageConfig.showSpinner">
+								<datatable-empty-message subMessage="Please click add new to start...">
+									<ng-template datatable-empty-message-template>
+										<div>
+											<ion-button *ngIf="formGroup.controls.Id.value != null" size="small" (click)="addItemLine({}, true)">
+												<ion-icon slot="start" name="add-circle-outline"></ion-icon>
+												{{ 'Add item' | translate }}
+											</ion-button>
+										</div>
+									</ng-template>
+								</datatable-empty-message>
+								<datatable-column [checkbox]="true" property="value" *ngIf="pageConfig.canEdit">
+									<ng-template datatable-header-template>
+										<input class="c-checkbox" type="checkbox" (change)="toggleSelectAll()"
+											[checked]="isAllSelected" />
+									</ng-template>
+									<ng-template let-g="row" datatable-cell-template>
+										<app-input-control (change)="changeSelection(g)"
+											[field]="{ id: 'IsChecked', label: 'Checked', type: 'checkbox', form: g }"></app-input-control>
+									</ng-template>
+								</datatable-column>
+								<datatable-column class="col-id" name="No." property="#"></datatable-column>
+								<datatable-column class="col-name item-name" name="Item" property="value">
+									<ng-template let-g="row" datatable-cell-template>
+										<app-input-control
+											[field]="{id: 'IDItem', label: 'Item', type : 'ng-select-item', form : g,  dataSource: g.controls._IDItemDataSource.value,  bindLabel: 'Name',  bindValue: 'Id', clearable: true,  placeholder: 'Type to search...', appendTo: '#ng-select-table'}"
+											(change)="IDItemChange($event, g)"></app-input-control>
+
+									</ng-template>
+								</datatable-column>
+								<datatable-column class="col-code" name="Unit" property="value">
+									<ng-template let-g="row" datatable-cell-template>
+										<app-input-control [field]="{
+											id: 'IDUoM',
+											type: 'ng-select',
+											form: g,
+											dataSource: g.get('_IDUoMDataSource').value,
+											bindLabel: 'Name',
+											bindValue: 'Id',
+											appendTo: '#ng-select-table'
+										}" (change)="IDUoMChange(g)">
+										</app-input-control>
+									</ng-template>
+								</datatable-column>
+								<datatable-column class="col-number" name="Quantity" property="value">
+									<ng-template let-g="row" datatable-cell-template>
+										<app-input-control (change)="submitData(g)"
+											[field]="{ id: 'Quantity', type: 'number', form: g }"></app-input-control>
+									</ng-template>
+								</datatable-column>
+
+								<datatable-column class="col-del" name="" property="value" *ngIf="pageConfig.canEdit">
+									<ng-template datatable-header-template>
+										<ion-icon
+											*ngIf="selectedLines.controls?.length > 0"
+											color="danger"
+											class="min-btn clickable"
+											name="trash-outline"
+											title="{{ 'SELECTED_ITEMS' | translate: { COUNT: selectedLines.controls?.length } }}"
+											(click)="removeSelectedItems()"
+										></ion-icon>
+									</ng-template>
+									<ng-template let-g="row" let-idx="idx" datatable-cell-template>
+										<ion-icon color="danger" class="min-btn clickable" name="trash-outline" (click)="removeItem(idx)"></ion-icon>
+									</ng-template>
+								</datatable-column>
+							</app-data-table>
+						</div>
+					</ng-container>
+				</form>
+				<div class="ion-padding" *ngIf="pageConfig.canEdit && formGroup.controls.Lines.value.length ">
+					<ion-button fill="clear" size="small" (click)="addItemLine({}, true)">
+						<ion-icon slot="start" name="add-circle-outline"></ion-icon>
+						{{ 'Add item' | translate }}
+					</ion-button>
+				</div>
+			</div>
+			
+			<div *ngIf="segmentView == 's2' && formGroup.get('Lines')['controls'].length >= 2">
+				<div class="table-contain">
+					<app-data-table class="box-shadow responsive" [rows]="formGroup.get('ApplyItemsReplacementLines')['controls']" [showSpinner]="pageConfig.showSpinner">
+						<datatable-empty-message subMessage="Please click add new to start...">
+							<ng-template datatable-empty-message-template>
+								<div>
+									<ion-button *ngIf="!formGroup.controls.ApplyItemsReplacementLines.value.length" size="small" (click)="addApplyReplacementRow()">
+										<ion-icon slot="start" name="add-circle-outline"></ion-icon>
+										{{ 'Add item' | translate }}
+									</ion-button>
+								</div>
+							</ng-template>
+						</datatable-empty-message>
+						<datatable-column [checkbox]="true" property="value" *ngIf="pageConfig.canEdit">
+							<ng-template datatable-header-template>
+								<input class="c-checkbox" type="checkbox" (change)="applyToggleSelectAll()" [checked]="applyIsAllChecked" />
+							</ng-template>
+							<ng-template let-g="row" datatable-cell-template>
+								<app-input-control (change)="applyChangeSelection(g)"
+									[field]="{ id: 'IsChecked', label: 'Checked', type: 'checkbox', form: g }"></app-input-control>
+							</ng-template>
+						</datatable-column>
+						<datatable-column class="col-name" name="Item" property="_Item">
+							<ng-template let-g="row" datatable-cell-template>
+								<app-input-control
+									[field]="{id: 'IDItem' , type : 'ng-select-async', form : g,  dataSource: g?.controls?._IDItemDataSource?.value, bindValue: '_Item.Id', clearable: true,  placeholder: 'Type to search...', appendTo: '#ng-select-table'}"
+									(change)="applyItemChange($event, g)">
+									<ng-template input-control-template ng-label-tmp let-i="item">
+										<div *ngIf="i._Item?.Id">
+											<span (mousedown)="$event.stopPropagation()">#{{ i._Item?.Id }} </span>
+											<a class="clickable" [routerLink]="['/item/' + i._Item?.Id]" (mousedown)="$event.stopPropagation()"
+												><ion-icon name="open-outline"></ion-icon
+											></a>
+											&nbsp;
+											<span [title]="i._Item?.Name">
+												<b *ngIf="i._Item?.Code" (mousedown)="$event.stopPropagation()">{{ i._Item?.Code }}</b>
+												{{ i._Item?.Name }}
+											</span>
+										</div>
+									</ng-template>
+									<ng-template input-control-template ng-option-tmp let-i="item" let-search="searchTerm">
+										<div *ngIf="i">
+											<div>
+												<span [ngOptionHighlight]="search">{{ i._Item.Name }}</span>
+											</div>
+											<small
+												>#<b
+													><span class="important" [ngOptionHighlight]="search">{{ i._Item.Id }} - {{ i._Item.Code }}</span></b
+												></small
+											>
+										</div>
+									</ng-template>
+								</app-input-control>
+							</ng-template>
+						</datatable-column>
+
+						<datatable-column class="col-name" name="Replace by item" property="_ReplaceByItem">
+							<ng-template let-g="row" datatable-cell-template>
+								<app-input-control
+									[field]="{id: 'IDReplaceByItem' , type : 'ng-select-async', form : g,  dataSource: g?.controls?._IDItemReplaceDataSource?.value,  bindValue: '_Item.Id', clearable: true,  placeholder: 'Type to search...', appendTo: '#ng-select-table'}"
+									(change)="applyItemReplaceChange($event, g)">
+									<ng-template input-control-template ng-label-tmp let-i="item">
+										<div *ngIf="i._Item?.Id">
+											<span (mousedown)="$event.stopPropagation()">#{{ i._Item?.Id }} </span>
+											<a class="clickable" [routerLink]="['/item/' + i._Item?.Id]" (mousedown)="$event.stopPropagation()"
+												><ion-icon name="open-outline"></ion-icon
+											></a>
+											&nbsp;
+											<span [title]="i._Item?.Name">
+												<b *ngIf="i._Item?.Code" (mousedown)="$event.stopPropagation()">{{ i._Item?.Code }}</b>
+												{{ i._Item?.Name }}
+											</span>
+										</div>
+									</ng-template>
+									<ng-template input-control-template ng-option-tmp let-i="item" let-search="searchTerm">
+										<div *ngIf="i">
+											<div>
+												<span [ngOptionHighlight]="search">{{ i._Item.Name }}</span>
+											</div>
+											<small
+												>#<b
+													><span class="important" [ngOptionHighlight]="search">{{ i._Item.Id }} - {{ i._Item.Code }}</span></b
+												></small
+											>
+										</div>
+									</ng-template>
+								</app-input-control>
+							</ng-template>
+						</datatable-column>
+
+						<datatable-column class="col-date" name="Effective date from" property="EffectiveDateFrom" filterControlType="date">
+							<ng-template let-g="row" datatable-cell-template>
+								<app-input-control [field]="{id:'EffectiveDateFrom', type : 'date', form : g }" (change)="saveApplyDate(g)"></app-input-control>
+							</ng-template>
+						</datatable-column>
+
+						<datatable-column class="col-date" name="Effective date to" property="EffectiveDateTo" filterControlType="date">
+							<ng-template let-g="row" datatable-cell-template>
+								<app-input-control [field]="{id:'EffectiveDateTo', type : 'date', form : g }" (change)="saveApplyDate(g)"></app-input-control>
+							</ng-template>
+						</datatable-column>
+						<datatable-column class="col-del" name="" property="value" *ngIf="pageConfig.canEdit">
+							<ng-template datatable-header-template>
+								<ion-icon
+									*ngIf="applySelectedLines.controls?.length > 0"
+									color="danger"
+									class="min-btn clickable"
+									name="trash-outline"
+									title="{{ 'SELECTED_ITEMS' | translate: { COUNT: applySelectedLines.controls?.length } }}"
+									(click)="applyRemoveSelectedItems()"
+								></ion-icon>
+							</ng-template>
+							<ng-template let-g="row" let-idx="idx" datatable-cell-template>
+								<ion-icon color="danger" class="min-btn clickable" name="trash-outline" (click)="applyRemoveItem(idx)"></ion-icon>
+							</ng-template>
+						</datatable-column>
+					</app-data-table>
+				</div>
+				<div class="ion-padding" *ngIf="pageConfig.canEdit && formGroup.controls.ApplyItemsReplacementLines.value.length ">
+					<ion-button fill="clear" size="small" (click)="addApplyReplacementRow()">
+						<ion-icon slot="start" name="add-circle-outline"></ion-icon>
+						{{ 'Add item' | translate }}
+					</ion-button>
+				</div>
+			</div>
+			<div *ngIf="segmentView == 's3'">
+				<div class="ion-padding">
+					<ion-grid fixed>
+						<ion-row class="hr-group" *ngIf="item?.Id">
+							<ion-col size="12" size-sm="12" size-md="12" size-xl="3">
+								<ion-list-header class="ion-no-padding">
+									<ion-label color="primary">{{'Other information' | translate}}</ion-label>
+								</ion-list-header>
+							</ion-col>
+							<ion-col size="12" size-sm size-xl="4">
+								<app-form-control [field]="{id: 'CreatedBy', type: 'text', label: 'Created by', form: formGroup }"></app-form-control>
+								<app-form-control [field]="{id: 'CreatedDate', type: 'span-datetime', label: 'Created date', form: formGroup }"></app-form-control>		
+							</ion-col>
+							<ion-col size="12" size-sm size-xl="4">
+								<app-form-control [field]="{id: 'ModifiedBy', type: 'text', label: 'Last modified by', form: formGroup }"></app-form-control>
+								<app-form-control [field]="{id: 'ModifiedDate', type: 'span-datetime', label: 'Last modified date', form: formGroup }"></app-form-control>
+							</ion-col>
+						</ion-row>
+					</ion-grid>
+				</div>
+			</div>
+		</div>
+	</div>
+	<app-page-message [itemsLength]="item? 1: 0" [showSpinner]="pageConfig.showSpinner"></app-page-message>
+</ion-content>
+<ion-footer collapse="fade">
+	<ion-toolbar>
+		<div slot="start">
+			<ion-button fill="outline" *ngIf="item.Id && pageConfig.canDelete" (click)="delete()" color="danger"> {{'Delete' | translate}} </ion-button>
+		</div>
+
+		<div slot="end">
+			<ion-button fill="outline" *ngIf="!item.Id" color="warning" (click)="closeModal()"> {{'Cancel' | translate}} </ion-button>
+		</div>
+	</ion-toolbar>
+</ion-footer>

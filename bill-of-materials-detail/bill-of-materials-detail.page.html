@@ -125,6 +125,7 @@
 									<div class="col-qty cell">{{'Quantity' | translate}}</div>
 									<div class="col-qty cell" title="{{'Is the required resource to start or finish the production' | translate}}">{{'Add' | translate}}</div>
 									<div class="col-uom cell">{{'Provide' | translate}}</div>
+									<div class="col-uom cell">{{'Replacement' | translate}}</div>
 									@if(item.Type=='Sales' || item.Type=='BTSales'){
 									<div class="col-checkbox-custom cell">{{'IsRequired' | translate}}</div>
 									<div class="col-checkbox-custom cell">{{'AllowMultiple' | translate}}</div>
@@ -175,6 +176,7 @@
 													<div class="col-uom cell"></div>
 													<div class="col-qty cell"></div>
 													<div class="col-qty cell"></div>
+													<div class="col-uom cell"></div>
 													<div class="col-uom cell"></div>
 													@if(item.Type=='Sales' || item.Type=='BTSales'){
 													<div class="col-checkbox-custom cell">
@@ -264,6 +266,9 @@
 														>
 															<option [disabled]="t.Flag" *ngFor="let t of issueMethodList" [value]="t.Code">{{t.Name}}</option>
 														</select>
+													</div>
+													<div class="col-uom cell"  *ngIf="pageConfig.canEdit" (click)="showReplacement(g)">
+														<ion-icon class="min-btn" name="grid-outline"></ion-icon>
 													</div>
 													@if(item.Type=='Sales' || item.Type=='BTSales'){
 													<div class="col-checkbox-custom cell"></div>
