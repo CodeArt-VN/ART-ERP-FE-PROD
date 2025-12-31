@@ -1110,4 +1110,56 @@ export class ScenarioDetailPage extends PageBase {
 				this.submitAttempt = false;
 			});
 	}
+
+	getPivotRowName(row) {
+		if (row?.isParent) return row?.Name ?? '';
+		if (row?.type) return row.type;
+		return row?.Name ?? '';
+	}
+
+	getCsvValue(value) {
+		if (value === null || value === undefined) return '';
+		let text = String(value);
+		if (text.includes('"')) {
+			text = text.replace(/"/g, '""');
+		}
+		if (text.includes(',') || text.includes('\n') || text.includes('\r')) {
+			return `"${text}"`;
+		}
+		return text;
+	}
+
+	exportResultPivot() {
+		const rows = this.itemsResultPivotRows?.itemsState || [];
+		if (!rows.length || !this.dates?.length) {
+			this.env.showMessage('No data to export', 'warning');
+			return;
+		}
+
+		let csvContent = '\uFEFF';
+		const headerLabels = [ 'Id' ,'Name', 'Code', ...this.dateHeaders];
+		csvContent += headerLabels.join(',') + '\r\n';
+
+		for (let i = 0; i < rows.length; i++) {
+			const row = rows[i];
+			const values = [];
+			values.push(this.getCsvValue(row?.Id ?? row?.IDParent ?? ''));
+			values.push(this.getCsvValue(this.getPivotRowName(row)));
+			values.push(this.getCsvValue(row?.Code ?? ''));
+			for (let j = 0; j < this.dates.length; j++) {
+				const key = this.dates[j];
+				values.push(this.getCsvValue(row?.[key] ?? ''));
+			}
+			csvContent += values.join(',') + '\r\n';
+		}
+
+		const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement('a');
+		const nameSeed = this.item?.Code || this.item?.Id || 'data';
+		link.setAttribute('href', url);
+		link.setAttribute('download', `ScenarioResult_${nameSeed}.csv`);
+		document.body.appendChild(link);
+		link.click();
+	}
 }

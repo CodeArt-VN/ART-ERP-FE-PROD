@@ -109,6 +109,11 @@
 						<ion-label>{{'Recommend' | translate}}</ion-label>
 					</ion-segment-button>
 				</ion-segment>
+				<ion-buttons slot="end" *ngIf="segmentView=='s3' && itemsResultPivotRows?.itemsState?.length">
+					<ion-button class="ion-hide-sm-down" *ngIf="pageConfig.canExport" (click)="exportResultPivot()" title="{{'Export' | translate}}">
+						<ion-icon slot="icon-only" name="cloud-download-outline"></ion-icon>
+					</ion-button>
+				</ion-buttons>
 				<ion-buttons slot="end" *ngIf="segmentView=='s4' && _Recommendations?.itemsState?.length">
 					<ion-button (click)="createPurchaseRequest()" title="{{'Create purchase request' | translate}}">
 						{{'Create purchase request' | translate}}

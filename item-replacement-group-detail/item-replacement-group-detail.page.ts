@@ -130,6 +130,7 @@ export class ItemReplacementGroupDetailPage extends PageBase {
 			IsChecked: [false],
 		});
 		groups.push(group);
+		(group as any)._prevIDItem = line?.IDItem ?? null;
 		if (selectedItem) group.get('_IDItemDataSource').value.selected.push(selectedItem);
 		group.get('_IDItemDataSource').value?.initSearch();
 		if (markAsDirty) {
@@ -150,11 +151,12 @@ export class ItemReplacementGroupDetailPage extends PageBase {
 
 	segmentView = 's1';
 	applyIsAllChecked = false;
+	applyItemsReplacementLoaded = false;
 	applySelectedLines = new FormArray([]);
 	segmentChanged(ev: any) {
 		this.segmentView = ev?.detail?.value ?? ev;
 		if (this.segmentView == 's2') {
-			this.loadApplyItemsReplacement();
+			if(!this.applyItemsReplacementLoaded) this.loadApplyItemsReplacement();
 		}
 	}
 
@@ -167,6 +169,7 @@ export class ItemReplacementGroupDetailPage extends PageBase {
 			this.formGroup.controls.ApplyItemsReplacementLines = new FormArray([]);
 			this.applySelectedLines = new FormArray([]);
 			this.applyIsAllChecked = false;
+			this.applyItemsReplacementLoaded = false;
 			return;
 		}
 
@@ -176,19 +179,25 @@ export class ItemReplacementGroupDetailPage extends PageBase {
 				.read({ IDGroup: groupId, Take: 5000 }, true)
 				.then((result: any) => {
 					const rows = result?.data || [];
-					this.formGroup.controls.ApplyItemsReplacementLines = new FormArray([]);
-					rows.forEach((row) => this.addApplyReplacementLine(row));
-					this.applySelectedLines = new FormArray([]);
-					this.applyIsAllChecked = false;
+					this.setApplyItemsReplacementLines(rows);
 				})
 				.catch(() => {
+					this.applyItemsReplacementLoaded = false;
 					this.env.showMessage('Cannot load data', 'danger');
 				})
 				.finally(() => {
 					this.submitAttempt = false;
 					this.cdr.detectChanges();
 				})
-			);
+		);
+	}
+
+	setApplyItemsReplacementLines(rows: any[]) {
+		this.formGroup.controls.ApplyItemsReplacementLines = new FormArray([]);
+		rows.forEach((row) => this.addApplyReplacementLine(row));
+		this.applySelectedLines = new FormArray([]);
+		this.applyIsAllChecked = false;
+		this.applyItemsReplacementLoaded = true;
 	}
 
 	addApplyReplacementRow() {
@@ -477,7 +486,89 @@ export class ItemReplacementGroupDetailPage extends PageBase {
 		}
 	}
 
-	IDItemChange(e, group) {
+	getApplyItemsByItemIds(itemIds: any[]) {
+		const groupId = this.item?.Id || this.formGroup?.get('Id')?.value;
+		const uniqueIds = Array.from(new Set((itemIds || []).filter((id) => id)));
+		return new Promise((resolve, reject) => {
+			if (uniqueIds.length === 0) {
+				resolve([]);
+				return;
+			}
+
+			if (this.applyItemsReplacementLoaded) {
+				const applyLines = this.formGroup.get('ApplyItemsReplacementLines') as FormArray;
+				const rows = (applyLines?.controls || []).map((g) => ({
+					Id: g.get('Id')?.value,
+					IDItem: g.get('IDItem')?.value,
+					IDReplaceByItem: g.get('IDReplaceByItem')?.value,
+				}));
+				resolve(rows.filter((row) => uniqueIds.includes(row.IDItem) || uniqueIds.includes(row.IDReplaceByItem)));
+				return;
+			}
+
+			if (!groupId) {
+				resolve([]);
+				return;
+			}
+
+			this.applyItemsReplacementProvider
+				.read({ IDGroup: groupId, Take: 5000, Skip: 0 }, true)
+				.then((result: any) => {
+					const rows = result?.data || [];
+					this.setApplyItemsReplacementLines(rows);
+					resolve(rows.filter((row) => uniqueIds.includes(row.IDItem) || uniqueIds.includes(row.IDReplaceByItem)));
+				})
+				.catch(() => resolve([]));
+		});
+	}
+	confirmApplyItemsRemoval(rows: any[]) {
+		return new Promise((resolve, reject) => {
+			if (!rows || rows.length === 0) {
+				resolve([]);
+				return;
+			}
+			this.env
+				.showPrompt('Applied data exists for this item, do you want to continue?', null, 'Delete')
+				.then(() => resolve(rows))
+				.catch((err) => reject(err));
+		});
+	}
+
+	deleteApplyRows(rows: any[], itemIds: any[]) {
+		const deleteIds = (rows || []).map((row) => row?.Id).filter((id) => id);
+		return new Promise((resolve) => {
+			if (deleteIds.length === 0) {
+				resolve(false);
+				return;
+			}
+
+			this.applyItemsReplacementProvider
+				.delete(deleteIds.map((id) => ({ Id: id })))
+				.then(() => {
+					const applyLines = this.formGroup.get('ApplyItemsReplacementLines') as FormArray;
+					const ids = new Set((itemIds || []).filter((id) => id));
+
+					// Keep apply lines in sync after delete.
+					if (applyLines && ids.size > 0) {
+						for (let i = applyLines.length - 1; i >= 0; i--) {
+							const line = applyLines.at(i) as FormGroup;
+							if (ids.has(line.get('IDItem')?.value) || ids.has(line.get('IDReplaceByItem')?.value)) {
+								applyLines.removeAt(i);
+							}
+						}
+					}
+					this.applySelectedLines = new FormArray([]);
+					this.applyIsAllChecked = false;
+					resolve(true);
+				})
+				.catch(() => {
+					this.env.showMessage('Cannot delete apply items, please try again', 'danger');
+					resolve(false);
+				});
+		});
+	}
+
+	applyItemSelectionChange(e, group, nextId) {
 		if (e) {
 			if (e.PurchaseTaxInPercent && e.PurchaseTaxInPercent != -99) {
 				group.controls._IDUoMDataSource.setValue(e.UoMs);
@@ -485,6 +576,7 @@ export class ItemReplacementGroupDetailPage extends PageBase {
 				group.controls.IDUoM.setValue(e.PurchasingUoM);
 				group.controls.IDUoM.markAsDirty();
 				this.IDUoMChange(group);
+				(group as any)._prevIDItem = nextId ?? null;
 				return;
 			}
 
@@ -492,9 +584,89 @@ export class ItemReplacementGroupDetailPage extends PageBase {
 		}
 		group.controls.IDUoM.setValue(null);
 		group.controls.IDUoM.markAsDirty();
-
+		(group as any)._prevIDItem = nextId ?? null;
 	}
 
+	deleteLinesByIds(groups: FormArray, ids: any[]) {
+		return new Promise((resolve) => {
+			if (!ids || ids.length === 0) {
+				resolve(false);
+				return;
+			}
+
+			this.formGroup.get('DeletedLines').setValue(ids);
+			this.formGroup.get('DeletedLines').markAsDirty();
+			this.saveChange()
+				.then(() => {
+					ids.forEach((id) => {
+						const index = groups.controls.findIndex((x) => x.get('Id').value == id);
+						if (index >= 0) groups.removeAt(index);
+					});
+					resolve(true);
+				})
+				.catch(() => resolve(false));
+		});
+	}
+
+	removeSelectedLines(groups: FormArray, selectedItemIds: any[], confirmedRows: any[]) {
+		const itemsWithId = this.selectedLines.controls.map((fg) => fg.get('Id').value).filter((id) => id);
+		if (itemsWithId.length) {
+			this.env
+				.showPrompt({ code: 'ACTION_DELETE_MESSAGE', value: { value: this.selectedLines.length } }, null, {
+					code: 'ACTION_DELETE_MESSAGE',
+					value: { value: this.selectedLines.length },
+				})
+				.then(() => {
+					this.deleteLinesByIds(groups, itemsWithId).then((deleted) => {
+						if (deleted && confirmedRows.length) {
+							this.deleteApplyRows(confirmedRows, selectedItemIds);
+						}
+						if (deleted) {
+							this.selectedLines = new FormArray([]);
+							this.isAllChecked = false;
+						}
+					});
+				})
+				.catch(() => {});
+			return;
+		}
+
+		this.selectedLines.controls.forEach((fg) => {
+			const index = groups.controls.indexOf(fg);
+			if (index >= 0) groups.removeAt(index);
+		});
+		if (confirmedRows.length) {
+			this.deleteApplyRows(confirmedRows, selectedItemIds);
+		}
+		this.selectedLines = new FormArray([]);
+		this.isAllChecked = false;
+	}
+
+	async IDItemChange(e, group) {
+		if (!group) return;
+
+		const prevId = (group as any)._prevIDItem ?? null;
+		const nextId = e?.Id ?? e?.IDItem ?? group.get('IDItem')?.value ?? null;
+
+		if (prevId && prevId !== nextId) {
+			const applyRows : any = await this.getApplyItemsByItemIds([prevId]);
+			if (applyRows.length) {
+				this.confirmApplyItemsRemoval(applyRows)
+					.then((confirmedRows : any) => {
+						this.deleteApplyRows(confirmedRows, [prevId]).then(() => {
+							this.applyItemSelectionChange(e, group, nextId);
+						});
+					})
+					.catch(() => {
+						group.get('IDItem')?.setValue(prevId, { emitEvent: false });
+						this.cdr.detectChanges();
+					});
+				return;
+			}
+		}
+
+		this.applyItemSelectionChange(e, group, nextId);
+	}
 	IDUoMChange(group) {	
 		group.controls.Quantity.setValue(null);
 		group.controls.Quantity.markAsDirty();
@@ -526,31 +698,56 @@ export class ItemReplacementGroupDetailPage extends PageBase {
 		});
 	}
 
-	removeItem(index) {
+	async removeItem(index) {
 		const groups = this.formGroup.controls.Lines as FormArray;
-		if (groups.controls[index].get('Id').value) {
+		const group = groups?.controls[index] as FormGroup;
+		if (!group) return;
+
+		const itemId = group.get('IDItem')?.value;
+		const applyRows : any = itemId ? await this.getApplyItemsByItemIds([itemId]) : [];
+		const lineId = group.get('Id').value;
+
+		if (lineId) {
+			if (applyRows.length) {
+				this.confirmApplyItemsRemoval(applyRows)
+					.then((confirmedRows : any) => {
+						this.env
+							.showPrompt('Bạn có chắc muốn xóa sản phẩm?', null, 'Xóa sản phẩm')
+							.then(() => {
+								this.deleteLinesByIds(groups, [lineId]).then((deleted) => {
+									if (deleted) {
+										this.deleteApplyRows(confirmedRows, [itemId]);
+									}
+								});
+							})
+							.catch(() => {});
+					})
+					.catch(() => {});
+				return;
+			}
+
 			this.env
 				.showPrompt('Bạn có chắc muốn xóa sản phẩm?', null, 'Xóa sản phẩm')
 				.then(() => {
-					const Ids = [groups.controls[index].get('Id').value];
-					if (Ids && Ids.length > 0) {
-						this.formGroup.get('DeletedLines').setValue(Ids);
-						this.formGroup.get('DeletedLines').markAsDirty();
-						this.saveChange().then((s) => {
-							Ids.forEach((id) => {
-								let index = groups.controls.findIndex((x) => x.get('Id').value == id);
-								if (index >= 0) groups.removeAt(index);
-							});
-						});
-					}
+					this.deleteLinesByIds(groups, [lineId]);
 				})
 				.catch(() => {});
-		} else {
-			groups.removeAt(index);
+			return;
 		}
-	}
 
-	removeSelectedItems() {
+		if (applyRows.length) {
+			this.confirmApplyItemsRemoval(applyRows)
+				.then((confirmedRows :any) => {
+					groups.removeAt(index);
+					this.deleteApplyRows(confirmedRows, [itemId]);
+				})
+				.catch(() => {});
+			return;
+		}
+
+		groups.removeAt(index);
+	}
+	async removeSelectedItems() {
 		let groups = <FormArray>this.formGroup.controls.Lines;
 
 		if (this.selectedLines.controls.length === 0) {
@@ -558,41 +755,19 @@ export class ItemReplacementGroupDetailPage extends PageBase {
 			return;
 		}
 
-		if (this.selectedLines.controls.some((g) => g.get('Id').value)) {
-			this.env
-				.showPrompt({ code: 'ACTION_DELETE_MESSAGE', value: { value: this.selectedLines.length } }, null, {
-					code: 'ACTION_DELETE_MESSAGE',
-					value: { value: this.selectedLines.length },
-				})
-				.then((_) => {
-					let itemsWithId = this.selectedLines.controls.map((fg) => fg.get('Id').value).filter((id) => id);
+		const selectedItemIds = this.selectedLines.controls.map((g) => g.get('IDItem')?.value).filter((id) => id);
+		const applyRows :any = selectedItemIds.length ? await this.getApplyItemsByItemIds(selectedItemIds) : [];
 
-					if (itemsWithId.length > 0) {
-						if (itemsWithId && itemsWithId.length > 0) {
-							this.formGroup.get('DeletedLines').setValue(itemsWithId);
-							this.formGroup.get('DeletedLines').markAsDirty();
-							this.saveChange().then((s) => {
-								itemsWithId.forEach((id) => {
-									let index = groups.controls.findIndex((x) => x.get('Id').value == id);
-									if (index >= 0) groups.removeAt(index);
-								});
-							});
-						}
-					}
-					this.selectedLines = new FormArray([]);
-					this.isAllChecked = false;
+		if (applyRows.length) {
+			this.confirmApplyItemsRemoval(applyRows)
+				.then((confirmedRows: any) => {
+					this.removeSelectedLines(groups, selectedItemIds, confirmedRows);
 				})
-				.catch((_) => {});
-		} else {
-			this.selectedLines.controls
-				.map((fg) => fg.get('Id').value)
-				.forEach((id) => {
-					let index = groups.controls.findIndex((x) => x.get('Id').value == id);
-					if (index >= 0) groups.removeAt(index);
-				});
-			this.selectedLines = new FormArray([]);
-			this.isAllChecked = false;
+				.catch(() => {});
+			return;
 		}
+
+		this.removeSelectedLines(groups, selectedItemIds, []);
 	}
 
 	submitData(g) {
