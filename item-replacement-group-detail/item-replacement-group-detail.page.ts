@@ -129,6 +129,9 @@ export class ItemReplacementGroupDetailPage extends PageBase {
 			Sort: [line?.Sort],
 			IsChecked: [false],
 		});
+		if (!this.pageConfig.canEdit) {
+			group.disable({ emitEvent: false });
+		}
 		groups.push(group);
 		(group as any)._prevIDItem = line?.IDItem ?? null;
 		if (selectedItem) group.get('_IDItemDataSource').value.selected.push(selectedItem);
