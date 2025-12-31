@@ -152,10 +152,16 @@ export class ScenarioDetailPage extends PageBase {
 	}
 
 	loadedData(event?: any, ignoredFromGroup?: boolean): void {
-		this.item.StartDate = lib.dateFormat(this.item.StartDate);
-		this.item.EndDate = lib.dateFormat(this.item.EndDate);
-		this.item.RecommendationCalculatedDate = lib.dateFormat(this.item.RecommendationCalculatedDate);
-		this.item.LastExecuteDate = lib.dateFormat(this.item.LastExecuteDate);
+		try{
+			this.item.StartDate = lib.dateFormat(this.item.StartDate);
+			this.item.EndDate = lib.dateFormat(this.item.EndDate);
+			this.item.RecommendationCalculatedDate = lib.dateFormat(this.item.RecommendationCalculatedDate);
+			this.item.LastExecuteDate = lib.dateFormat(this.item.LastExecuteDate);
+			
+		}
+		catch(ex){
+			console.error(ex);
+		}
 		this.formGroup.controls.Warehouses.setValue(this.item._Warehouse?.map((d) => d.IDWarehouse) || []);
 		if (this.item.Id) {
 			// if (this.item?._ItemsResult?.length) {
