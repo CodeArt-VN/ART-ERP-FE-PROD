@@ -1093,7 +1093,7 @@ export class ScenarioDetailPage extends PageBase {
 		this.submitAttempt = true;
 		const items = this._Recommendations?.items ?? [];
 		const filterItems = Array.from(
-			new Set(items.filter((i) => i.Price === null || i.Price === undefined || i.Price === '')
+			new Set(items.filter((i) => !i.HasChild && (i.Price === null || i.Price === undefined || i.Price === '') )
 					.map((i) => i.IDItem)
 					.filter(Boolean))
 				);

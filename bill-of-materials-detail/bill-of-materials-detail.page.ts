@@ -922,7 +922,28 @@ export class BillOfMaterialsDetailPage extends PageBase {
 				const groups = Array.from(groupMap.values());
 
 				if (groups.length === 0) {
-					this.openReplacementGroupModal(0, null);
+					const selectedItem = group.get('_Item')?.value;
+					const selectedUoM =
+						group.get('IDUoM')?.value ??
+						selectedItem?.PurchasingUoM ??
+						selectedItem?.UoMs?.[0]?.Id ??
+						null;
+					const newItem = {
+						Id: 0,
+						_Items: selectedItem ? [selectedItem] : [],
+						Lines: [
+							{
+								Id: 0,
+								IDItem: selectedItem?.Id ?? itemId,
+								IDUoM: selectedUoM,
+								Code: selectedItem?.Code,
+								Name: selectedItem?.Name,
+								Quantity: '',
+								Sort: 1,
+							},
+						],
+					};
+					this.openReplacementGroupModal(0, newItem);
 					return;
 				}
 
