@@ -10,6 +10,7 @@ import { ScenarioDocumentSaleOrderModalPage } from '../scenario-document-sale-or
 import { ScenarioDocumentPurchaseModalPage } from '../scenario-document-purchase-modal/scenario-document-purchase-modal.page';
 import { ScenarioDocumentForecastModalPage } from '../scenario-document-forecast-modal/scenario-document-forecast-modal.page';
 import { CdkDragPlaceholder } from "@angular/cdk/drag-drop";
+import { ScenarioDocumentPurchaseRequestModalPage } from './scenario-document-purchase-request-modal/scenario-document-purchase-request-modal.page';
 
 
 
@@ -22,6 +23,6 @@ const routes: Routes = [
 
 @NgModule({
 	imports: [ShareModule, RouterModule.forChild(routes), CdkDragPlaceholder],
-	declarations: [ScenarioDetailPage, ScenarioDocumentSaleOrderModalPage, ScenarioDocumentPurchaseModalPage, ScenarioDocumentForecastModalPage, ScenarioPeggingModalPage],
+	declarations: [ScenarioDetailPage, ScenarioDocumentSaleOrderModalPage, ScenarioDocumentPurchaseModalPage, ScenarioDocumentForecastModalPage, ScenarioDocumentPurchaseRequestModalPage, ScenarioPeggingModalPage],
 })
 export class ScenarioDetailPageModule {}
