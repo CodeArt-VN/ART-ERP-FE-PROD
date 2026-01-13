@@ -15,6 +15,7 @@ import { ScenarioDocumentForecastModalPage } from '../scenario-document-forecast
 import { ScenarioDocumentPurchaseModalPage } from '../scenario-document-purchase-modal/scenario-document-purchase-modal.page';
 import { ApiSetting } from 'src/app/services/static/api-setting';
 import { OrderRecommendationModalPage } from '../order-recommendation-modal/order-recommendation-modal.page';
+import { ScenarioDocumentPurchaseRequestModalPage } from './scenario-document-purchase-request-modal/scenario-document-purchase-request-modal.page';
 
 @Component({
 	selector: 'app-scenario-detail',
@@ -134,6 +135,7 @@ export class ScenarioDetailPage extends PageBase {
 			{ Name: 'Forecast', Code: 'Forecast' },
 			{ Name: 'Sale order', Code: 'SaleOrder' },
 			{ Name: 'Purchase order', Code: 'PurchaseOrder' },
+			{ Name: 'Purchase request', Code: 'PurchaseRequest' },
 		];
 
 		this.warehouseDataSource = lib.cloneObject(this.env.branchList);
@@ -152,17 +154,17 @@ export class ScenarioDetailPage extends PageBase {
 	}
 
 	loadedData(event?: any, ignoredFromGroup?: boolean): void {
-		try{
+		try {
 			this.item.StartDate = lib.dateFormat(this.item.StartDate);
 			this.item.EndDate = lib.dateFormat(this.item.EndDate);
 			this.item.RecommendationCalculatedDate = lib.dateFormat(this.item.RecommendationCalculatedDate);
 			this.item.LastExecuteDate = lib.dateFormat(this.item.LastExecuteDate);
-			
-		}
-		catch(ex){
+		} catch (ex) {
 			console.error(ex);
 		}
-		this.formGroup.controls.Warehouses.setValue(this.item._Warehouse?.map((d) => d.IDWarehouse) || []);
+		if (this.item._Warehouse) {
+			this.formGroup.controls.Warehouses.setValue(this.item._Warehouse?.map((d) => d.IDWarehouse) || []);
+		}
 		if (this.item.Id) {
 			// if (this.item?._ItemsResult?.length) {
 
@@ -394,12 +396,10 @@ export class ScenarioDetailPage extends PageBase {
 				});
 			}
 		});
-		
-		this._Recommendations.items.forEach(i => {
+
+		this._Recommendations.items.forEach((i) => {
 			const price = i.Price;
-			i.PriceText = price == null || price === '' || price === undefined 
-				? ''
-				: lib.currencyFormat(price);
+			i.PriceText = price == null || price === '' || price === undefined ? '' : lib.currencyFormat(price);
 		});
 		lib.buildFlatTree(this._Recommendations.items, [], true).then((res: any) => {
 			this._Recommendations.itemsState = res;
@@ -939,6 +939,10 @@ export class ScenarioDetailPage extends PageBase {
 				this.selectedPurchaseList = [...this.formGroup.get('PreventDocument').value.filter((item) => item.Type === 'PurchaseOrder')];
 				this.showDocumentPurchaseModal(idMRP, type, status);
 				break;
+			case 'PurchaseRequest':
+				this.selectedPurchaseList = [...this.formGroup.get('PreventDocument').value.filter((item) => item.Type === 'PurchaseRequest')];
+				this.showDocumentPurchaseRequestModal(idMRP, type, status);
+				break;
 			case 'Forecast':
 				this.selectedForecastList = [...this.formGroup.get('PreventDocument').value.filter((item) => item.Type === 'Forecast')];
 				this.showDocumentForecastModal(idMRP, type, status);
@@ -988,6 +992,26 @@ export class ScenarioDetailPage extends PageBase {
 			this.processDocumentData(data, type, status);
 		}
 	}
+
+	async showDocumentPurchaseRequestModal(idMRP, type, status) {
+		const modal = await this.modalController.create({
+			component: ScenarioDocumentPurchaseRequestModalPage,
+			componentProps: {
+				idMRP: idMRP,
+				documentType: type,
+				status: status,
+				selectedPurchaseList: this.selectedPurchaseList,
+			},
+			cssClass: 'modal90',
+		});
+		this.selectedPurchaseList = [];
+		await modal.present();
+		const { data } = await modal.onWillDismiss();
+
+		if (data && data.length) {
+			this.processDocumentData(data, type, status);
+		}
+	}
 	async showDocumentForecastModal(idMRP, type, status) {
 		const modal = await this.modalController.create({
 			component: ScenarioDocumentForecastModalPage,
@@ -1017,11 +1041,13 @@ export class ScenarioDetailPage extends PageBase {
 				idField = 'IDOrder';
 				break;
 			case 'PurchaseOrder':
+			case 'PurchaseRequest':
 				idField = 'IDPurchase';
 				break;
 			case 'Forecast':
 				idField = 'IDForecast';
 				break;
+			
 		}
 
 		const dataIds = data.map((e) => e[idField]);
@@ -1093,10 +1119,13 @@ export class ScenarioDetailPage extends PageBase {
 		this.submitAttempt = true;
 		const items = this._Recommendations?.items ?? [];
 		const filterItems = Array.from(
-			new Set(items.filter((i) => !i.HasChild && (i.Price === null || i.Price === undefined || i.Price === '') )
+			new Set(
+				items
+					.filter((i) => !i.HasChild && (i.Price === null || i.Price === undefined || i.Price === ''))
 					.map((i) => i.IDItem)
-					.filter(Boolean))
-				);
+					.filter(Boolean)
+			)
+		);
 
 		if (!filterItems.length) {
 			this.env.showMessage('No items without price found', 'warning');
@@ -1143,7 +1172,7 @@ export class ScenarioDetailPage extends PageBase {
 		}
 
 		let csvContent = '\uFEFF';
-		const headerLabels = [ 'Id' ,'Name', 'Code', ...this.dateHeaders];
+		const headerLabels = ['Id', 'Name', 'Code', ...this.dateHeaders];
 		csvContent += headerLabels.join(',') + '\r\n';
 
 		for (let i = 0; i < rows.length; i++) {
