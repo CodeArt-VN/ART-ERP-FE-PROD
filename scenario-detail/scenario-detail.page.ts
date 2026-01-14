@@ -1,5 +1,3 @@
-import { map } from 'rxjs/operators';
-import { WMS_ItemInWarehouseConfig } from './../../../models/model-list-interface';
 import { Component, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { NavController, LoadingController, AlertController, ModalController } from '@ionic/angular';
 import { PageBase } from 'src/app/page-base';
@@ -154,42 +152,17 @@ export class ScenarioDetailPage extends PageBase {
 	}
 
 	loadedData(event?: any, ignoredFromGroup?: boolean): void {
-		try {
+		if (this.item) {
 			this.item.StartDate = lib.dateFormat(this.item.StartDate);
 			this.item.EndDate = lib.dateFormat(this.item.EndDate);
 			this.item.RecommendationCalculatedDate = lib.dateFormat(this.item.RecommendationCalculatedDate);
 			this.item.LastExecuteDate = lib.dateFormat(this.item.LastExecuteDate);
-		} catch (ex) {
-			console.error(ex);
 		}
-		if (this.item._Warehouse) {
+
+		if (this.item?._Warehouse) {
 			this.formGroup.controls.Warehouses.setValue(this.item._Warehouse?.map((d) => d.IDWarehouse) || []);
 		}
-		if (this.item.Id) {
-			// if (this.item?._ItemsResult?.length) {
-
-			// 	this.item._ItemsResult = this.item._ItemsResult.sort((a, b) => new Date(a.Period).getTime() - new Date(b.Period).getTime());
-			// 	const dividerConfig = {
-			// 		field: 'Period',
-			// 		dividerFn: (record, recordIndex, records) => {
-			// 			let a: any = recordIndex == 0 ? new Date('2000-01-01') : new Date(records[recordIndex - 1].Period);
-			// 			let b: any = new Date(record.Period);
-			// 			let mins = Math.floor((b - a) / 1000 / 60);
-
-			// 			if (Math.abs(mins) < 600) {
-			// 				return null;
-			// 			}
-			// 			return lib.dateFormat((record.Period), 'dd/mm/yyyy');
-			// 		},
-			// 	};
-
-			// 	this.item._ItemsResult.forEach((item, index) => {
-			// 		const dividerValue = dividerConfig.dividerFn(item, index, this.item._ItemsResult);
-			// 		if (dividerValue) {
-			// 			item['_divider'] = dividerValue;
-			// 		}
-			// 	});
-			// }
+		if (this.item?.Id) {
 			if (this.item?._ItemsResult?.length) {
 				const sourceData = this.item?._ItemsResult ?? [];
 				this.dates = Array.from(new Set(sourceData.map((p) => p.Period))).sort((a: string, b: string) => new Date(a).getTime() - new Date(b).getTime());
@@ -769,18 +742,19 @@ export class ScenarioDetailPage extends PageBase {
 		this.formGroup.controls.Lines.patchValue(groups.value);
 	}
 
-	addItemLine(line) {
+	addItemLine(line, markAsDirty = false) {
 		let groups = <FormArray>this.formGroup.controls.Lines;
 		let group = this.formBuilder.group({
 			_IDItemDataSource: this.buildSelectDataSource((term) => {
-				return this.itemProvider.search({
+				return this.itemProvider.commonService.connect('GET', 'PROD/MRPScenario/MRPItemSearch', {
 					SortBy: ['Id_desc'],
 					Take: 20,
 					Skip: 0,
-					Term: term,
+					Keyword: term,
 				});
 			}),
 			Id: [line?.Id],
+			IDMRP: [this.item?.Id],
 			Name: [line?.Name],
 			Code: [line?.Code],
 			IDItem: [line?.IDItem, Validators.required],
@@ -796,6 +770,11 @@ export class ScenarioDetailPage extends PageBase {
 		if (line) group.get('_IDItemDataSource').value.selected.push(_item);
 		group.get('_IDItemDataSource').value.initSearch();
 		groups.push(group);
+		if (markAsDirty) {
+			group.get('IDItem').markAsDirty();
+			group.get('Id').markAsDirty();
+			group.get('IDMRP').markAsDirty();
+		}
 	}
 
 	setDocumentLines() {
@@ -1032,7 +1011,7 @@ export class ScenarioDetailPage extends PageBase {
 		}
 	}
 
-	processDocumentData(data: any[], type: string, status: boolean) {
+	async processDocumentData(data: any[], type: string, status: boolean) {
 		const preventDocArray = this.formGroup.get('PreventDocument') as FormArray;
 
 		let idField: string;
@@ -1047,7 +1026,6 @@ export class ScenarioDetailPage extends PageBase {
 			case 'Forecast':
 				idField = 'IDForecast';
 				break;
-			
 		}
 
 		const dataIds = data.map((e) => e[idField]);
@@ -1079,9 +1057,59 @@ export class ScenarioDetailPage extends PageBase {
 				}
 			}
 		}
-
-		for (const newItem of documentAdded) {
-			this.addDocumentItemLine(newItem, true);
+		if (documentAdded.length > 0) {
+			let url = '';
+			let obj = {};
+			switch (type) {
+				case 'SaleOrder':
+					url = 'SALE/OrderDetail';
+					obj = {
+						IDOrder: documentAdded.map((d) => d.RefId),
+					};
+					break;
+				case 'PurchaseOrder':
+					url = 'PURCHASE/OrderDetail';
+					obj = {
+						IDOrder: documentAdded.map((d) => d.RefId),
+					};
+					break;
+				case 'PurchaseRequest':
+					url = 'PURCHASE/RequestDetail';
+					obj = {
+						IDRequest: documentAdded.map((d) => d.RefId),
+					};
+					break;
+				case 'Forecast':
+					url = 'PROD/ForecastDetail';
+					obj = {
+						IDForecast: documentAdded.map((d) => d.RefId),
+					};
+					break;
+			}
+			await this.env
+				.showLoading('Please wait for a few moments', this.pageProvider.commonService.connect('GET', url, obj).toPromise())
+				.then(async (response: any) => {
+					console.log('response', response);
+					if (response && response.length) {
+						let mrpItems = this.formGroup.get('Lines').value.map((d) => d.IDItem);
+						let addItems = response.filter((d) => !mrpItems.includes(d.IDItem));
+						await this.commonService
+							.connect('GET', 'PROD/MRPScenario/MRPItemSearch', {
+								Id: addItems.map((d) => d.IDItem),
+							})
+							.toPromise()
+							.then((rs: any) => {
+								rs.forEach((docItem) => {
+									this.addItemLine({ IDItem: docItem.Id, Code: docItem.Code, Name: docItem.Name }, true);
+								});
+							});
+					}
+				})
+				.finally(() => {
+					for (const newItem of documentAdded) {
+						this.addDocumentItemLine(newItem, true);
+					}
+				});
 		}
 
 		const documentDeletedIds = documentDeleted.filter((x) => x.Id);
@@ -1196,5 +1224,61 @@ export class ScenarioDetailPage extends PageBase {
 		link.setAttribute('download', `ScenarioResult_${nameSeed}.csv`);
 		document.body.appendChild(link);
 		link.click();
+	}
+
+	async reloadItemByDocuments() {
+		let docs = this.formGroup.get('PreventDocument').getRawValue();
+		let types = new Set(docs.map((s) => s.Type));
+		let promises = [];
+		types.forEach(async (type) => {
+			let url = '';
+			let obj = {};
+			switch (type) {
+				case 'SaleOrder':
+					url = 'SALE/OrderDetail';
+					obj = {
+						IDOrder: docs.filter((d) => d.Type == 'SaleOrder').map((d) => d.RefId),
+					};
+					break;
+				case 'PurchaseOrder':
+					url = 'PURCHASE/OrderDetail';
+					obj = {
+						IDOrder: docs.filter((d) => d.Type == 'PurchaseOrder').map((d) => d.RefId),
+					};
+					break;
+				case 'PurchaseRequest':
+					url = 'PURCHASE/RequestDetail';
+					obj = {
+						IDRequest: docs.filter((d) => d.Type == 'PurchaseRequest').map((d) => d.RefId),
+					};
+					break;
+				case 'Forecast':
+					url = 'PROD/ForecastDetail';
+					obj = {
+						IDForecast: docs.filter((d) => d.Type == 'Forecast').map((d) => d.RefId),
+					};
+					break;
+			}
+			promises.push(this.pageProvider.commonService.connect('GET', url, obj).toPromise());
+		});
+		this.env.showLoading('Please wait for a few moments', Promise.all(promises)).then((responses: any) => {
+			let allItems = [];
+			if (responses && responses.length) {
+				const responseItemSet = new Set(responses.flat().map((x) => x.IDItem));
+				let lines = this.formGroup.get('Lines').value;
+				const lineItemSet = new Set(lines.map((d) => d.IDItem).filter(Boolean));
+				const deletedLines = lines.filter((d) => !responseItemSet.has(d.IDItem));
+				if (deletedLines.length) {
+					this.formGroup.get('DeletedLines').setValue(deletedLines.map((d) => d.Id));
+					this.formGroup.get('DeletedLines').markAsDirty();
+				}
+				// 3️⃣ Item mới (response có, docs chưa có)
+				const newItemIds = [...responseItemSet].filter((id) => !lineItemSet.has(id));
+				newItemIds.forEach((newId) => {
+					this.addItemLine({ IDItem: newId }, true);
+				});
+				this.saveChange();
+			}
+		});
 	}
 }

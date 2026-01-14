@@ -120,6 +120,12 @@
 					<ion-button class="ion-hide-sm-down" *ngIf="pageConfig.canExport && item.Id" (click)="exportRecommendations()" title="{{'Export item no price' | translate}}">
 						<ion-icon slot="icon-only" name="cloud-download-outline"></ion-icon>
 					</ion-button>
+				
+				</ion-buttons>
+				<ion-buttons *ngIf="segmentView=='s2'">
+						<ion-button class="ion-hide-sm-down"  (click)="reloadItemByDocuments()" title="{{'Fetch item' | translate}}">
+						<ion-icon slot="icon-only" name="reload-outline"></ion-icon>
+					</ion-button>
 				</ion-buttons>
 			</ion-toolbar>
 			<div>
@@ -330,7 +336,7 @@
 															{{ 'Add document' | translate }}
 														</ion-button>
 													</ng-template>
-												</datatable-empty-message>
+												</datatable-empty-message>	
 												<datatable-column class="col-id" name="RefId" property="RefId">
 													<ng-template let-i="row" datatable-cell-template>
 														<a *ngIf="i.Type == 'SaleOrder'" [routerLink]="['/sale-order/'+i.RefId]"> {{i.RefId}} </a>
