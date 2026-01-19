@@ -556,7 +556,11 @@
 										{{i.IDItem}} <ion-icon name="open-outline"></ion-icon> </a
 									>&nbsp;
 								</span>
-								<ion-text (click)="toggleRow(_Recommendations?.items, i, true);" class="clickable"
+								<ion-text
+									(click)="toggleRow(_Recommendations?.items, i, true);"
+									class="clickable"
+									[ngClass]="rowLineClampClass"
+									[attr.title]="i.ItemName + (i.Code ? ' ' + i.Code : '')"
 									>{{i.ItemName}}<small label *ngIf="i.Code"> {{i.Code}}</small></ion-text
 								>
 							</ng-template>
