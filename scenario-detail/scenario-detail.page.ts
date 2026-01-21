@@ -7,6 +7,7 @@ import { PROD_MRPRecommendationProvider, PROD_MRPScenarioProvider, WMS_ItemGroup
 import { FormBuilder, Validators, FormControl, FormGroup, FormArray } from '@angular/forms';
 import { CommonService } from 'src/app/services/core/common.service';
 import { lib } from 'src/app/services/static/global-functions';
+import { SYS_ConfigService } from 'src/app/services/custom/system-config.service';
 import { ScenarioPeggingModalPage } from '../scenario-pegging-modal/scenario-pegging-modal.page';
 import { ScenarioDocumentSaleOrderModalPage } from '../scenario-document-sale-order-modal/scenario-document-sale-order-modal.page';
 import { ScenarioDocumentForecastModalPage } from '../scenario-document-forecast-modal/scenario-document-forecast-modal.page';
@@ -28,6 +29,7 @@ export class ScenarioDetailPage extends PageBase {
 	fullTree = [];
 	isAllRowOpenedItemRecommend = true;
 	isAllRowOpenedItemResult = true;
+	rowLineClampClass = '';
 
 	_Recommendations: any = {};
 
@@ -55,7 +57,8 @@ export class ScenarioDetailPage extends PageBase {
 		public formBuilder: FormBuilder,
 		public cdr: ChangeDetectorRef,
 		public loadingController: LoadingController,
-		public commonService: CommonService
+		public commonService: CommonService,
+		private sysConfigService: SYS_ConfigService
 	) {
 		super();
 		this.pageConfig.isDetailPage = true;
@@ -141,11 +144,18 @@ export class ScenarioDetailPage extends PageBase {
 			this.itemGroupProvider.read({
 				Take: 5000,
 			}),
+			this.sysConfigService.getConfig(this.env.selectedBranch, ['UIDatatableRowLineClamp'])
 		]).then((values: any) => {
 			if (values[0] && values[0].data) {
 				lib.buildFlatTree(values[0].data, []).then((result: any) => {
 					this.itemGroupDataSource = result;
 				});
+			}
+			const value = values[1]?.UIDatatableRowLineClamp;
+			if (!value) {
+				this.rowLineClampClass = '';
+			} else if (typeof value === 'string') {
+				this.rowLineClampClass = value;
 			}
 			super.preLoadData();
 		});
