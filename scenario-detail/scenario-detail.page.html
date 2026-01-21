@@ -168,7 +168,7 @@
 										>
 										</app-form-control>
 									</ion-col>
-									<ion-col size="12" size-sm="6" size-xl="4" offset-xl="3">
+									<!-- <ion-col size="12" size-sm="6" size-xl="4" offset-xl="3">
 										<app-form-control
 											[field]="{id: 'IsHolidaysForProduction', label: 'IsHolidaysForProduction', type: 'checkbox', form: formGroup }"
 											(change)="saveChange()"
@@ -312,7 +312,7 @@
 											(change)="saveChange()"
 										>
 										</app-form-control>
-									</ion-col>
+									</ion-col> -->
 								</ion-row>
 								<ion-row class="hr-group" *ngIf="item?.Id">
 									<ion-col size-xs="12" size-sm="12" size-md="12" size-lg="12" size-xl="3">
@@ -576,8 +576,8 @@
 						<datatable-column class="col-number" name="MOQ" property="MOQ"> </datatable-column>
 						<datatable-column class="col-number" name="Order multiple" property="OrderMultiple"> </datatable-column>
 						<datatable-column class="col-number" name="Order interval" property="OrderInterval"> </datatable-column>
-						<datatable-column class="col-number" name="Lead time" property="LeadTime"> </datatable-column>
-						<datatable-column class="col-number" name="Tolerance days" property="ToleranceDays"> </datatable-column>
+						<datatable-column class="col-number" name="Lead time" property="Leadtime"> </datatable-column>
+						<datatable-column class="col-number" name="Tolerance days" property="ToleranceDay"> </datatable-column>
 					</app-data-table>
 				</div>
 			</div>
