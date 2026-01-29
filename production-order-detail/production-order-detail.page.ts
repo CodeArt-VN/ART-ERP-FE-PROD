@@ -186,7 +186,7 @@ export class ProductionOrderDetailPage extends PageBase {
 				distinctUntilChanged(),
 				tap(() => (this.itemListLoading = true)),
 				switchMap((term) =>
-					this.bomProvider.search({ Take: 50, Skip: 0, Type: 'BTProduction', Term: term }).pipe(
+					this.bomProvider.search({ Take: 50, Skip: 0, Type: 'BTProduction', Keyword: term }).pipe(
 						catchError(() => of([])), // empty list on error
 						tap(() => (this.itemListLoading = false))
 					)

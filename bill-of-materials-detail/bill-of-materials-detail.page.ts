@@ -299,7 +299,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
 	}
 
 	_IDItemDataSource = this.buildSelectDataSource((term) => {
-		return this.pageProvider.commonService.connect('GET', 'PROD/BillOfMaterials/ItemSearch/', { Take: 20, Skip: 0, Term: term });
+		return this.pageProvider.commonService.connect('GET', 'PROD/BillOfMaterials/ItemSearch/', { Take: 20, Skip: 0, Keyword: term });
 	});
 	// _IDItemDataSource = {
 	// 	searchProvider: this.commonService,

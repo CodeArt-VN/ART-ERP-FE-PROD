@@ -348,7 +348,7 @@ export class ItemReplacementGroupDetailPage extends PageBase {
 					SortBy: ['Id_desc'],
 					Take: 20,
 					Skip: 0,
-					Term: term,
+					Keyword: term,
 				};
 				if (selectedId) value.IDItem_ne = selectedId;
 				return this.itemReplaceProvider.search(value);
