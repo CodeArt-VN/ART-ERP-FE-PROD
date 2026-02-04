@@ -8,6 +8,7 @@ import { ApiSetting } from 'src/app/services/static/api-setting';
 import { lib } from 'src/app/services/static/global-functions';
 import QRCode from 'qrcode';
 import { ActivatedRoute } from '@angular/router';
+import { FormBuilder, FormGroup } from '@angular/forms';
 
 @Component({
 	selector: 'app-staff-catering-booking-note',
@@ -16,6 +17,7 @@ import { ActivatedRoute } from '@angular/router';
 	standalone: false,
 })
 export class StaffCateringBookingNotePage extends PageBase {
+	formGroup: FormGroup;
 	constructor(
 		public pageProvider: HRM_StaffScheduleProvider,
 		public modalController: ModalController,
@@ -24,7 +26,8 @@ export class StaffCateringBookingNotePage extends PageBase {
 		public env: EnvService,
 		public navCtrl: NavController,
 		public location: Location,
-		public route: ActivatedRoute
+		public route: ActivatedRoute,
+		public formBuilder: FormBuilder
 	) {
 		super();
 		this.pageConfig.isShowFeature = true;
@@ -36,6 +39,9 @@ export class StaffCateringBookingNotePage extends PageBase {
 
 		this.query.WorkingDateFrom = lib.dateFormat(today, 'yyyy-mm-dd');
 		this.query.WorkingDateTo = lib.dateFormat(today.setDate(today.getDate() + 2), 'yyyy-mm-dd');
+		this.formGroup = this.formBuilder.group({
+			IDBranch: [this.query.IDBranch || ''],
+		});
 	}
 
 	segmentView = 'schedule';
@@ -71,5 +77,10 @@ export class StaffCateringBookingNotePage extends PageBase {
 
 	refresh(event?: any): void {
 		this.query = Object.assign({}, this.query);
+	}
+
+	onBranchFilterChange() {
+		this.query.IDBranch = this.formGroup.get('IDBranch')?.value;
+		this.refresh();
 	}
 }

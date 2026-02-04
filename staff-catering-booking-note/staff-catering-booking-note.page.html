@@ -19,33 +19,24 @@
 
 <ion-content appScrollbarTheme class="left scrollx" [ngClass]="{withFeature: pageConfig.isShowFeature}" forceOverscroll="false">
 	<ion-fab *ngIf="pageConfig.isShowFeature" class="feature no-print" vertical="bottom" horizontal="start" slot="fixed">
+		<div id="detail-page" style="position: absolute; z-index: 30005"></div>
 		<div class="ion-padding" style="padding-bottom: 0">
-			<div class="c-control">
-				<label class="c-label" for="IDBranch">
-					<ion-text color="primary">{{'Unit' | translate}}</ion-text>
-				</label>
-				<ng-select
-					class="c-input no-check-dirty"
-					appendTo="#ng-select-holder"
-					#IDBranch
-					(change)="refresh();"
-					labelForId="IDBranch"
-					[items]="env.branchList"
-					[(ngModel)]="query.IDBranch"
-					bindLabel="Name"
-					bindValue="Query"
-					placeholder="{{'unit-placeholder' | translate}}"
-				>
-					<ng-template ng-option-tmp let-i="item" let-search="searchTerm">
-						<div *ngIf="i">
-							<div>
-								<span *ngFor="let l of i.levels">&nbsp;&nbsp;&nbsp;</span>
-								<ion-text [color]=" i.Type == 'Company'? 'primary':'dark'" [ngOptionHighlight]="search">{{i.Name}}</ion-text>
-							</div>
-						</div>
-					</ng-template>
-				</ng-select>
-			</div>
+			<app-form-control
+				[field]="{
+					id:'IDBranch',
+					label:'Unit',
+					type:'ng-select-branch',
+					dataSource: env.branchList,
+					bindLabel:'Name',
+					bindValue:'Query',
+					form: formGroup,
+					virtualScroll: true,
+					clearable: true,
+					appendTo:'#detail-page',
+					placeholder:'unit-placeholder'
+				}"
+				(change)="onBranchFilterChange()"
+			></app-form-control>
 			<div class="c-control">
 				<label class="c-label" for="ValidFrom">
 					<ion-text color="primary">{{'From date' | translate}}</ion-text>
