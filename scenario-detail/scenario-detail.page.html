@@ -37,7 +37,7 @@
 											<ion-icon [color]="i.Color" [name]="i.Icon" slot="start"></ion-icon> &nbsp;
 											<ion-text [ngOptionHighlight]="search">{{ i.Name }}</ion-text>
 											&nbsp; &nbsp;
-											<ion-icon name="checkmark-outline" slot="end" color="secondary" *ngIf="documentTypeSelected?.Code == i.Code"></ion-icon>
+											<ion-icon name="checkmark-outline" slot="end" color="secondary" *ngIf="$any(documentTypeSelected)?.Code == i.Code"></ion-icon>
 										</div>
 									</div>
 								</ng-template>

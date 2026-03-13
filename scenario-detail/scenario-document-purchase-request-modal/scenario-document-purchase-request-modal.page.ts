@@ -15,6 +15,9 @@ import { SYS_ConfigService } from 'src/app/services/custom/system-config.service
 	standalone: false,
 })
 export class ScenarioDocumentPurchaseRequestModalPage extends PageBase {
+	//TODO: Remove empty functions
+	imgPath = '';
+
 	documentType;
 	idMRP;
 	status;

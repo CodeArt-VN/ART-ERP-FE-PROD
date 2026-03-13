@@ -915,7 +915,7 @@ export class ScenarioDetailPage extends PageBase {
 		this.isOpenAddDocumentPopover = !this.isOpenAddDocumentPopover;
 	}
 
-	showDocumentModal(status: string) {
+	showDocumentModal(status) {
 		let type = this.documentTypeSelected;
 		let idMRP = this.item?.Id;
 

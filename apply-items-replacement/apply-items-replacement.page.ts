@@ -277,4 +277,7 @@ export class ApplyItemsReplacementPage extends PageBase {
 		row._prevEffectiveDateTo = toValue ?? null;
 		return true;
 	}
+
+	//TODO: Remove empty functions
+	noCheckDirty = false;
 }

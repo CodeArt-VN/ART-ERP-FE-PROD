@@ -806,4 +806,7 @@ export class ItemReplacementGroupDetailPage extends PageBase {
 				});
 		}
 	}
+
+	//TODO: Remove empty functions
+	isAllSelected = false;
 }

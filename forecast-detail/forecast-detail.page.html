@@ -280,7 +280,7 @@
 						<app-input-control [field]="{id:'Quantity', label: 'Quantity', type : 'number', form : g}" (change)="saveChange();" ></app-input-control>
 					</div> -->
 								</ng-container>
-								<div class="col-icon cell" (click)="removeRow(g,j)">
+								<div class="col-icon cell" (click)="removeRow(g, idx)">
 									<ion-icon class="clickable" color="danger" *ngIf="pageConfig.canEdit && pageConfig.canDelete" name="trash"></ion-icon>
 								</div>
 							</div>

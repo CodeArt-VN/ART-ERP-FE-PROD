@@ -31,10 +31,10 @@
 		</ion-row>
 		<ion-row class="hr-group ion-no-padding mobile-screen" *ngIf="segmentView.Page == 's2'">
 			<ion-col size="12" size-sm="6" size-xl="6">
-				<app-form-control [readonly]="true" [field]="{id :'Quantity', label:'BOM for', type:'number', form:formGroup }" (change)="saveChange()"> </app-form-control>
+				<app-form-control [field]="{id :'Quantity', label:'BOM for', type:'number', form:formGroup }" (change)="saveChange()"> </app-form-control>
 			</ion-col>
 			<ion-col size="12" size-sm="6" size-xl="6">
-				<app-form-control [readonly]="true" [field]="{id :'BatchSize', label:'Quantity/batch', type:'number', form:formGroup }" (change)="saveChange()"> </app-form-control>
+				<app-form-control [field]="{id :'BatchSize', label:'Quantity/batch', type:'number', form:formGroup }" (change)="saveChange()"> </app-form-control>
 			</ion-col>
 		</ion-row>
 	</form>
@@ -217,7 +217,7 @@
 												<ng-container *ngIf="g.controls.Type.value=='CTItem' || g.controls.Type.value=='Item'">
 													<div class="col-name cell">
 														<app-input-control
-															[field]="{id :'IDItem', label:'Component', type:'ng-select-item', dataSource:g.controls._IDItemDataSource.value, bindValue:'Id', bindLabel:'Name', form:g, appendTo:'#order-detail-page', placeHolder:'Search for name or product code', virtualScroll:true }"
+															[field]="{id :'IDItem', label:'Component', type:'ng-select-item', dataSource:g.controls._IDItemDataSource.value, bindValue:'Id', bindLabel:'Name', form:g, appendTo:'#order-detail-page', placeholder:'Search for name or product code', virtualScroll:true }"
 															(change)="changedIDItem(g,$event)"
 														></app-input-control>
 													</div>
@@ -421,7 +421,7 @@
 													</select>
 													<br />
 													<app-input-control
-														[field]="{id :'IDItem', label:'Component', type:'ng-select-item', dataSource:g.controls._IDItemDataSource, bindValue:'Id', bindLabel:'Name', form:g, appendTo:'#order-detail-page', placeHolder:'Search for name or product code', virtualScroll:true }"
+														[field]="{id :'IDItem', label:'Component', type:'ng-select-item', dataSource:g.controls._IDItemDataSource, bindValue:'Id', bindLabel:'Name', form:g, appendTo:'#order-detail-page', placeholder:'Search for name or product code', virtualScroll:true }"
 														(change)="changedIDItem(g,$event)"
 													></app-input-control>
 													<!-- <ng-select

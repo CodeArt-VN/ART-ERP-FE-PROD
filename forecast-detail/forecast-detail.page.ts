@@ -282,7 +282,7 @@ export class ForecastDetailPage extends PageBase {
 		groups.push(group);
 	}
 
-	addRows(row: any, addNew = false) {
+	addRows(row: any = null, addNew = false) {
 		let groups = <FormArray>this.formGroup.controls.Rows;
 		let existedItems = groups.controls.map((d) => d.get('IDItem').value);
 		let group = this.formBuilder.group({
@@ -984,4 +984,7 @@ export class ForecastDetailPage extends PageBase {
 				this.formGroup.controls.Multiply.setValue(this.multiplyOld);
 			});
 	}
+
+	//TODO: Remove empty functions
+	show = false;
 }
