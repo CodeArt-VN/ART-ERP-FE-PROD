@@ -45,6 +45,10 @@ export class BillOfMaterialsPage extends PageBase {
 		});
 	}
 
+	async export() {
+		this.exportClick();
+	}
+
 	exportClick() {
 		if (this.submitAttempt) return;
 		this.submitAttempt = true;
