@@ -1,4 +1,4 @@
-<ion-header>
+<ion-header [translucent]="true">
 	<app-toolbar [page]="this">
 		<ion-button title="{{ 'Run MRP' | translate }}" (click)="runMRP()">
 			<ion-icon color="primary" slot="icon-only" name="calculator-outline"></ion-icon>
@@ -60,7 +60,7 @@
 		</ion-content>
 	</ng-template>
 </ion-popover>
-<ion-content appScrollbarTheme class="ion-padding">
+<ion-content [fullscreen]="true" appScrollbarTheme class="ion-padding">
 	<div id="scenario-detail-page" style="position: absolute"></div>
 	<div class="main-view" *ngIf="item && pageConfig.showSpinner==false">
 		<ion-grid fixed>

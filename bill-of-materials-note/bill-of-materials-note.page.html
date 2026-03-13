@@ -1,4 +1,4 @@
-<ion-header>
+<ion-header [translucent]="true">
 	<ion-toolbar>
 		<ion-buttons slot="start" class="ion-hide-sm-down_">
 			<ion-back-button [defaultHref]="'bill-of-materials/'+id"></ion-back-button>
@@ -22,7 +22,7 @@
 	</ion-toolbar>
 </ion-header>
 
-<ion-content appScrollbarTheme appPrintFix class="A4 left" [ngClass]="{withFeature: pageConfig.isShowFeature}">
+<ion-content [fullscreen]="true" appScrollbarTheme appPrintFix class="A4 left" [ngClass]="{withFeature: pageConfig.isShowFeature}">
 	<app-page-message
 		[message]="!pageConfig.canPrint? '{{`erp.app.pages.product.bill-of-material-note.cannot-print` | translate}}' : '' "
 		[itemsLength]="item? 1: 0"

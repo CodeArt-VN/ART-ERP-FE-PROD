@@ -1,4 +1,4 @@
-<ion-header>
+<ion-header [translucent]="true">
 	<app-toolbar [page]="this">
 		<ion-button *ngIf="formGroup.get('LinePeriod')['controls']?.length>0" (click)="generatorForecastPeriod()" title="{{'Calculate forecast data' | translate}}">
 			<ion-icon name="calculator-outline"></ion-icon>
@@ -19,7 +19,7 @@
 		</ion-button>
 	</app-toolbar>
 </ion-header>
-<ion-content appScrollbarTheme>
+<ion-content [fullscreen]="true" appScrollbarTheme>
 	<app-page-title class="ion-padding safe-max-width" [pageConfig]="pageConfig"></app-page-title>
 	<div class="main-view safe-max-width" *ngIf="item && pageConfig.showSpinner==false">
 		<div class="row-full shadow full-screen">

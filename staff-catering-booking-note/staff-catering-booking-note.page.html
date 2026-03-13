@@ -1,4 +1,4 @@
-<ion-header>
+<ion-header [translucent]="true">
 	<app-list-toolbar
 		pageTitle="{{'Meals summary' | translate}}"
 		[pageConfig]="pageConfig"
@@ -17,7 +17,7 @@
 	></app-list-toolbar>
 </ion-header>
 
-<ion-content appScrollbarTheme class="left scrollx" [ngClass]="{withFeature: pageConfig.isShowFeature}" forceOverscroll="false">
+<ion-content [fullscreen]="true" appScrollbarTheme class="left scrollx" [ngClass]="{withFeature: pageConfig.isShowFeature}" forceOverscroll="false">
 	<ion-fab *ngIf="pageConfig.isShowFeature" class="feature no-print" vertical="bottom" horizontal="start" slot="fixed">
 		<div id="detail-page" style="position: absolute; z-index: 30005"></div>
 		<div class="ion-padding" style="padding-bottom: 0">

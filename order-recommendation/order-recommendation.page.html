@@ -1,4 +1,4 @@
-<ion-header>
+<ion-header [translucent]="true">
 	<app-toolbar [page]="this">
 		<ng-container>
 			<ion-button (click)="createPurchaseRequest()" title="{{'Create purchase request' | translate}}">
@@ -18,7 +18,7 @@
 	</section> -->
 </ion-header>
 
-<ion-content appScrollbarTheme class="header-table scrollx" forceOverscroll="false">
+<ion-content [fullscreen]="true" appScrollbarTheme class="header-table scrollx" forceOverscroll="false">
 	<div class="table" style="max-width: 1440px; margin: auto; width: 100%">
 		<app-data-table
 			style="width: fit-content; min-width: calc(100% - 32px) !important"
