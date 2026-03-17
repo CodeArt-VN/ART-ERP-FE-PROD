@@ -255,6 +255,7 @@ export class ScenarioDetailPage extends PageBase {
 					this._Recommendations.items = result.data?.Recommendations;
 					this._Recommendations.itemList = result.data?.Items;
 					this._Recommendations.vendorList = result.data?.Vendors;
+					this._Recommendations.ItemVendorInBranchs = result.data?.ItemVendorInBranchs ?? result.data?.ItemVendorInBranches ?? [];
 					let data = new Map();
 
 					for (let obj of this._Recommendations.items) {
@@ -475,35 +476,71 @@ export class ScenarioDetailPage extends PageBase {
 		if (this.submitAttempt) return;
 		else this.submitAttempt = true;
 		let preferVendorIds = [];
+		let itemVendorInBranchs = Array.isArray(this._Recommendations?.ItemVendorInBranchs) ? this._Recommendations.ItemVendorInBranchs : [];
+		const getMinPriceVendor = (lines: any[], availableVendorIds?: number[]) => {
+			const allowSet = Array.isArray(availableVendorIds) && availableVendorIds.length ? new Set(availableVendorIds.map((v) => Number(v))) : null;
+			const totalByVendor = {};
+			lines.forEach((line) => {
+				if (line?.IDVendor == null) return;
+				const vendorId = Number(line.IDVendor);
+				if (Number.isNaN(vendorId)) return;
+				if (allowSet && !allowSet.has(vendorId)) return;
+				const price = Number(line.Price);
+				if (Number.isNaN(price)) return;
+				if (totalByVendor[vendorId] == null) {
+					totalByVendor[vendorId] = 0;
+				}
+				totalByVendor[vendorId] += price;
+			});
+			const minVendor = Object.entries(totalByVendor).reduce(
+				(min: { id: number | null; total: number }, [id, total]) => {
+					return Number(total) < min.total ? { id: Number(id), total: Number(total) } : min;
+				},
+				{ id: null, total: Infinity }
+			).id;
+			if (minVendor != null) return minVendor;
+
+			const fallbackLine = lines.find((line) => {
+				const vendorId = Number(line?.IDVendor);
+				if (Number.isNaN(vendorId)) return false;
+				return allowSet ? allowSet.has(vendorId) : true;
+			});
+			return fallbackLine?.IDVendor != null ? Number(fallbackLine.IDVendor) : null;
+		};
 		this._Recommendations.items
 			.filter((d) => !d.IDParent)
 			.forEach((i) => {
 				let vendorLines = this._Recommendations.items.filter((d) => d.IDParent == i.Id);
 				if (vendorLines.length == 0) return;
 				else {
-					const totalByVendor = {};
-					vendorLines.forEach((line) => {
-						if (!totalByVendor[line.IDVendor]) {
-							totalByVendor[line.IDVendor] = 0;
-						}
-						totalByVendor[line.IDVendor] += line.Price;
-					});
-					const minVendor = Object.entries(totalByVendor).reduce(
-						(min: { id: number | null; total: number }, [id, total]) => {
-							return Number(total) < min.total ? { id: Number(id), total: Number(total) } : min;
-						},
-						{ id: null, total: Infinity }
-					).id;
+					let selectedVendor: any = null;
+					const matchedByItemBranch = itemVendorInBranchs.filter(
+						(p) => p?.IDItem == i.IDItem && p?.IDBranch == i.IDBranch && vendorLines.some((line) => line.IDVendor == p?.IDVendor)
+					);
+					const matchedPreferredVendorIds:any = [...new Set(matchedByItemBranch.map((p) => Number(p?.IDVendor)).filter((id) => !Number.isNaN(id)))];
+
+					// Flow:
+					// 1) exactly 1 preferred record -> choose that vendor
+					// 2) more than 1 preferred record -> compare price within preferred vendors
+					// 3) no preferred record -> compare price on all vendors
+					if (matchedByItemBranch.length == 1 && matchedPreferredVendorIds.length) {
+						selectedVendor = matchedPreferredVendorIds[0];
+					} else if (matchedByItemBranch.length > 1 && matchedPreferredVendorIds.length) {
+						selectedVendor = getMinPriceVendor(vendorLines, matchedPreferredVendorIds);
+					} else {
+						selectedVendor = getMinPriceVendor(vendorLines);
+					}
 
 					vendorLines.forEach((line) => {
 						let item = this._Recommendations.items.find((d) => d.Id == line.Id);
-						if (item.IDVendor == minVendor) item.Checked = true;
+						if (item.IDVendor == selectedVendor) item.Checked = true;
 						else item.Checked = false;
 					});
+					i.IDPreferVendor = selectedVendor;
 
 					preferVendorIds.push({
 						Id: i.Id,
-						IdPreferVendor: minVendor,
+						IDPreferVendor: selectedVendor,
 					});
 				}
 			});
@@ -513,6 +550,7 @@ export class ScenarioDetailPage extends PageBase {
 				this.pageProvider.commonService.connect('POST', 'PROD/MRPRecommendation/ChangePreferVendors', preferVendorIds).toPromise()
 			)
 			.then((resp) => {
+				this.selectedCount = this._Recommendations.items.filter((d) => d.Checked).length;
 				this.env.showMessage('Vendors suggested successfully', 'success');
 			})
 			.finally(() => (this.submitAttempt = false));

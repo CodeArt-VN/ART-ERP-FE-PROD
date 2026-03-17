@@ -1,0 +1,135 @@
+<ion-header>
+	<app-toolbar [page]="this"> </app-toolbar>
+</ion-header>
+
+<ion-content appScrollbarTheme class="scrollx" forceOverscroll="false">
+	<div id="ng-select-table" style="position: absolute"></div>
+	<app-page-title class="ion-padding safe-max-width" [pageConfig]="pageConfig"></app-page-title>
+	<div class="safe-max-width">
+		<app-data-table
+			class="box-shadow responsive"
+			[rows]="items"
+			[trackBy]="'Id'"
+			[(selectedRows)]="selectedItems"
+			[showSpinner]="pageConfig.showSpinner"
+			[showFilter]="pageConfig.isShowSearch"
+			[(query)]="query"
+			(dataInfinite)="loadData($event)"
+			(filter)="onDatatableFilter($event)"
+			(sort)="onSort($event)"
+			(selectedRowsChange)="showCommandBySelectedRows($event)"
+		>
+			<datatable-empty-message subMessage="Please click add new to start..." [showImg]="false" minHeight="125px">
+				<ng-template datatable-empty-message-template>
+					<ion-button (click)="add()" size="small" fill="outline" *ngIf="pageConfig.canEdit">
+						<ion-icon slot="start" name="add-outline"></ion-icon>
+						{{ 'Add vendor in branch' | translate }}
+					</ion-button>
+				</ng-template>
+			</datatable-empty-message>
+			<datatable-column [checkbox]="true" name=""></datatable-column>
+			<datatable-column class="col-id" name="Id" property="Id">
+				<ng-template let-i="row" datatable-cell-template>
+					<span *ngIf="!i?.isEdit" (click)="showVendorInBranchModal(i)">{{ i?.Id }}</span>
+					<span *ngIf="i?.isEdit">{{ i?.Id }}</span>
+				</ng-template>
+			</datatable-column>
+
+			<datatable-column class="col-name" name="Unit" property="_Branch">
+				<ng-template let-i="row" datatable-cell-template>
+					<app-branch-breadcrumbs
+						*ngIf="!i?.isEdit"
+						[maxItems]="3"
+						[itemsBeforeCollapse]="0"
+						[itemsAfterCollapse]="2"
+						[Id]="i.IDBranch"
+						[Items]="env.branchList"
+						[ngClass]="{'no-check-dirty': noCheckDirty}"
+						class="c-input disable breadcrumbs"
+					>
+					</app-branch-breadcrumbs>
+					<app-input-control
+						*ngIf="i?.isEdit"
+						[field]="{
+							id: 'IDBranch',
+							type: 'ng-select-branch',
+							form: i?._formGroup,
+							dataSource: i?._formGroup?.controls?._IDBranchDataSource?.value,
+							bindLabel: 'Name',
+							bindValue: 'Id',
+							clearable: true,
+							appendTo: '#ng-select-table',
+							branchConfig: { selectedBranch: env.selectedBranch, showingMode: 'showSelectedAndChildren' },
+							virtualScroll: true
+						}"
+					></app-input-control>
+				</ng-template>
+			</datatable-column>
+
+			<datatable-column class="col-name" name="Item" property="_Item">
+				<ng-template let-i="row" datatable-cell-template>
+					<div *ngIf="!i?.isEdit && i?._Item">
+						<span (mousedown)="$event.stopPropagation()"> #{{ i._Item.Id }} </span>
+						<a class="clickable" [routerLink]="['/item/' + i._Item.Id]" (mousedown)="$event.stopPropagation()"><ion-icon name="open-outline"></ion-icon></a>
+						<small label class="bold">{{ i._Item.Code }}</small>
+						<div>{{ i._Item.Name }}</div>
+					</div>
+					<app-input-control
+						*ngIf="i?.isEdit"
+						[field]="{
+							id: 'IDItem',
+							type: 'ng-select-item',
+							form: i?._formGroup,
+							dataSource: i?._formGroup?.controls?._IDItemDataSource?.value,
+							bindValue: 'Id',
+							placeholder: 'Type to search...',
+							clearable: true,
+							appendTo: '#ng-select-table'
+						}"
+						(change)="itemChange($event, i)"
+					></app-input-control>
+				</ng-template>
+			</datatable-column>
+
+			<datatable-column class="col-name" name="Vendor" property="_Vendor">
+				<ng-template let-i="row" datatable-cell-template>
+					<div *ngIf="i?._Vendor && !i?.isEdit">
+						<span (mousedown)="$event.stopPropagation()"> #{{ i?._Vendor?.Id }} </span>
+						<a class="clickable" [routerLink]="['/vendor/' + i?._Vendor?.Id]" (mousedown)="$event.stopPropagation()"><ion-icon name="open-outline"></ion-icon></a>
+						<small label class="bold">{{ i?._Vendor?.Code }}</small>
+						<div>{{ i?._Vendor?.Name }}</div>
+					</div>
+					<app-input-control
+						*ngIf="i?.isEdit && i?._formGroup?.controls?._Vendors?.value?.length"
+						[field]="{
+							id: 'IDVendor',
+							type: 'ng-select',
+							form: i?._formGroup,
+							dataSource: i?._formGroup?.controls?._Vendors?.value,
+							bindValue: 'Id',
+							bindLabel: 'Name',
+							clearable: true,
+							appendTo: '#ng-select-table',
+							placeholder: 'Select vendor'
+						}"
+						(change)="vendorChange($event, i)"
+					></app-input-control>
+					<span *ngIf="i?.isEdit && !i?._formGroup?.controls?._Vendors?.value?.length" class="c-input disable">-</span>
+				</ng-template>
+			</datatable-column>
+
+			<datatable-column class="col-icon" name="" property="Id">
+				<ng-template let-i="row" datatable-cell-template>
+					<ion-button *ngIf="!i?.isEdit && pageConfig.canEdit" (click)="editRow(i)" size="small" title="{{ 'Edit' | translate }}" fill="clear">
+						<ion-icon slot="icon-only" name="pencil"></ion-icon>
+					</ion-button>
+					<div class="text-center">
+						<ion-button *ngIf="i?.isEdit" (click)="saveRow(i)" size="small"> {{ 'Save' | translate }} </ion-button>
+						<br />
+						<ion-button *ngIf="i?.isEdit" (click)="cancelRow(i)" size="small" fill="outline"> {{ 'Cancel' | translate }} </ion-button>
+					</div>
+				</ng-template>
+			</datatable-column>
+		</app-data-table>
+	</div>
+</ion-content>
