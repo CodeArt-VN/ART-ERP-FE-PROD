@@ -144,7 +144,7 @@ export class ScenarioDetailPage extends PageBase {
 			this.itemGroupProvider.read({
 				Take: 5000,
 			}),
-			this.sysConfigService.getConfig(this.env.selectedBranch, ['UIDatatableRowLineClamp'])
+			this.sysConfigService.getConfig(this.env.selectedBranch, ['UIDatatableRowLineClamp']),
 		]).then((values: any) => {
 			if (values[0] && values[0].data) {
 				lib.buildFlatTree(values[0].data, []).then((result: any) => {
@@ -455,6 +455,7 @@ export class ScenarioDetailPage extends PageBase {
 						})),
 					IDWarehouse: data.IDWarehouse,
 					IDStorer: data.IDStorer,
+					IDMRP: this.item.Id,
 				};
 				this.commonService
 					.connect('POST', ApiSetting.apiDomain('PURCHASE/Order/CreateFromRecommendation/'), postData)
