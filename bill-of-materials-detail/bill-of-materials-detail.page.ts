@@ -315,7 +315,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
 	// 				distinctUntilChanged(),
 	// 				tap(() => (this.loading = true)),
 	// 				switchMap((term) =>
-	// 					this.searchProvider.connect('GET', 'PROD/BillOfMaterials/ItemSearch/', { Take: 20, Skip: 0, Term: term }).pipe(
+	// 					this.searchProvider.connect('GET', 'PROD/BillOfMaterials/ItemSearch/', { Take: 20, Skip: 0, Keyword: term }).pipe(
 	// 						map((result: any) => {
 	// 							return (result = result.filter((d) => d.BOMs?.length == 0));
 	// 						}),
