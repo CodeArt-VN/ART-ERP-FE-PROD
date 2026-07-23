@@ -10,38 +10,37 @@
 		>
 			<ion-icon name="radio-button-on-outline"></ion-icon>
 		</ion-button>
-			<ion-button
-			(click)="createMRPScenario()"
-			*ngIf="pageConfig.canAdd && formGroup.get('Cells')['controls'].length>0 && item.Id"
-			title="{{'Create MRP scenario' | translate}}"
-		>
+		<ion-button (click)="createMRPScenario()" *ngIf="pageConfig.canAdd && formGroup.get('Cells')['controls'].length>0 && item.Id" title="{{'Create MRP scenario' | translate}}">
 			<ion-icon slot="icon-only" name="logo-chrome"></ion-icon>
+		</ion-button>
+		<ion-button *ngIf="segmentView=='s2' && pageConfig.canEdit" (click)="openAddProductModal()" title="{{ 'Add products' | translate }}">
+			<ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
+		</ion-button>
+		<ion-button *ngIf="segmentView=='s2'" (click)="toggleProductViewMode()" [title]="(productViewMode === 'Quantity' ? 'Switch to revenue' : 'Switch to quantity') | translate">
+			<ion-icon slot="icon-only" [name]="productViewMode === 'Quantity' ? 'cash-outline' : 'cube-outline'"></ion-icon>
+		</ion-button>
+		<ion-button class="ion-hide-sm-down" *ngIf="segmentView=='s2' && pageConfig.canExport && item.Id" (click)="export()" title="{{'Export' | translate}}">
+			<ion-icon slot="icon-only" name="cloud-download-outline"></ion-icon>
+		</ion-button>
+		<ion-button class="ion-hide-sm-down" *ngIf="segmentView=='s2' && pageConfig.canImport && item.Id" (click)="onClickImport()" title="{{'Import' | translate}}">
+			<ion-icon slot="icon-only" name="cloud-upload-outline"></ion-icon>
+			<input class="hide-all" #importfile type="file" accept=".xlsx" (change)="import($event)" />
 		</ion-button>
 	</app-toolbar>
 </ion-header>
-<ion-content [fullscreen]="true" appScrollbarTheme>
+<ion-content [fullscreen]="true" appScrollbarTheme class="scrollx">
 	<app-page-title class="ion-padding safe-max-width" [pageConfig]="pageConfig"></app-page-title>
-	<div class="main-view safe-max-width" *ngIf="item && pageConfig.showSpinner==false">
+	<div class="main-view safe-max-width" *ngIf="item && pageConfig.showSpinner==false" style="position: sticky; left: 0">
 		<div class="row-full shadow full-screen">
 			<ion-toolbar color="primary">
 				<ion-segment scrollable="true" (ionChange)="segmentChanged($event)" [value]="segmentView">
 					<ion-segment-button value="s1">
-						<ion-label>{{'Forecast' | translate}}</ion-label>
+						<ion-label>{{'Configurations 1' | translate}}</ion-label>
 					</ion-segment-button>
 					<ion-segment-button value="s2">
-						<ion-label>{{'Product' | translate }}</ion-label>
+						<ion-label>{{'Products' | translate }}</ion-label>
 					</ion-segment-button>
 				</ion-segment>
-
-				<ion-buttons slot="end" *ngIf="segmentView=='s2'">
-					<ion-button class="ion-hide-sm-down" *ngIf="pageConfig.canExport && item.Id" (click)="export()" title="{{'Export' | translate}}">
-						<ion-icon slot="icon-only" name="cloud-download-outline"></ion-icon>
-					</ion-button>
-					<ion-button class="ion-hide-sm-down" *ngIf="pageConfig.canImport && item.Id" (click)="onClickImport()" title="{{'Import' | translate}}">
-						<ion-icon slot="icon-only" name="cloud-upload-outline"></ion-icon>
-						<input class="hide-all" #importfile type="file" accept=".xlsx" (change)="import($event)" />
-					</ion-button>
-				</ion-buttons>
 			</ion-toolbar>
 
 			<!-- Forecast -->
@@ -52,56 +51,61 @@
 							<ion-col size="12" size-sm="12" size-md="12" size-xl="3">
 								<ion-list lines="none">
 									<ion-list-header class="ion-no-padding">
-										<ion-label color="primary">{{'Forecast' | translate}}</ion-label>
+										<ion-label color="primary">{{'Configurations' | translate}}</ion-label>
 									</ion-list-header>
 								</ion-list>
 							</ion-col>
-							<!-- <ion-col size="12" size-sm="12" size-md="12" size-xl="12">
-						<app-page-title [icon]="person-outcell" [color]="warning"
-						[title]="'API collection'"></app-page-title>
-					</ion-col> -->
-							<ion-col size="12" size-sm="6" size-md="6" size-xl="4">
-								<app-form-control [field]="{id:'Name', label: 'Name', type : 'text', form : formGroup }" (change)="saveChange2()">
-									<small label *ngIf="item?.Id">Id: {{item.Id}}</small>
-								</app-form-control>
-
-								<app-form-control
-									[field]="{id:'Type', label: 'Type', type : 'ng-select', dataSource: viewDataSource, bindLabel:'Name', bindValue:'Code', form : formGroup }"
-									(change)="changePeriodAndDate()"
-								>
-								</app-form-control>
-								<app-form-control
-									*ngIf="isAdvance"
-									[field]="{id:'StartDate', label: 'Start date', type: 'date' , form : formGroup }"
-									(change)="changePeriodAndDate()"
-								></app-form-control>
-								<app-form-control
-									*ngIf="isAdvance"
-									[field]="{id:'EndDate', label: 'End date', type: 'date' , form : formGroup }"
-									(change)="changePeriodAndDate()"
-								></app-form-control>
-							</ion-col>
-							<ion-col size="12" size-sm="6" size-md="6" size-xl="4">
-								<app-form-control
-									[field]="{id:'NumberOfNextPeriod', type : 'number', label: 'Number of next periods', form : formGroup }"
-									(change)="changePeriodAndDate()"
-								></app-form-control>
-								<app-form-control
-									[field]="{id:'NumberOfPrePeriod', type : 'number', label: 'Number of previous periods', form : formGroup }"
-									(change)="changePeriodAndDate()"
-								></app-form-control>
-								<app-form-control
-									*ngIf="isAdvance"
-									[field]="{id:'Multiply', type : 'number', label: 'Multiply (%)', form : formGroup }"
-									(change)="changeMultiply()"
-								></app-form-control>
-							</ion-col>
-							<ion-col size="12" size-sm size-xl="8" push-xl="3">
-								<div class="c-control">
-									<ion-button size="small" (click)="isAdvance = !isAdvance" [fill]=" isAdvance ? 'solid' : 'outline' " *ngIf="item?.Id">
-										{{'Advanced settings' | translate}}
-									</ion-button>
-								</div>
+							<ion-col size="12" size-sm="12" size-md="12" size-xl="8">
+								<ion-row>
+									<ion-col size="12">
+										<app-form-control [field]="{id:'Name', label: 'Name', type : 'text', form : formGroup }" (change)="saveChange2()">
+											<small label *ngIf="item?.Id">Id: {{item.Id}}</small>
+										</app-form-control>
+									</ion-col>
+									<ion-col size="12" size-sm="6">
+										<app-form-control
+											[field]="{id:'NumberOfNextPeriod', type : 'number', label: 'Number of next periods', form : formGroup }"
+											(change)="changePeriodAndDate()"
+										></app-form-control>
+										<app-form-control
+											[field]="{id:'Type', label: 'Next period type', type : 'ng-select', dataSource: viewDataSource, bindLabel:'Name', bindValue:'Code', form : formGroup }"
+											(change)="changePeriodAndDate()"
+										></app-form-control>
+										<app-form-control
+											[field]="{id:'StartDate', label: 'Start date', type: 'date' , form : formGroup }"
+											(change)="changePeriodAndDate()"
+										></app-form-control>
+										<app-form-control
+											[field]="{id:'EndDate', label: 'End date', type: 'date' , form : formGroup }"
+											(change)="changePeriodAndDate()"
+										></app-form-control>
+									</ion-col>
+									<ion-col size="12" size-sm="6">
+										<app-form-control
+											[field]="{id:'NumberOfPrePeriod', type : 'number', label: 'Number of previous periods', form : formGroup }"
+											(change)="changePeriodAndDate()"
+										></app-form-control>
+										<app-form-control
+											[field]="{id:'PrePeriodType', label: 'Previous period type', type : 'ng-select', dataSource: prePeriodTypeDataSource, bindLabel:'Name', bindValue:'Code', form : formGroup }"
+											(change)="changePeriodAndDate()"
+										></app-form-control>
+										<app-form-control
+											[field]="{id:'Multiply', type : 'number', label: 'Multiply (%)', form : formGroup }"
+											(change)="changeMultiply()"
+										></app-form-control>
+										<app-form-control
+											[field]="{id:'IDPriceList', label: 'Sales price list', type : 'ng-select-async', dataSource: _PriceListDataSource, bindLabel:'Name', bindValue:'Id', clearable: true, form : formGroup }"
+											(change)="onPriceListChange()"
+										></app-form-control>
+									</ion-col>
+									<ion-col size="12">
+										<div class="c-control">
+											<ion-button size="small" (click)="isAdvance = !isAdvance" [fill]=" isAdvance ? 'solid' : 'outline' " *ngIf="item?.Id">
+												{{'Advanced settings' | translate}}
+											</ion-button>
+										</div>
+									</ion-col>
+								</ion-row>
 							</ion-col>
 						</ion-row>
 
@@ -114,66 +118,90 @@
 								</ion-list>
 							</ion-col>
 							<ion-col size="12" size-sm size-xl="8">
-								<ng-container formArrayName="Cells">
-									<ng-container *ngFor="let g of formGroup.get('LinePeriod')['controls']; let idx = index;">
-										<div class="c-control">
-											<label class="c-label" *ngIf="g.controls.Label?.value">
-												{{'Configurations of cycle' | translate}}
-												<ion-text color="primary"> {{g.controls.Label.value}}</ion-text>
-											</label>
-
-											<section class="table">
-												<header class="bold">
-													<div class="col-checkbox cell"></div>
-													<div class="col-name cell">{{'From date' | translate}}</div>
-													<div class="col-name cell">{{'To date' | translate}}</div>
-													<div class="col-number cell">{{'Multiply' | translate}}</div>
-													<div class="col-icon cell clickable">
-														<!-- <ion-icon size="large" color="danger" slot="icon-only" name="trash" (click)="deletePeriods()"> </ion-icon> -->
+								<ion-accordion-group [multiple]="true" [value]="openedCycles" (ionChange)="onCycleAccordionChange($event)">
+									<ion-accordion *ngFor="let g of formGroup.get('LinePeriod')['controls']; let idx = index;" [value]="'' + idx" toggleIcon="chevron-down-outline">
+										<ion-item slot="header">
+											<ion-label>
+												<span class="bold">{{'Configurations of cycle' | translate}}</span>
+												<span *ngIf="g.controls.Label?.value">
+													-
+													<ion-text color="medium">{{g.controls.Label.value}}</ion-text>
+												</span>
+											</ion-label>
+										</ion-item>
+										<div class="forecast-cycle-content" slot="content">
+											<!-- Desktop: table -->
+											<div class="table-contain ion-hide-sm-down">
+												<section class="table">
+													<header class="bold">
+														<div class="col-name cell">{{'From date' | translate}}</div>
+														<div class="col-name cell">{{'To date' | translate}}</div>
+														<div class="col-number cell">{{'Multiply' | translate}}</div>
+														<div class="col-icon cell"></div>
+													</header>
+													<div class="row" *ngFor="let p of g.get('Lines')['controls']; let lineIdx = index;">
+														<ng-container [formGroup]="p">
+															<div class="col-name cell">
+																<app-input-control
+																	[field]="{id:'FromDate', label: 'FromDate', type : 'date', form : p}"
+																	(change)="saveChangeConfig()"
+																></app-input-control>
+															</div>
+															<div class="col-name cell">
+																<app-input-control
+																	[field]="{id:'ToDate', label: 'ToDate', type : 'date', form : p}"
+																	(change)="saveChangeConfig()"
+																></app-input-control>
+															</div>
+															<div class="col-number cell">
+																<app-input-control
+																	[field]="{id:'Multiply', label: 'Multiply', type : 'number', form : p}"
+																	(change)="saveChangeConfig()"
+																></app-input-control>
+															</div>
+															<div class="col-icon cell" *ngIf="pageConfig.canEdit">
+																<ion-icon class="clickable" color="danger" name="trash-outline" (click)="deletePeriod(idx, lineIdx)"></ion-icon>
+															</div>
+														</ng-container>
 													</div>
-												</header>
-												<div class="row" *ngFor="let p of g.get('Lines')['controls']; let lineIdx = index;">
+												</section>
+											</div>
+
+											<!-- Mobile: form controls -->
+											<div class="forecast-cycle-lines ion-hide-sm-up">
+												<div class="forecast-cycle-line" *ngFor="let p of g.get('Lines')['controls']; let lineIdx = index;">
 													<ng-container [formGroup]="p">
-														<div class="col-checkbox cell" style="text-align: center">
-															<app-input-control [field]="{id:'IsChecked', type : 'checkbox', form : p }"></app-input-control>
-														</div>
-														<div class="col-name cell">
-															<app-input-control
-																[field]="{id:'FromDate', label: 'FromDate', type : 'date', form : p}"
-																(change)="saveChangeConfig()"
-															></app-input-control>
-														</div>
-														<div class="col-name cell">
-															<app-input-control
-																[field]="{id:'ToDate', label: 'ToDate', type : 'date', form : p}"
-																(change)="saveChangeConfig()"
-															></app-input-control>
-														</div>
-														<div class="col-number cell">
-															<app-input-control
-																[field]="{id:'Multiply', label: 'Multiply', type : 'number', form : p}"
-																(change)="saveChangeConfig()"
-															></app-input-control>
-														</div>
-														<div class="col-icon cell">
-															<ion-icon size="large" color="danger" slot="icon-only" name="trash" (click)="deletePeriod(idx,lineIdx)"> </ion-icon>
+														<app-form-control
+															[field]="{id:'FromDate', label: 'From date', type : 'date', form : p}"
+															(change)="saveChangeConfig()"
+														></app-form-control>
+														<app-form-control
+															[field]="{id:'ToDate', label: 'To date', type : 'date', form : p}"
+															(change)="saveChangeConfig()"
+														></app-form-control>
+														<app-form-control
+															[field]="{id:'Multiply', label: 'Multiply', type : 'number', form : p}"
+															(change)="saveChangeConfig()"
+														></app-form-control>
+														<div class="forecast-cycle-delete" *ngIf="pageConfig.canEdit">
+															<ion-button fill="solid" color="danger" size="small" (click)="deletePeriod(idx, lineIdx)">
+																<ion-icon slot="start" name="trash-outline"></ion-icon>
+																{{'Delete' | translate}}
+															</ion-button>
 														</div>
 													</ng-container>
 												</div>
-											</section>
-											<div class="row" *ngIf="pageConfig.canEdit">
+											</div>
+
+											<div *ngIf="pageConfig.canEdit">
 												<ion-button fill="clear" size="small" (click)="addPeriod(idx)">
-													<ion-icon size="small" slot="icon-only" name="add-circle-outline"></ion-icon>
+													<ion-icon size="small" slot="start" name="add-circle-outline"></ion-icon>
 													{{ 'Add' | translate }}
 												</ion-button>
 											</div>
-
-											<div class="ion-padding"></div>
 										</div>
-									</ng-container>
-
-									<div class="ion-padding"></div>
-								</ng-container>
+									</ion-accordion>
+								</ion-accordion-group>
 							</ion-col>
 						</ion-row>
 
@@ -216,97 +244,95 @@
 					</form>
 				</ion-grid>
 			</div>
+		</div>
+	</div>
 
-			<div class="ion-padding" *ngIf="segmentView == 's2'" class="table-contain">
-				<form [formGroup]="formGroup">
-					<ng-container formArrayName="Cells">
-						<section class="table">
-							<header class="bold">
-								<div class="col-checkbox cell">
-									<input (change)="toggleSelectAll()" [(ngModel)]="isAllChecked" [ngModelOptions]="{standalone: true}" class="c-checkbox" type="checkbox" />
-								</div>
-								<div class="col-id cell">{{'No.' | translate}}</div>
-								<div class="col-name cell">{{'Item' | translate}}</div>
-								<div class="col-code cell">{{'Unit' | translate}}</div>
-								<div
-									*ngFor="let column of columnView"
-									class="col-date cell"
-									[ngStyle]="{ 'flex-direction': column.SubTitle?'column':'row', 'align-items':column.SubTitle? 'flex-start':'center','justify-content': column.SubTitle?'center':'flex-start'} "
-								>
-									{{column.Title}} <span *ngIf="column.SubTitle">{{column.SubTitle}}</span>
-								</div>
-								<div class="col-icon cell">
-									<ion-icon
-										*ngIf="checkedRows.controls.length>0 && pageConfig.canEdit"
-										(click)="removeSelectedItems()"
-										color="danger"
-										slot="icon-only"
-										size="large"
-										name="trash"
-										slot="start"
-									></ion-icon>
-								</div>
-								<!-- <div class="col-number cell">{{'Quantity' | translate}}</div> -->
-							</header>
-							<div class="row" *ngFor="let g of formGroup.get('Rows')['controls']; let idx = index;">
-								<ng-container [formGroup]="g">
-									<div class="col-checkbox cell" style="text-align: center">
-										<app-input-control [field]="{id:'IsChecked', type : 'checkbox', form : g }" (change)="changeSelection(g)"></app-input-control>
-									</div>
-									<div class="col-id cell">{{idx+1}}</div>
-									<div class="col-name cell">
-										<app-input-control
-											[field]="{id:'IDItem', label: 'Item', type : 'ng-select-item', form : g,  dataSource: g.get('_IDItemDataSource').value, bindLabel:'Name', bindValue: 'Id', clearable: true, placeholder: 'Type to search...' }"
-											(change)="changeItem($event, g);"
-											(nav)="nav($event)"
-										></app-input-control>
-									</div>
-									<div class="col-code cell">
-										<select formControlName="IDUoM" class="c-input c-dropdown" (change)="changeUoM(g)">
-											<option [disabled]="t.Flag" *ngFor="let t of g.controls._UoMDataSource.value" [value]="t.Id">{{t.Name}}</option>
-										</select>
-									</div>
-									<div *ngFor="let column of columnView" class="col-date cell">
-										<ng-container *ngFor="let c of formGroup.get('Cells')['controls']">
-											<app-input-control
-												*ngIf="c.get('Date').value == column.Date && c.get('Key').value == g.get('Key').value"
-												[field]="{id:'Quantity', label: 'Quantity', type : 'number', form : c}"
-												(change)="saveChangeDetail(c);"
-											></app-input-control>
-											<!-- <app-input-control *ngIf="c.get('Date').value != column || c.get('IDItem').value == g.get('IDItem').value && c.get('IDUoM').value == g.get('IDUoM').value" [field]="{id:'Quantity', label: 'Quantity', type : 'number', form : c}" (change)="saveChange();" ></app-input-control> -->
-										</ng-container>
-									</div>
-									<!-- <div class="col-number cell">
-						<app-input-control [field]="{id:'Quantity', label: 'Quantity', type : 'number', form : g}" (change)="saveChange();" ></app-input-control>
-					</div> -->
-								</ng-container>
-								<div class="col-icon cell" (click)="removeRow(g, idx)">
-									<ion-icon class="clickable" color="danger" *ngIf="pageConfig.canEdit && pageConfig.canDelete" name="trash"></ion-icon>
-								</div>
-							</div>
-							<div class="row">
-								<div class="cell">
-									<ion-button fill="clear" size="small" (click)="addRows()">
-										<ion-icon slot="start" name="add-circle-outline"></ion-icon>
-										{{'Add product' | translate}}
-									</ion-button>
-									<ion-button
-										fill="clear"
-										size="small"
-										*ngIf="formGroup.get('LinePeriod')['controls']?.length>0"
-										(click)="generatorForecastTopItem()"
-										class="ion-hide-sm-down"
-										title="{{'Add top item' | translate}}"
-									>
-										<ion-icon slot="start" name="add-circle-outline"></ion-icon>
-										{{'Add top item' | translate}}
-									</ion-button>
-								</div>
-							</div>
-						</section>
+	<div class="main-view safe-max-width" *ngIf="segmentView == 's2'">
+		<app-data-table
+			*ngIf="segmentView == 's2'"
+			[formGroup]="formGroup"
+			class="forecast-products-table"
+			[virtualScroll]="true"
+			[rows]="formGroup.get('Rows')['controls']"
+			[showSpinner]="pageConfig.showSpinner"
+		>
+			<datatable-column [checkbox]="true" name="" property="value" [canFilter]="false">
+				<ng-template datatable-header-template>
+					<input (change)="toggleSelectAll()" [(ngModel)]="isAllChecked" [ngModelOptions]="{ standalone: true }" class="c-checkbox" type="checkbox" />
+				</ng-template>
+				<ng-template let-g="row" datatable-cell-template>
+					<app-input-control [field]="{ id: 'IsChecked', type: 'checkbox', form: g }" (change)="changeSelection(g)"></app-input-control>
+				</ng-template>
+			</datatable-column>
+			<datatable-column class="col-id" name="No." property="#" [canFilter]="false"></datatable-column>
+			<datatable-column class="col-name" name="Item" property="value" [canFilter]="false">
+				<ng-template datatable-header-template>
+					<div class="forecast-col-header">
+						<span>{{ 'Item' | translate }}</span>
+					</div>
+				</ng-template>
+				<ng-template let-g="row" datatable-cell-template>
+					<span class="c-input disable" [title]="g.get('ItemName')?.value">
+						<ng-container *ngIf="g.get('IDItem')?.value as itemId">
+							<span>#{{ itemId }}</span>
+							<a class="clickable" [routerLink]="['/item/' + itemId]" (mousedown)="$event.stopPropagation()">
+								<ion-icon name="open-outline"></ion-icon>
+							</a>
+							&nbsp;
+						</ng-container>
+						<b *ngIf="g.get('ItemCode')?.value">{{ g.get('ItemCode').value }}</b>
+						{{ g.get('ItemName')?.value }}
+					</span>
+				</ng-template>
+			</datatable-column>
+			<datatable-column class="col-code" name="Unit" property="value" [canFilter]="false">
+				<ng-template let-g="row" datatable-cell-template>
+					<ng-container [formGroup]="g">
+						<select formControlName="IDUoM" class="c-input c-dropdown" (change)="changeUoM(g)">
+							<option [disabled]="t.Flag" *ngFor="let t of g.controls._UoMDataSource.value" [value]="t.Id">{{ t.Name }}</option>
+						</select>
 					</ng-container>
-				</form>
-			</div>
+				</ng-template>
+			</datatable-column>
+			<datatable-column *ngFor="let column of columnView" class="col-number forecast-qty-col" [name]="column.Title" [property]="column.Date" [canFilter]="false">
+				<ng-template datatable-header-template>
+					<div class="forecast-col-header" [class.has-subtitle]="column.SubTitle">
+						<span>{{ column.Title }}</span>
+						<small *ngIf="column.SubTitle">{{ column.SubTitle }}</small>
+						<span *ngIf="productViewMode === 'Revenue'" class="forecast-subtotal-value"> {{ getColumnRevenueSubtotal(column.Date) | number: '1.0-0' }} </span>
+					</div>
+				</ng-template>
+				<ng-template let-g="row" datatable-cell-template>
+					<ng-container *ngIf="getCellForRow(g, column.Date) as c">
+						<app-input-control
+							*ngIf="productViewMode === 'Quantity'"
+							[field]="{ id: 'Quantity', label: 'Quantity', type: 'number', form: c }"
+							(change)="saveChangeDetail(c)"
+						></app-input-control>
+						<span *ngIf="productViewMode === 'Revenue'" class="c-input disable"> {{ getCellRevenue(c) | number: '1.0-0' }} </span>
+					</ng-container>
+				</ng-template>
+			</datatable-column>
+			<datatable-column class="col-icon" name="" property="value" [canFilter]="false" *ngIf="pageConfig.canEdit">
+				<ng-template datatable-header-template>
+					<ion-icon
+						*ngIf="checkedRows.controls.length > 0 && pageConfig.canEdit"
+						(click)="removeSelectedItems()"
+						color="danger"
+						class="clickable"
+						name="trash"
+					></ion-icon>
+				</ng-template>
+				<ng-template let-g="row" let-idx="idx" datatable-cell-template>
+					<ion-icon class="clickable" color="danger" *ngIf="pageConfig.canEdit && pageConfig.canDelete" name="trash" (click)="removeRow(g, idx)"></ion-icon>
+				</ng-template>
+			</datatable-column>
+		</app-data-table>
+		<div class="ion-padding-start" *ngIf="pageConfig.canEdit">
+			<ion-button fill="clear" size="small" (click)="openAddProductModal()">
+				<ion-icon slot="start" name="add-circle-outline"></ion-icon>
+				{{ 'Add products' | translate }}
+			</ion-button>
 		</div>
 	</div>
 

@@ -5,6 +5,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { ShareModule } from 'src/app/share.module';
 import { ForecastDetailPage } from './forecast-detail.page';
+import { ForecastProductPickerPage } from './forecast-product-picker.page';
 
 const routes: Routes = [
 	{
@@ -15,6 +16,6 @@ const routes: Routes = [
 
 @NgModule({
 	imports: [CommonModule, FormsModule, IonicModule, ReactiveFormsModule, ShareModule, RouterModule.forChild(routes)],
-	declarations: [ForecastDetailPage],
+	declarations: [ForecastDetailPage, ForecastProductPickerPage],
 })
 export class ForecastDetailPageModule {}
