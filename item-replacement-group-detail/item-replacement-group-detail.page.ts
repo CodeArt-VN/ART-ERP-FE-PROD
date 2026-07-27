@@ -715,7 +715,7 @@ export class ItemReplacementGroupDetailPage extends PageBase {
 				this.confirmApplyItemsRemoval(applyRows)
 					.then((confirmedRows : any) => {
 						this.env
-							.showPrompt('Bạn có chắc muốn xóa sản phẩm?', null, 'Xóa sản phẩm')
+							.showPrompt('Are you sure you want to delete the product?', null, 'Delete the product')
 							.then(() => {
 								this.deleteLinesByIds(groups, [lineId]).then((deleted) => {
 									if (deleted) {
@@ -730,7 +730,7 @@ export class ItemReplacementGroupDetailPage extends PageBase {
 			}
 
 			this.env
-				.showPrompt('Bạn có chắc muốn xóa sản phẩm?', null, 'Xóa sản phẩm')
+				.showPrompt('Are you sure you want to delete the product?', null, 'Delete the product')
 				.then(() => {
 					this.deleteLinesByIds(groups, [lineId]);
 				})

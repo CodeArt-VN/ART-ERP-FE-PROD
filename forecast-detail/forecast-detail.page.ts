@@ -277,7 +277,7 @@ export class ForecastDetailPage extends PageBase {
 		if (reRender) {
 			if (this.columnView.length >= 100) {
 				this.env
-					.showPrompt('Bạn đang load lượng lớn dữ liệu hơn 100 dòng, bạn có muốn tiếp tục ?', null, 'Tiếp tục')
+					.showPrompt('You are loading more than 100 rows. Do you want to continue?', null, 'Continue')
 					.then((_) => {
 						this.reRender();
 					})
@@ -540,7 +540,7 @@ export class ForecastDetailPage extends PageBase {
 		}
 
 		//  let deleteIds = filteredIds?.map((filteredControl) => filteredControl.get('Id').value);
-		this.env.showPrompt('Bạn có chắc muốn xóa không?', null, { code: 'Xóa {{value}} dòng', value: deletedIds.length }).then((_) => {
+		this.env.showPrompt('Are you sure you want to delete?', null, { code: 'Delete {{value}} line(s)', value: deletedIds.length }).then((_) => {
 			this.forecastDetailService.delete(deletedIds).then((_) => {
 				this.env
 					.showLoading('Please wait for a few moments', this.forecastDetailService.delete(deletedIds))
@@ -591,8 +591,8 @@ export class ForecastDetailPage extends PageBase {
 		});
 		deleteCells = [...new Set(deleteCells)];
 		this.env
-			.showPrompt({ code: 'Bạn có chắc muốn xóa {{value}} đang chọn?', value: deleteCells.length }, null, {
-				code: 'Xóa {{value}} dòng?',
+			.showPrompt({ code: 'Are you sure you want to delete the selected {{value}}?', value: deleteCells.length }, null, {
+				code: 'Delete {{value}} row',
 				value: { value: deleteCells.length },
 			})
 			.then((_) => {
@@ -688,7 +688,7 @@ export class ForecastDetailPage extends PageBase {
 		let groupCells = <FormArray>this.formGroup.controls.Cells;
 		if (groupCells.controls.length > 0) {
 			this.env
-				.showPrompt('Thay đổi chu kỳ sẽ xoá hết dữ liệu dự báo, bạn có tiếp tục?', null, 'Xóa')
+				.showPrompt('Changing period will delete the entire forecast data,do you want to continue?', null, 'Delete')
 				.then((_) => {
 					this.submitAttempt = false;
 					this.formGroup.controls.Config.setValue(null);
@@ -789,11 +789,11 @@ export class ForecastDetailPage extends PageBase {
 					this.env
 						.showPrompt(
 							{
-								code: 'Có {{value}} lỗi khi import: {{value1}}',
+								code: '{{value}} error(s) during import: {{value1}}',
 								value: { value: resp.ErrorList.length, value1: message },
 							},
-							'Bạn có muốn xem lại các mục bị lỗi?',
-							'Có lỗi import dữ liệu'
+							'Do you want to review the items with errors?',
+							'Data import error'
 						)
 						.then((_) => {
 							this.downloadURLContent(resp.FileUrl);
@@ -1046,7 +1046,7 @@ export class ForecastDetailPage extends PageBase {
 		if (!lineGroups.controls[lineIdx].valid) {
 			lineGroups.removeAt(index);
 		} else {
-			this.env.showPrompt('Bạn có chắc muốn xóa không?', null, 'Xóa 1 dòng').then((_) => {
+			this.env.showPrompt('Are you sure you want to delete?', null, 'Delete 1 row').then((_) => {
 				lineGroups.removeAt(lineIdx);
 				this.saveChangeConfig();
 			});
@@ -1177,7 +1177,7 @@ export class ForecastDetailPage extends PageBase {
 			});
 	}
 	generatorForecastPeriod() {
-		this.env.showPrompt('Khi dự đoán tự động sẽ xoá hết dữ liệu dự báo hiện tại, bạn có tiếp tục?', null, 'Xóa').then((_) => {
+		this.env.showPrompt('When automatic forecast deleting the current forecast data,do you want to continue?', null, 'Delete').then((_) => {
 			this.env
 				.showLoading('Please wait for a few moments', this.commonService.connect('POST', 'SALE/Forecast/GeneratorForecastPeriod/' + this.item.Id, null).toPromise())
 				.then((result: any) => {
@@ -1205,7 +1205,7 @@ export class ForecastDetailPage extends PageBase {
 		}
 
 		this.env
-			.showPrompt('Khi thay đổi hệ số nhân dũ liệu cũ sẽ bị thay đổi thành dữ liệu mới, bạn có muốn  thay đổi không?', null, 'Thay đổi hệ số nhân')
+			.showPrompt('When changing the multiplier factor, old data will be changed to new data, do you want apply?', null, 'Change the multiplier factor')
 			.then((_) => {
 				this.env
 					.showLoading(
