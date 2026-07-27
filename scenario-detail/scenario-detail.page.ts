@@ -880,7 +880,7 @@ export class ScenarioDetailPage extends PageBase {
 		let group = groups.controls[index];
 		if (group.get('Id').value) {
 			this.env
-				.showPrompt('Bạn có chắc muốn xóa sản phẩm?', null, 'Xóa sản phẩm')
+				.showPrompt('Are you sure you want to delete the product?', null, 'Delete the product')
 				.then((_) => {
 					let Ids = [];
 					Ids.push(groups.controls[index].get('Id').value);
@@ -1141,7 +1141,7 @@ export class ScenarioDetailPage extends PageBase {
 		if (index >= 0) {
 			if (item.Id) {
 				this.env
-					.showPrompt('Bạn có chắc muốn xóa document này?', null, 'Xóa document')
+					.showPrompt('Are you sure you want to delete this document?', null, 'Delete document')
 					.then((_) => {
 						this.formGroup.get('DeletedDocuments').setValue([item.Id]);
 						this.formGroup.get('DeletedDocuments').markAsDirty();

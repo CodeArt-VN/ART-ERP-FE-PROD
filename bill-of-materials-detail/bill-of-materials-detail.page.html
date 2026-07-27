@@ -547,26 +547,26 @@
 																	thousandSeparator=","
 																	[allowNegativeNumbers]="false"
 																/>
-																{{'đ' | translate}}
+																{{'VND' | translate}}
 															</td>
 														</tr>
 														<tr>
 															<td>{{'Suggested selling price' | translate}}</td>
 
 															<td class="align-right">
-																<b> {{ (g.controls.TotalPrice.value ) | number: '1.0-0'}} {{'đ' | translate}}</b>
+																<b> {{ (g.controls.TotalPrice.value ) | number: '1.0-0'}} {{'VND' | translate}}</b>
 															</td>
 														</tr>
 														<tr>
 															<td>{{'Production unit price' | translate}}</td>
 
-															<td class="align-right">{{ (g.controls.StdCost.value ) | number: '1.0-0'}} {{'đ' | translate}}</td>
+															<td class="align-right">{{ (g.controls.StdCost.value ) | number: '1.0-0'}} {{'VND' | translate}}</td>
 														</tr>
 														<tr>
 															<td>{{'Production cost' | translate}}</td>
 
 															<td class="align-right">
-																<b>{{ (g.controls.TotalStdCost.value ) | number: '1.0-0'}} {{'đ' | translate}}</b>
+																<b>{{ (g.controls.TotalStdCost.value ) | number: '1.0-0'}} {{'VND' | translate}}</b>
 															</td>
 														</tr>
 													</table>
@@ -590,12 +590,12 @@
 
 								<ion-card-content class="info barcode secondary total-price" *ngIf="pageConfig.canEdit">
 									<div>
-										<ion-badge class="ion-float-right"> {{ item.TotalPrice | number: '1.0-0' }} {{'đ' | translate}}</ion-badge>
+										<ion-badge class="ion-float-right"> {{ item.TotalPrice | number: '1.0-0' }} {{'VND' | translate}}</ion-badge>
 										<ion-badge color="secondary">{{'Suggested selling price' | translate}}</ion-badge>
 									</div>
 
 									<div>
-										<ion-badge class="ion-float-right"> {{ item.TotalStdCost | number: '1.0-0' }} {{'đ' | translate}}</ion-badge>
+										<ion-badge class="ion-float-right"> {{ item.TotalStdCost | number: '1.0-0' }} {{'VND' | translate}}</ion-badge>
 										<ion-badge color="secondary">{{'Production cost' | translate}}</ion-badge>
 									</div>
 								</ion-card-content>

@@ -594,7 +594,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
 	}
 
 	resetPrice() {
-		this.env.showPrompt('Bạn có chắc muốn lấy lại giá theo bảng giá đang chọn?', null, 'Reset price').then((_) => {
+		this.env.showPrompt('Are you sure you want to reload prices from the selected price list?', null, 'Reset price').then((_) => {
 			this.calcTotalLine(true);
 		});
 	}
@@ -820,8 +820,8 @@ export class BillOfMaterialsDetailPage extends PageBase {
 
 						this.alertCtrl
 							.create({
-								header: 'Có lỗi import dữ liệu',
-								subHeader: 'Bạn có muốn xem lại các mục bị lỗi?',
+								header: 'Data import error',
+								subHeader: 'Do you want to review the items with errors?',
 								message: 'Có ' + resp.ErrorList.length + ' lỗi khi import:' + message,
 								cssClass: 'alert-text-left',
 								buttons: [
@@ -877,7 +877,7 @@ export class BillOfMaterialsDetailPage extends PageBase {
 		let itemBOM = e.BOMs.find((f) => f.IDBOM != this.item.Id);
 		if (itemBOM) {
 			this.env
-				.showPrompt('Bạn có muốn xem định mức này không?', null, 'Đã thiết lập BOM cho sản phẩm ' + e.Name)
+				.showPrompt('Do you want to view this BOM?', null, 'Đã thiết lập BOM cho sản phẩm ' + e.Name)
 				.then((_) => {
 					this.nav('bill-of-materials/' + itemBOM.IDBOM, 'forward');
 					this.id = itemBOM.IDBOM;
