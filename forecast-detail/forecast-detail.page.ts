@@ -540,7 +540,7 @@ export class ForecastDetailPage extends PageBase {
 		}
 
 		//  let deleteIds = filteredIds?.map((filteredControl) => filteredControl.get('Id').value);
-		this.env.showPrompt('Bạn có chắc muốn xóa không?', null, { code: 'Xóa {{value}} dòng', value: deletedIds.length }).then((_) => {
+		this.env.showPrompt('Bạn có chắc muốn xóa không?', null, { code: 'Xóa {value} dòng', value: deletedIds.length }).then((_) => {
 			this.forecastDetailService.delete(deletedIds).then((_) => {
 				this.env
 					.showLoading('Please wait for a few moments', this.forecastDetailService.delete(deletedIds))
@@ -591,8 +591,8 @@ export class ForecastDetailPage extends PageBase {
 		});
 		deleteCells = [...new Set(deleteCells)];
 		this.env
-			.showPrompt({ code: 'Bạn có chắc muốn xóa {{value}} đang chọn?', value: deleteCells.length }, null, {
-				code: 'Xóa {{value}} dòng?',
+			.showPrompt({ code: 'Bạn có chắc muốn xóa {value} đang chọn?', value: deleteCells.length }, null, {
+				code: 'Xóa {value} dòng?',
 				value: { value: deleteCells.length },
 			})
 			.then((_) => {
@@ -789,7 +789,7 @@ export class ForecastDetailPage extends PageBase {
 					this.env
 						.showPrompt(
 							{
-								code: 'Có {{value}} lỗi khi import: {{value1}}',
+								code: 'Có {value} lỗi khi import: {value1}',
 								value: { value: resp.ErrorList.length, value1: message },
 							},
 							'Bạn có muốn xem lại các mục bị lỗi?',
