@@ -778,7 +778,7 @@ export class ItemReplacementGroupDetailPage extends PageBase {
 			const invalidControls = super.findInvalidControlsRecursive(this.formGroup);
 			const translationPromises = invalidControls.map((control) => this.env.translateResource(control));
 			Promise.all(translationPromises).then((values) => {
-				this.env.showMessage('Please recheck control(s): {{value}}', 'warning', values.join(' | '));
+				this.env.showMessage('Please recheck control(s): {value}', 'warning', values.join(' | '));
 			});
 		} else {
 			this.saveChange();

@@ -211,7 +211,7 @@ export class OrderRecommendationPage extends PageBase {
 
 		this.pageProvider.commonService.connect("POST","PROD/MRPRecommendation/ChangePreferVendors",submitItem).toPromise()
 			.then(() => {
-				this.env.showMessage('NCC {{value}} selected', 'success', i.VendorName);
+				this.env.showMessage('NCC {value} selected', 'success', i.VendorName);
 				// this.selectedCount = this.items.filter((d) => d.checked).length;
 			})
 			.finally(() => {

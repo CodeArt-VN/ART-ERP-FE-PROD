@@ -544,7 +544,7 @@ export class ScenarioDetailPage extends PageBase {
 			.toPromise()
 			.then(() => {
 				this.selectedCount = this._Recommendations.items.filter((d) => d.Checked).length;
-				this.env.showMessage('NCC {{value}} selected', 'success', i.VendorName);
+				this.env.showMessage('NCC {value} selected', 'success', i.VendorName);
 			})
 			.finally(() => {
 				this.submitAttempt = false;
