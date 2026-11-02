@@ -17,10 +17,7 @@
 			<ion-row>
 				<ion-col size="12" size-sm="12" size-md="12">
 					<app-form-control
-						[field]="{branchConfig:{showingType:'Warehouse',selectedBranch:this.env.selectedBranch},
-            id:'IDWarehouse',label:'Warehouse',type:'ng-select-branch',
-            dataSource:branchList,bindLabel:'Name',bindValue:'Id', placeholder:'Search',
-            form:formGroup}"
+						[field]="{id:'IDWarehouse',label:'Warehouse',type:'ng-select-warehouse', placeholder:'Search', form:formGroup}"
 					>
 					</app-form-control>
 					<div class="c-control">

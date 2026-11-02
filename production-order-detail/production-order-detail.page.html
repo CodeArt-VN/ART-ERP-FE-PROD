@@ -78,16 +78,11 @@
 							[field]="{
 								id:'IDWarehouse',
 								label: 'Warehouse',
-								type :'ng-select-branch',
-								dataSource: branchList,
-								bindLabel:'Name',
-								bindValue:'Id',
-								form : formGroup,
-								virtualScroll: true,
+								type: 'ng-select-warehouse',
+								form: formGroup,
 								clearable: true,
 								placeholder:'Search...',
-								appendTo: '#detail-page',
-								branchConfig:{showingType:'Warehouse', showingMode:'showAll'}
+								appendTo: '#detail-page'
 							}"
 							(change)="saveChange()">
 						</app-form-control>

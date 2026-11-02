@@ -161,9 +161,7 @@
 										>
 										</app-form-control>
 										<app-form-control
-											[field]="{id: 'Warehouses', label: 'Warehouse', type: 'ng-select-branch', form: formGroup,  dataSource: warehouseDataSource,  bindLabel: 'Name',  bindValue: 'Id',
-                                    		branchConfig:{showingType:'Warehouse'},multiple: true,
-                                    		treeConfig:{searchFnDefault:true}, appendTo:'#scenario-detail-page'}"
+											[field]="{id: 'Warehouses', label: 'Warehouse', type: 'ng-select-warehouse', form: formGroup, multiple: true, appendTo:'#scenario-detail-page'}"
 											(controlChange)="saveChange();"
 										>
 										</app-form-control>
